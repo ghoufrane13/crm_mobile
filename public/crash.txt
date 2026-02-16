@@ -1,0 +1,95 @@
+date/time         : 2026-02-16, 18:49:43, 914ms
+computer name     : ASUSVIVOBOOK
+user name         : slime
+registered owner  : slimensotubi@gmail.com
+operating system  : Windows NT New x64 build 9200
+system language   : French
+system up time    : 47 days
+program up time   : 1 second
+processors        : 16x 13th Gen Intel(R) Core(TM) i7-13700H
+physical memory   : 3249/24201 MB (free/total)
+free disk space   : (C:) 204,56 GB
+display mode      : 1536x864, 32 bit
+process id        : $6f6c
+allocated memory  : 22,87 MB
+command line      : "C:\xampp81\sendmail\sendmail.exe" -t
+executable        : sendmail.exe
+exec. date/time   : 2012-04-16 18:30
+compiled with     : Delphi 2006/07
+madExcept version : 3.0l
+callstack crc     : $fecf9b34, $498dfd25, $498dfd25
+exception number  : 1
+exception class   : EIdSMTPReplyError
+exception message : Handshake error.
+
+main thread ($8724):
+0045918a +003e sendmail.exe IdReplySMTP                    501   +1 TIdReplySMTP.RaiseReplyError
+0043ff28 +0008 sendmail.exe IdTCPConnection                576   +0 TIdTCPConnection.RaiseExceptionForLastCmdResult
+004402f4 +003c sendmail.exe IdTCPConnection                751  +10 TIdTCPConnection.CheckResponse
+0043feba +002a sendmail.exe IdTCPConnection                565   +2 TIdTCPConnection.GetResponse
+0043ff87 +005b sendmail.exe IdTCPConnection                585   +4 TIdTCPConnection.SendCmd
+0044020e +0056 sendmail.exe IdTCPConnection                723   +4 TIdTCPConnection.SendCmd
+0045ac17 +0017 sendmail.exe IdSMTP                         394   +2 TIdSMTP.DisconnectNotifyPeer
+0043fe12 +002a sendmail.exe IdTCPConnection                519   +5 TIdTCPConnection.Disconnect
+0045aea0 +0018 sendmail.exe IdSMTP                         509   +2 TIdSMTP.Disconnect
+00440598 +0004 sendmail.exe IdTCPConnection                857   +0 TIdTCPConnection.Disconnect
+00445fe3 +0023 sendmail.exe IdExplicitTLSClientServerBase  398   +2 TIdExplicitTLSClient.TLSHandShakeFailed
+00445d52 +002a sendmail.exe IdExplicitTLSClientServerBase  283   +6 TIdExplicitTLSClient.DoOnTLSHandShakeFailed
+00445e03 +000f sendmail.exe IdExplicitTLSClientServerBase  326   +3 TIdExplicitTLSClient.ProcessTLSHandShakeFailed
+00445faf +005b sendmail.exe IdExplicitTLSClientServerBase  391   +6 TIdExplicitTLSClient.TLSHandshake
+773bb56a +000a ntdll.dll                                            KiUserExceptionDispatcher
+0040474d +001d sendmail.exe System                         262   +0 @AfterConstruction
+11049f3e +006e libeay32.dll                                         ERR_get_state
+11049290 +0000 libeay32.dll                                         ERR_peek_error
+00465681 +0041 sendmail.exe IdSSLOpenSSL                  2131   +5 TIdSSLIOHandlerSocketOpenSSL.SetPassThrough
+00445f97 +0043 sendmail.exe IdExplicitTLSClientServerBase  388   +3 TIdExplicitTLSClient.TLSHandshake
+00459fc1 +0075 sendmail.exe IdSMTPBase                     395  +12 TIdSMTPBase.StartTLS
+0045a8bd +0039 sendmail.exe IdSMTP                         312  +11 TIdSMTP.Authenticate
+004b5f81 +10cd sendmail.exe sendmail                       822 +340 initialization
+75e45d47 +0017 KERNEL32.DLL                                         BaseThreadInitThunk
+
+thread $1190:
+75e45d47 +17 KERNEL32.DLL  BaseThreadInitThunk
+
+thread $2bf4:
+75e45d47 +17 KERNEL32.DLL  BaseThreadInitThunk
+
+thread $1ad4:
+75e45d47 +17 KERNEL32.DLL  BaseThreadInitThunk
+
+stack dump:
+0019f2bc  8f 91 45 00 de fa ed 0e - 01 00 00 00 07 00 00 00  ..E.............
+0019f2cc  d0 f2 19 00 8f 91 45 00 - 68 cc 72 02 e8 1d 74 02  ......E.h.r...t.
+0019f2dc  00 00 00 00 26 02 00 00 - 00 f3 19 00 ec f2 19 00  ....&...........
+0019f2ec  40 f3 19 00 c8 4b 40 00 - 00 f3 19 00 34 a5 45 00  @....K@.....4.E.
+0019f2fc  00 00 00 00 1c f3 19 00 - 2b ff 43 00 f7 02 44 00  ........+.C...D.
+0019f30c  00 00 00 00 88 f3 19 00 - 88 f3 19 00 40 da 6c 02  ............@.l.
+0019f31c  34 f3 19 00 bd fe 43 00 - 00 00 00 00 94 34 46 00  4.....C......4F.
+0019f32c  00 00 00 00 34 a5 45 00 - 60 f3 19 00 8a ff 43 00  ....4.E.`.....C.
+0019f33c  00 00 00 00 70 f3 19 00 - c8 4b 40 00 60 f3 19 00  ....p....K@.`...
+0019f34c  00 00 00 00 dd 00 71 02 - 34 a5 45 00 88 f3 19 00  ......q.4.E.....
+0019f35c  00 00 00 00 90 f3 19 00 - 14 02 44 00 00 00 00 00  ..........D.....
+0019f36c  00 00 00 00 a4 f3 19 00 - c8 4b 40 00 90 f3 19 00  .........K@.....
+0019f37c  5c fd 19 00 00 00 00 00 - 40 da 6c 02 dd 00 44 00  \.......@.l...D.
+0019f38c  00 00 00 00 b4 f3 19 00 - 1c ac 45 00 00 00 00 00  ..........E.....
+0019f39c  40 da 6c 02 15 fe 43 00 - bc f3 19 00 c8 4b 40 00  @.l...C......K@.
+0019f3ac  b4 f3 19 00 40 da 6c 02 - cc f3 19 00 a5 ae 45 00  ....@.l.......E.
+0019f3bc  d8 f3 19 00 c8 4b 40 00 - cc f3 19 00 40 da 6c 02  .....K@.....@.l.
+0019f3cc  ec f3 19 00 9b 05 44 00 - e8 5f 44 00 5c fd 19 00  ......D.._D.\...
+0019f3dc  c8 4b 40 00 ec f3 19 00 - 40 da 6c 02 00 00 00 00  .K@.....@.l.....
+0019f3ec  78 fd 19 00 57 5d 44 00 - 00 00 00 00 ac 5f 44 00  x...W]D......_D.
+
+disassembling:
+[...]
+00459177       call    -$1f480 ($439cfc)      ; IdReply.TIdReply.GetNumericCode
+0045917c       mov     ecx, eax
+0045917e       mov     dl, 1
+00459180       mov     eax, [$458844]
+00459185       call    +$182 ($45930c)        ; IdReplySMTP.EIdSMTPReplyError.CreateError
+0045918a     > call    -$544a3 ($404cec)      ; System.@RaiseExcept
+0045918f 502   xor     eax, eax
+00459191       pop     edx
+00459192       pop     ecx
+00459193       pop     ecx
+00459194       mov     fs:[eax], edx
+[...]

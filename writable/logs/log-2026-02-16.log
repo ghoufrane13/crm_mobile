@@ -1,0 +1,511 @@
+ERROR - 2026-02-16 08:55:11 --> mysqli_sql_exception: MySQL server has gone away in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('INSERT INTO `tb...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `tb...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `tb...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(2307): CodeIgniter\Database\BaseConnection->query('INSERT INTO `tb...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Model.php(327): CodeIgniter\Database\BaseBuilder->insert()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\BaseModel.php(802): CodeIgniter\Model->doInsert(Array)
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Model.php(749): CodeIgniter\BaseModel->insert(Array, true)
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\RegisterController.php(107): CodeIgniter\Model->insert(Array)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\RegisterController->registerContact()
+#9 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\RegisterController))
+#10 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#12 {main}
+CRITICAL - 2026-02-16 08:55:11 --> CodeIgniter\Database\Exceptions\DatabaseException: MySQL server has gone away
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(2307): CodeIgniter\Database\BaseConnection->query('INSERT INTO `tblcontacts` (`userid`, `firstname`, `lastname`, `email`, `phonenumber`, `password`, `is_primary`, `active`) VALUES (:userid:, :firstname:, :lastname:, :email:, :phonenumber:, :password:, :is_primary:, :active:)', [...], false)
+ 2 SYSTEMPATH\Model.php(327): CodeIgniter\Database\BaseBuilder->insert()
+ 3 SYSTEMPATH\BaseModel.php(802): CodeIgniter\Model->doInsert([...])
+ 4 SYSTEMPATH\Model.php(749): CodeIgniter\BaseModel->insert([...], true)
+ 5 APPPATH\Controllers\RegisterController.php(107): CodeIgniter\Model->insert([...])
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\RegisterController->registerContact()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\RegisterController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-16 08:55:11 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: MySQL server has gone away
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `tblcontacts` (`userid`, `firstname`, `lastname`, `email`, `phonenumber`, `password`, `is_primary`, `active`) VALUES (4, \'sofia\', \'borji\', \'bordjisofia1@gmail.com\', \'27859641\', \'$2y$10$3HxLKcHGvSGwUg1kWEfQp.D3bdjAST1EHTuhMnNH8YXA./ys7Dity\', 0, 0)')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `tblcontacts` (`userid`, `firstname`, `lastname`, `email`, `phonenumber`, `password`, `is_primary`, `active`) VALUES (4, \'sofia\', \'borji\', \'bordjisofia1@gmail.com\', \'27859641\', \'$2y$10$3HxLKcHGvSGwUg1kWEfQp.D3bdjAST1EHTuhMnNH8YXA./ys7Dity\', 0, 0)')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(2307): CodeIgniter\Database\BaseConnection->query('INSERT INTO `tblcontacts` (`userid`, `firstname`, `lastname`, `email`, `phonenumber`, `password`, `is_primary`, `active`) VALUES (:userid:, :firstname:, :lastname:, :email:, :phonenumber:, :password:, :is_primary:, :active:)', [...], false)
+ 4 SYSTEMPATH\Model.php(327): CodeIgniter\Database\BaseBuilder->insert()
+ 5 SYSTEMPATH\BaseModel.php(802): CodeIgniter\Model->doInsert([...])
+ 6 SYSTEMPATH\Model.php(749): CodeIgniter\BaseModel->insert([...], true)
+ 7 APPPATH\Controllers\RegisterController.php(107): CodeIgniter\Model->insert([...])
+ 8 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\RegisterController->registerContact()
+ 9 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\RegisterController))
+10 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-16 08:55:11 --> [Caused by] mysqli_sql_exception: MySQL server has gone away
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('INSERT INTO `tblcontacts` (`userid`, `firstname`, `lastname`, `email`, `phonenumber`, `password`, `is_primary`, `active`) VALUES (4, \'sofia\', \'borji\', \'bordjisofia1@gmail.com\', \'27859641\', \'$2y$10$3HxLKcHGvSGwUg1kWEfQp.D3bdjAST1EHTuhMnNH8YXA./ys7Dity\', 0, 0)', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `tblcontacts` (`userid`, `firstname`, `lastname`, `email`, `phonenumber`, `password`, `is_primary`, `active`) VALUES (4, \'sofia\', \'borji\', \'bordjisofia1@gmail.com\', \'27859641\', \'$2y$10$3HxLKcHGvSGwUg1kWEfQp.D3bdjAST1EHTuhMnNH8YXA./ys7Dity\', 0, 0)')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `tblcontacts` (`userid`, `firstname`, `lastname`, `email`, `phonenumber`, `password`, `is_primary`, `active`) VALUES (4, \'sofia\', \'borji\', \'bordjisofia1@gmail.com\', \'27859641\', \'$2y$10$3HxLKcHGvSGwUg1kWEfQp.D3bdjAST1EHTuhMnNH8YXA./ys7Dity\', 0, 0)')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(2307): CodeIgniter\Database\BaseConnection->query('INSERT INTO `tblcontacts` (`userid`, `firstname`, `lastname`, `email`, `phonenumber`, `password`, `is_primary`, `active`) VALUES (:userid:, :firstname:, :lastname:, :email:, :phonenumber:, :password:, :is_primary:, :active:)', [...], false)
+ 5 SYSTEMPATH\Model.php(327): CodeIgniter\Database\BaseBuilder->insert()
+ 6 SYSTEMPATH\BaseModel.php(802): CodeIgniter\Model->doInsert([...])
+ 7 SYSTEMPATH\Model.php(749): CodeIgniter\BaseModel->insert([...], true)
+ 8 APPPATH\Controllers\RegisterController.php(107): CodeIgniter\Model->insert([...])
+ 9 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\RegisterController->registerContact()
+10 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\RegisterController))
+11 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+12 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-16 17:32:19 --> CodeIgniter\Database\Exceptions\DataException: There is no data to update.
+in SYSTEMPATH\BaseModel.php on line 970.
+ 1 SYSTEMPATH\BaseModel.php(970): CodeIgniter\Database\Exceptions\DataException::forEmptyDataset('update')
+ 2 SYSTEMPATH\Model.php(812): CodeIgniter\BaseModel->update([...], [])
+ 3 APPPATH\Controllers\PasswordResetController.php(233): CodeIgniter\Model->update('4', [...])
+ 4 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\PasswordResetController->requestReset()
+ 5 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PasswordResetController))
+ 6 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 7 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-02-16 17:35:29 --> Échec de l'envoi de l'email de réinitialisation à: bordjisofia1@gmail.com
+ERROR - 2026-02-16 17:37:37 --> Échec de l'envoi de l'email de réinitialisation à: bordjisofia1@gmail.com
+ERROR - 2026-02-16 17:41:47 --> Échec de l'envoi de l'email de réinitialisation à: bordjisofia1@gmail.com
+ERROR - 2026-02-16 17:42:25 --> Échec de l'envoi de l'email de réinitialisation à: bordjisofia1@gmail.com
+ERROR - 2026-02-16 17:44:19 --> Échec de l'envoi de l'email de réinitialisation à: bordjisofia1@gmail.com
+INFO - 2026-02-16 17:47:09 --> ========================================
+INFO - 2026-02-16 17:47:09 --> 🔑 CODE DE RÉINITIALISATION
+INFO - 2026-02-16 17:47:09 --> Email: bordjisofia1@gmail.com
+INFO - 2026-02-16 17:47:09 --> Code: 129741
+INFO - 2026-02-16 17:47:09 --> Expire dans: 15 minutes
+INFO - 2026-02-16 17:47:09 --> ========================================
+ERROR - 2026-02-16 17:47:12 --> ❌ Échec de l'envoi de l'email à: bordjisofia1@gmail.com
+ERROR - 2026-02-16 17:47:12 --> Vérifiez la configuration SMTP dans php.ini et sendmail.ini
+INFO - 2026-02-16 17:47:32 --> ========================================
+INFO - 2026-02-16 17:47:32 --> 🔑 CODE DE RÉINITIALISATION
+INFO - 2026-02-16 17:47:32 --> Email: bordjisofia1@gmail.com
+INFO - 2026-02-16 17:47:32 --> Code: 830940
+INFO - 2026-02-16 17:47:32 --> Expire dans: 15 minutes
+INFO - 2026-02-16 17:47:32 --> ========================================
+ERROR - 2026-02-16 17:47:34 --> ❌ Échec de l'envoi de l'email à: bordjisofia1@gmail.com
+ERROR - 2026-02-16 17:47:34 --> Vérifiez la configuration SMTP dans php.ini et sendmail.ini
+INFO - 2026-02-16 17:49:42 --> ========================================
+INFO - 2026-02-16 17:49:42 --> 🔑 CODE DE RÉINITIALISATION
+INFO - 2026-02-16 17:49:42 --> Email: bordjisofia1@gmail.com
+INFO - 2026-02-16 17:49:42 --> Code: 914294
+INFO - 2026-02-16 17:49:42 --> Expire dans: 15 minutes
+INFO - 2026-02-16 17:49:42 --> ========================================
+ERROR - 2026-02-16 17:49:44 --> ❌ Échec de l'envoi de l'email à: bordjisofia1@gmail.com
+ERROR - 2026-02-16 17:49:44 --> Vérifiez la configuration SMTP dans php.ini et sendmail.ini
+INFO - 2026-02-16 17:52:24 --> ========================================
+INFO - 2026-02-16 17:52:24 --> 🔑 CODE DE RÉINITIALISATION
+INFO - 2026-02-16 17:52:24 --> Email: bordjisofia1@gmail.com
+INFO - 2026-02-16 17:52:24 --> Code: 878396
+INFO - 2026-02-16 17:52:24 --> Expire dans: 15 minutes
+INFO - 2026-02-16 17:52:24 --> ========================================
+ERROR - 2026-02-16 17:52:27 --> ❌ Échec de l'envoi de l'email à: bordjisofia1@gmail.com
+ERROR - 2026-02-16 17:52:27 --> Vérifiez la configuration SMTP dans php.ini et sendmail.ini
+INFO - 2026-02-16 17:55:10 --> ========================================
+INFO - 2026-02-16 17:55:10 --> 🔑 CODE DE RÉINITIALISATION
+INFO - 2026-02-16 17:55:10 --> Email: bordjisofia1@gmail.com
+INFO - 2026-02-16 17:55:10 --> Code: 928779
+INFO - 2026-02-16 17:55:10 --> Expire dans: 15 minutes
+INFO - 2026-02-16 17:55:10 --> ========================================
+ERROR - 2026-02-16 17:55:13 --> ❌ Échec de l'envoi de l'email à: bordjisofia1@gmail.com
+ERROR - 2026-02-16 17:55:13 --> Vérifiez la configuration SMTP dans php.ini et sendmail.ini
+INFO - 2026-02-16 18:03:37 --> ========================================
+INFO - 2026-02-16 18:03:37 --> 🔑 CODE DE RÉINITIALISATION
+INFO - 2026-02-16 18:03:37 --> Email: bordjisofia1@gmail.com
+INFO - 2026-02-16 18:03:37 --> Code: 750254
+INFO - 2026-02-16 18:03:37 --> Expire dans: 15 minutes
+INFO - 2026-02-16 18:03:37 --> ========================================
+ERROR - 2026-02-16 18:03:40 --> ❌ Échec de l'envoi de l'email à: bordjisofia1@gmail.com
+ERROR - 2026-02-16 18:03:40 --> Vérifiez la configuration SMTP dans php.ini et sendmail.ini
+CRITICAL - 2026-02-16 18:04:12 --> ErrorException: A non-numeric value encountered
+in APPPATH\Controllers\PasswordResetController.php on line 296.
+ 1 APPPATH\Controllers\PasswordResetController.php(296): CodeIgniter\Debug\Exceptions->errorHandler(2, 'A non-numeric value encountered', 'C:\\xampp81\\htdocs\\CodeIgniter4-4.4.7\\app\\Controllers\\PasswordResetController.php', 296)
+ 2 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\PasswordResetController->verifyResetCode()
+ 3 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PasswordResetController))
+ 4 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 5 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-16 18:04:20 --> ErrorException: A non-numeric value encountered
+in APPPATH\Controllers\PasswordResetController.php on line 296.
+ 1 APPPATH\Controllers\PasswordResetController.php(296): CodeIgniter\Debug\Exceptions->errorHandler(2, 'A non-numeric value encountered', 'C:\\xampp81\\htdocs\\CodeIgniter4-4.4.7\\app\\Controllers\\PasswordResetController.php', 296)
+ 2 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\PasswordResetController->verifyResetCode()
+ 3 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PasswordResetController))
+ 4 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 5 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+INFO - 2026-02-16 18:08:22 --> ========================================
+INFO - 2026-02-16 18:08:22 --> 🔑 CODE DE RÉINITIALISATION
+INFO - 2026-02-16 18:08:22 --> Email: bordjisofia1@gmail.com
+INFO - 2026-02-16 18:08:22 --> Code: 139965
+INFO - 2026-02-16 18:08:22 --> Expire dans: 15 minutes
+INFO - 2026-02-16 18:08:22 --> ========================================
+ERROR - 2026-02-16 18:08:24 --> ❌ Échec de l'envoi de l'email à: bordjisofia1@gmail.com
+ERROR - 2026-02-16 18:08:24 --> Vérifiez la configuration SMTP dans php.ini et sendmail.ini
+INFO - 2026-02-16 18:10:26 --> ========================================
+INFO - 2026-02-16 18:10:26 --> 🔑 CODE DE RÉINITIALISATION
+INFO - 2026-02-16 18:10:26 --> Email: bordjisofia1@gmail.com
+INFO - 2026-02-16 18:10:26 --> Code: 264661
+INFO - 2026-02-16 18:10:26 --> Expire dans: 15 minutes
+INFO - 2026-02-16 18:10:26 --> ========================================
+ERROR - 2026-02-16 18:10:29 --> ❌ Échec de l'envoi de l'email à: bordjisofia1@gmail.com
+ERROR - 2026-02-16 18:10:29 --> Vérifiez la configuration SMTP dans php.ini et sendmail.ini
+INFO - 2026-02-16 18:12:02 --> ========================================
+INFO - 2026-02-16 18:12:02 --> 🔑 CODE DE RÉINITIALISATION
+INFO - 2026-02-16 18:12:02 --> Email: wardaslimen17@gmail.com
+INFO - 2026-02-16 18:12:02 --> Code: 743602
+INFO - 2026-02-16 18:12:02 --> Expire dans: 15 minutes
+INFO - 2026-02-16 18:12:02 --> ========================================
+ERROR - 2026-02-16 18:12:04 --> ❌ Échec de l'envoi de l'email à: wardaslimen17@gmail.com
+ERROR - 2026-02-16 18:12:04 --> Vérifiez la configuration SMTP dans php.ini et sendmail.ini
+INFO - 2026-02-16 18:12:45 --> ========================================
+INFO - 2026-02-16 18:12:45 --> 🔑 CODE DE RÉINITIALISATION
+INFO - 2026-02-16 18:12:45 --> Email: wardaslimen17@gmail.com
+INFO - 2026-02-16 18:12:45 --> Code: 598996
+INFO - 2026-02-16 18:12:45 --> Expire dans: 15 minutes
+INFO - 2026-02-16 18:12:45 --> ========================================
+ERROR - 2026-02-16 18:12:49 --> ❌ Échec de l'envoi de l'email à: wardaslimen17@gmail.com
+ERROR - 2026-02-16 18:12:49 --> Vérifiez la configuration SMTP dans php.ini et sendmail.ini
+INFO - 2026-02-16 18:13:26 --> ========================================
+INFO - 2026-02-16 18:13:26 --> 🔑 CODE DE RÉINITIALISATION
+INFO - 2026-02-16 18:13:26 --> Email: wardaslimen17@gmail.com
+INFO - 2026-02-16 18:13:26 --> Code: 713590
+INFO - 2026-02-16 18:13:26 --> Expire dans: 15 minutes
+INFO - 2026-02-16 18:13:26 --> ========================================
+ERROR - 2026-02-16 18:13:28 --> ❌ Échec de l'envoi de l'email à: wardaslimen17@gmail.com
+ERROR - 2026-02-16 18:13:28 --> Vérifiez la configuration SMTP dans php.ini et sendmail.ini
+INFO - 2026-02-16 18:13:44 --> ========================================
+INFO - 2026-02-16 18:13:44 --> 🔑 CODE DE RÉINITIALISATION
+INFO - 2026-02-16 18:13:44 --> Email: wardaslimen17@gmail.com
+INFO - 2026-02-16 18:13:44 --> Code: 206779
+INFO - 2026-02-16 18:13:44 --> Expire dans: 15 minutes
+INFO - 2026-02-16 18:13:44 --> ========================================
+ERROR - 2026-02-16 18:13:46 --> ❌ Échec de l'envoi de l'email à: wardaslimen17@gmail.com
+ERROR - 2026-02-16 18:13:46 --> Vérifiez la configuration SMTP dans php.ini et sendmail.ini
+INFO - 2026-02-16 18:16:42 --> ========================================
+INFO - 2026-02-16 18:16:42 --> 🔑 CODE DE RÉINITIALISATION
+INFO - 2026-02-16 18:16:42 --> Email: bordjisofia1@gmail.com
+INFO - 2026-02-16 18:16:42 --> Code: 917953
+INFO - 2026-02-16 18:16:42 --> Expire dans: 15 minutes
+INFO - 2026-02-16 18:16:42 --> ========================================
+ERROR - 2026-02-16 18:16:45 --> ❌ Échec de l'envoi de l'email à: bordjisofia1@gmail.com
+ERROR - 2026-02-16 18:16:45 --> Vérifiez la configuration SMTP dans php.ini et sendmail.ini
+INFO - 2026-02-16 18:36:25 --> ========================================
+INFO - 2026-02-16 18:36:25 --> 🔑 CODE DE RÉINITIALISATION
+INFO - 2026-02-16 18:36:25 --> Email: wardaslimen17@gmail.com
+INFO - 2026-02-16 18:36:25 --> Code: 416924
+INFO - 2026-02-16 18:36:25 --> Expire dans: 15 minutes
+INFO - 2026-02-16 18:36:25 --> ========================================
+ERROR - 2026-02-16 18:36:32 --> ❌ Échec de l'envoi de l'email à: wardaslimen17@gmail.com
+ERROR - 2026-02-16 18:36:32 --> Vérifiez la configuration SMTP dans php.ini et sendmail.ini
+ERROR - 2026-02-16 18:50:00 --> Email: Unable to send email using SMTP. Your server might not be configured to send mail using this method.
+ERROR - 2026-02-16 18:50:00 --> 220 smtp-relay.brevo.com ESMTP Service Ready
+
+hello: 250-Hello localhost
+250-PIPELINING
+250-8BITMIME
+250-ENHANCEDSTATUSCODES
+250-CHUNKING
+250-STARTTLS
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 SIZE 20971520
+
+starttls: 220 2.0.0 Ready to start TLS
+
+hello: 250-Hello localhost
+250-PIPELINING
+250-8BITMIME
+250-ENHANCEDSTATUSCODES
+250-CHUNKING
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 SIZE 20971520
+
+Failed to authenticate password. Error: 535 5.7.8 Authentication failed
+
+ERROR - 2026-02-16 18:50:00 --> ❌ Échec de l'envoi de l'email à: bordjisofia1@gmail.com
+ERROR - 2026-02-16 18:50:00 --> 220 smtp-relay.brevo.com ESMTP Service Ready
+<br><pre>hello: 250-Hello localhost
+250-PIPELINING
+250-8BITMIME
+250-ENHANCEDSTATUSCODES
+250-CHUNKING
+250-STARTTLS
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 SIZE 20971520
+</pre><pre>starttls: 220 2.0.0 Ready to start TLS
+</pre><pre>hello: 250-Hello localhost
+250-PIPELINING
+250-8BITMIME
+250-ENHANCEDSTATUSCODES
+250-CHUNKING
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 SIZE 20971520
+</pre>Failed to authenticate password. Error: 535 5.7.8 Authentication failed
+<br>Unable to send email using SMTP. Your server might not be configured to send mail using this method.<br><pre>Date: Mon, 16 Feb 2026 18:49:59 +0000
+To: bordjisofia1@gmail.com
+From: &quot;CRM Mobile&quot; &lt;ghoufranbensassy@gmail.com&gt;
+Return-Path: &lt;ghoufranbensassy@gmail.com&gt;
+Reply-To: &quot;Support CRM&quot; &lt;support@crm-mobile.com&gt;
+Subject: =?UTF-8?Q?Code=20de=20r=C3=A9initialisation=20-=20CRM=20Mobile?=
+User-Agent: CodeIgniter
+X-Sender: ghoufranbensassy@gmail.com
+X-Mailer: CodeIgniter
+X-Priority: 3 (Normal)
+Message-ID: &lt;699366d7a44d12.05116208@gmail.com&gt;
+Mime-Version: 1.0
+
+</pre>
+ERROR - 2026-02-16 18:50:27 --> Email: Unable to send email using SMTP. Your server might not be configured to send mail using this method.
+ERROR - 2026-02-16 18:50:27 --> 220 smtp-relay.brevo.com ESMTP Service Ready
+
+hello: 250-Hello localhost
+250-PIPELINING
+250-8BITMIME
+250-ENHANCEDSTATUSCODES
+250-CHUNKING
+250-STARTTLS
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 SIZE 20971520
+
+starttls: 220 2.0.0 Ready to start TLS
+
+hello: 250-Hello localhost
+250-PIPELINING
+250-8BITMIME
+250-ENHANCEDSTATUSCODES
+250-CHUNKING
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 SIZE 20971520
+
+Failed to authenticate password. Error: 535 5.7.8 Authentication failed
+
+ERROR - 2026-02-16 18:50:27 --> ❌ Échec de l'envoi de l'email à: bordjisofia1@gmail.com
+ERROR - 2026-02-16 18:50:27 --> 220 smtp-relay.brevo.com ESMTP Service Ready
+<br><pre>hello: 250-Hello localhost
+250-PIPELINING
+250-8BITMIME
+250-ENHANCEDSTATUSCODES
+250-CHUNKING
+250-STARTTLS
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 SIZE 20971520
+</pre><pre>starttls: 220 2.0.0 Ready to start TLS
+</pre><pre>hello: 250-Hello localhost
+250-PIPELINING
+250-8BITMIME
+250-ENHANCEDSTATUSCODES
+250-CHUNKING
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 SIZE 20971520
+</pre>Failed to authenticate password. Error: 535 5.7.8 Authentication failed
+<br>Unable to send email using SMTP. Your server might not be configured to send mail using this method.<br><pre>Date: Mon, 16 Feb 2026 18:50:25 +0000
+To: bordjisofia1@gmail.com
+From: &quot;CRM Mobile&quot; &lt;ghoufranbensassy@gmail.com&gt;
+Return-Path: &lt;ghoufranbensassy@gmail.com&gt;
+Reply-To: &quot;Support CRM&quot; &lt;support@crm-mobile.com&gt;
+Subject: =?UTF-8?Q?Code=20de=20r=C3=A9initialisation=20-=20CRM=20Mobile?=
+User-Agent: CodeIgniter
+X-Sender: ghoufranbensassy@gmail.com
+X-Mailer: CodeIgniter
+X-Priority: 3 (Normal)
+Message-ID: &lt;699366f1d2da75.52294215@gmail.com&gt;
+Mime-Version: 1.0
+
+</pre>
+INFO - 2026-02-16 18:55:27 --> ✅ Email envoyé avec succès à: bordjisofia1@gmail.com
+ERROR - 2026-02-16 18:57:31 --> Échec de l'envoi de l'email de réinitialisation à: bordjisofia1@gmail.com
+INFO - 2026-02-16 18:58:42 --> ✅ Email envoyé avec succès à: bordjisofia1@gmail.com
+ERROR - 2026-02-16 18:59:21 --> Email: Unable to send email using SMTP. Your server might not be configured to send mail using this method.
+ERROR - 2026-02-16 18:59:21 --> 220 smtp-relay.brevo.com ESMTP Service Ready
+
+hello: 250-Hello localhost
+250-PIPELINING
+250-8BITMIME
+250-ENHANCEDSTATUSCODES
+250-CHUNKING
+250-STARTTLS
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 SIZE 20971520
+
+starttls: 220 2.0.0 Ready to start TLS
+
+hello: 250-Hello localhost
+250-PIPELINING
+250-8BITMIME
+250-ENHANCEDSTATUSCODES
+250-CHUNKING
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 SIZE 20971520
+
+Failed to authenticate password. Error: 535 5.7.8 Authentication failed
+
+ERROR - 2026-02-16 18:59:21 --> Erreur envoi email: 220 smtp-relay.brevo.com ESMTP Service Ready
+<br><pre>hello: 250-Hello localhost
+250-PIPELINING
+250-8BITMIME
+250-ENHANCEDSTATUSCODES
+250-CHUNKING
+250-STARTTLS
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 SIZE 20971520
+</pre><pre>starttls: 220 2.0.0 Ready to start TLS
+</pre><pre>hello: 250-Hello localhost
+250-PIPELINING
+250-8BITMIME
+250-ENHANCEDSTATUSCODES
+250-CHUNKING
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 SIZE 20971520
+</pre>Failed to authenticate password. Error: 535 5.7.8 Authentication failed
+<br>Unable to send email using SMTP. Your server might not be configured to send mail using this method.<br><pre>Date: Mon, 16 Feb 2026 18:59:20 +0000
+From: &quot;CRM Mobile&quot; &lt;noreply@crm-mobile.com&gt;
+Return-Path: &lt;noreply@crm-mobile.com&gt;
+To: bordjisofia1@gmail.com
+Subject: =?UTF-8?Q?Code=20de=20r=C3=A9initialisation=20-=20CRM=20Mobile?=
+Reply-To: &lt;noreply@crm-mobile.com&gt;
+User-Agent: CodeIgniter
+X-Sender: noreply@crm-mobile.com
+X-Mailer: CodeIgniter
+X-Priority: 3 (Normal)
+Message-ID: &lt;699369084e94c4.22450834@crm-mobile.com&gt;
+Mime-Version: 1.0
+
+</pre>
+ERROR - 2026-02-16 19:01:15 --> Email: Unable to send email using SMTP. Your server might not be configured to send mail using this method.
+ERROR - 2026-02-16 19:01:15 --> 220 smtp-relay.brevo.com ESMTP Service Ready
+
+hello: 250-Hello localhost
+250-PIPELINING
+250-8BITMIME
+250-ENHANCEDSTATUSCODES
+250-CHUNKING
+250-STARTTLS
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 SIZE 20971520
+
+starttls: 220 2.0.0 Ready to start TLS
+
+hello: 250-Hello localhost
+250-PIPELINING
+250-8BITMIME
+250-ENHANCEDSTATUSCODES
+250-CHUNKING
+250-AUTH LOGIN CRAM-MD5 PLAIN
+250 SIZE 20971520
+
+Failed to authenticate password. Error: 535 5.7.8 Authentication failed
+
+ERROR - 2026-02-16 19:01:15 --> Erreur envoi email: 220 smtp-relay.brevo.com ESMTP Service Ready
+<br><pre>hello: 250-Hello localhost
+250-PIPELINING
+250-8BITMIME
+250-ENHANCEDSTATUSCODES
+250-CHUNKING
+250-STARTTLS
+250-AUTH PLAIN LOGIN CRAM-MD5
+250 SIZE 20971520
+</pre><pre>starttls: 220 2.0.0 Ready to start TLS
+</pre><pre>hello: 250-Hello localhost
+250-PIPELINING
+250-8BITMIME
+250-ENHANCEDSTATUSCODES
+250-CHUNKING
+250-AUTH LOGIN CRAM-MD5 PLAIN
+250 SIZE 20971520
+</pre>Failed to authenticate password. Error: 535 5.7.8 Authentication failed
+<br>Unable to send email using SMTP. Your server might not be configured to send mail using this method.<br><pre>Date: Mon, 16 Feb 2026 19:01:14 +0000
+From: &quot;CRM Mobile&quot; &lt;ghoufranbensassy@gmail.com&gt;
+Return-Path: &lt;ghoufranbensassy@gmail.com&gt;
+To: bordjisofia1@gmail.com
+Subject: =?UTF-8?Q?Code=20de=20r=C3=A9initialisation=20-=20CRM=20Mobile?=
+Reply-To: &lt;ghoufranbensassy@gmail.com&gt;
+User-Agent: CodeIgniter
+X-Sender: ghoufranbensassy@gmail.com
+X-Mailer: CodeIgniter
+X-Priority: 3 (Normal)
+Message-ID: &lt;6993697ace8965.06651679@gmail.com&gt;
+Mime-Version: 1.0
+
+</pre>
+INFO - 2026-02-16 19:06:25 --> ✅ Email envoyé avec succès à: bordjisofia1@gmail.com
+INFO - 2026-02-16 19:11:34 --> ✅ Email envoyé avec succès à: bordjisofia1@gmail.com
+CRITICAL - 2026-02-16 19:12:27 --> ErrorException: A non-numeric value encountered
+in APPPATH\Controllers\PasswordResetController.php on line 135.
+ 1 APPPATH\Controllers\PasswordResetController.php(135): CodeIgniter\Debug\Exceptions->errorHandler(2, 'A non-numeric value encountered', 'C:\\xampp81\\htdocs\\CodeIgniter4-4.4.7\\app\\Controllers\\PasswordResetController.php', 135)
+ 2 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\PasswordResetController->verifyResetCode()
+ 3 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PasswordResetController))
+ 4 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 5 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-16 19:17:10 --> CodeIgniter\HTTP\Exceptions\HTTPException: Failed to parse JSON string. Error: Syntax error
+in SYSTEMPATH\HTTP\IncomingRequest.php on line 588.
+ 1 SYSTEMPATH\HTTP\IncomingRequest.php(588): CodeIgniter\HTTP\Exceptions\HTTPException::forInvalidJSON('Syntax error')
+ 2 APPPATH\Controllers\PasswordResetController.php(120): CodeIgniter\HTTP\IncomingRequest->getJSON(true)
+ 3 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\PasswordResetController->verifyResetCode()
+ 4 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PasswordResetController))
+ 5 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-16 19:19:00 --> CodeIgniter\HTTP\Exceptions\HTTPException: Failed to parse JSON string. Error: Syntax error
+in SYSTEMPATH\HTTP\IncomingRequest.php on line 588.
+ 1 SYSTEMPATH\HTTP\IncomingRequest.php(588): CodeIgniter\HTTP\Exceptions\HTTPException::forInvalidJSON('Syntax error')
+ 2 APPPATH\Controllers\PasswordResetController.php(120): CodeIgniter\HTTP\IncomingRequest->getJSON(true)
+ 3 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\PasswordResetController->verifyResetCode()
+ 4 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PasswordResetController))
+ 5 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-16 19:19:01 --> CodeIgniter\HTTP\Exceptions\HTTPException: Failed to parse JSON string. Error: Syntax error
+in SYSTEMPATH\HTTP\IncomingRequest.php on line 588.
+ 1 SYSTEMPATH\HTTP\IncomingRequest.php(588): CodeIgniter\HTTP\Exceptions\HTTPException::forInvalidJSON('Syntax error')
+ 2 APPPATH\Controllers\PasswordResetController.php(120): CodeIgniter\HTTP\IncomingRequest->getJSON(true)
+ 3 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\PasswordResetController->verifyResetCode()
+ 4 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PasswordResetController))
+ 5 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-16 19:20:04 --> ErrorException: A non-numeric value encountered
+in APPPATH\Controllers\PasswordResetController.php on line 142.
+ 1 APPPATH\Controllers\PasswordResetController.php(142): CodeIgniter\Debug\Exceptions->errorHandler(2, 'A non-numeric value encountered', 'C:\\xampp81\\htdocs\\CodeIgniter4-4.4.7\\app\\Controllers\\PasswordResetController.php', 142)
+ 2 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\PasswordResetController->verifyResetCode()
+ 3 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PasswordResetController))
+ 4 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 5 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-16 19:20:07 --> ErrorException: A non-numeric value encountered
+in APPPATH\Controllers\PasswordResetController.php on line 142.
+ 1 APPPATH\Controllers\PasswordResetController.php(142): CodeIgniter\Debug\Exceptions->errorHandler(2, 'A non-numeric value encountered', 'C:\\xampp81\\htdocs\\CodeIgniter4-4.4.7\\app\\Controllers\\PasswordResetController.php', 142)
+ 2 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\PasswordResetController->verifyResetCode()
+ 3 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PasswordResetController))
+ 4 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 5 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-16 19:20:33 --> ErrorException: A non-numeric value encountered
+in APPPATH\Controllers\PasswordResetController.php on line 142.
+ 1 APPPATH\Controllers\PasswordResetController.php(142): CodeIgniter\Debug\Exceptions->errorHandler(2, 'A non-numeric value encountered', 'C:\\xampp81\\htdocs\\CodeIgniter4-4.4.7\\app\\Controllers\\PasswordResetController.php', 142)
+ 2 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\PasswordResetController->verifyResetCode()
+ 3 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PasswordResetController))
+ 4 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 5 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-16 19:20:44 --> ErrorException: A non-numeric value encountered
+in APPPATH\Controllers\PasswordResetController.php on line 142.
+ 1 APPPATH\Controllers\PasswordResetController.php(142): CodeIgniter\Debug\Exceptions->errorHandler(2, 'A non-numeric value encountered', 'C:\\xampp81\\htdocs\\CodeIgniter4-4.4.7\\app\\Controllers\\PasswordResetController.php', 142)
+ 2 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\PasswordResetController->verifyResetCode()
+ 3 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PasswordResetController))
+ 4 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 5 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-16 19:20:57 --> ErrorException: A non-numeric value encountered
+in APPPATH\Controllers\PasswordResetController.php on line 142.
+ 1 APPPATH\Controllers\PasswordResetController.php(142): CodeIgniter\Debug\Exceptions->errorHandler(2, 'A non-numeric value encountered', 'C:\\xampp81\\htdocs\\CodeIgniter4-4.4.7\\app\\Controllers\\PasswordResetController.php', 142)
+ 2 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\PasswordResetController->verifyResetCode()
+ 3 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PasswordResetController))
+ 4 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 5 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+INFO - 2026-02-16 19:24:18 --> Email envoyé à: bordjisofia1@gmail.com
+INFO - 2026-02-16 19:26:58 --> ✅ Email envoyé avec succès à: bordjisofia1@gmail.com
+CRITICAL - 2026-02-16 19:27:40 --> ErrorException: A non-numeric value encountered
+in APPPATH\Controllers\PasswordResetController.php on line 141.
+ 1 APPPATH\Controllers\PasswordResetController.php(141): CodeIgniter\Debug\Exceptions->errorHandler(2, 'A non-numeric value encountered', 'C:\\xampp81\\htdocs\\CodeIgniter4-4.4.7\\app\\Controllers\\PasswordResetController.php', 141)
+ 2 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\PasswordResetController->verifyResetCode()
+ 3 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PasswordResetController))
+ 4 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 5 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-16 19:27:58 --> ErrorException: A non-numeric value encountered
+in APPPATH\Controllers\PasswordResetController.php on line 141.
+ 1 APPPATH\Controllers\PasswordResetController.php(141): CodeIgniter\Debug\Exceptions->errorHandler(2, 'A non-numeric value encountered', 'C:\\xampp81\\htdocs\\CodeIgniter4-4.4.7\\app\\Controllers\\PasswordResetController.php', 141)
+ 2 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\PasswordResetController->verifyResetCode()
+ 3 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PasswordResetController))
+ 4 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 5 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+INFO - 2026-02-16 19:36:16 --> ✅ Email envoyé avec succès à: bordjisofia1@gmail.com
+INFO - 2026-02-16 19:39:04 --> ✅ Email envoyé avec succès à: bordjisofia1@gmail.com
+INFO - 2026-02-16 19:53:10 --> ✅ Email envoyé avec succès à: bordjisofia1@gmail.com
+INFO - 2026-02-16 20:00:52 --> ✅ Email envoyé avec succès à: bordjisofia1@gmail.com
+INFO - 2026-02-16 20:19:25 --> ✅ Email envoyé avec succès à: ibtihel.elghoul@gmail.com

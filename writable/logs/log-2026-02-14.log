@@ -1,0 +1,31 @@
+CRITICAL - 2026-02-14 07:23:45 --> ErrorException: Declaration of CodeIgniter\I18n\TimeTrait::createFromTimestamp(int $timestamp, $timezone = null, ?string $locale = null) must be compatible with DateTimeImmutable::createFromTimestamp(int|float $timestamp): CodeIgniter\Autoloader\Autoloader
+in SYSTEMPATH\I18n\TimeTrait.php on line 266.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
+CRITICAL - 2026-02-14 07:24:11 --> ErrorException: Declaration of CodeIgniter\I18n\TimeTrait::createFromTimestamp(int $timestamp, $timezone = null, ?string $locale = null) must be compatible with DateTimeImmutable::createFromTimestamp(int|float $timestamp): CodeIgniter\Autoloader\Autoloader
+in SYSTEMPATH\I18n\TimeTrait.php on line 266.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->shutdownHandler()
+INFO - 2026-02-14 19:18:27 --> registerCompany: Client created successfully - ID: 4, Company: Test SARL
+INFO - 2026-02-14 19:36:22 --> registerCompany: Client created successfully - ID: 5, Company: startNow
+INFO - 2026-02-14 19:42:19 --> registerCompany: Client created successfully - ID: 6, Company: iset
+INFO - 2026-02-14 19:43:32 --> registerContact: Contact created successfully - ID: 2, Email: alaa@gmail.com
+INFO - 2026-02-14 20:14:26 --> registerCompany: Client created successfully - ID: 7, Company: stn
+INFO - 2026-02-14 20:16:24 --> registerContact: Contact created successfully - ID: 3, Email: slimen@gmail.com
+WARNING - 2026-02-14 20:16:46 --> login: Invalid password for email: slimen@gmail.com
+WARNING - 2026-02-14 20:17:12 --> login: Invalid password for email: alaa@gmail.com
+INFO - 2026-02-14 20:17:52 --> registerCompany: Client created successfully - ID: 8, Company: mg
+WARNING - 2026-02-14 20:19:17 --> login: Email not found: ala@gmail.com
+WARNING - 2026-02-14 20:19:29 --> login: Email not found: ala@gmail.com
+WARNING - 2026-02-14 20:19:34 --> login: Email not found: ala@gmail.com
+WARNING - 2026-02-14 20:19:40 --> login: Email not found: ala@gmail.com
+WARNING - 2026-02-14 20:19:45 --> login: Email not found: ala@gmail.com
+WARNING - 2026-02-14 20:19:53 --> login: Invalid password for email: alaa@gmail.com
+WARNING - 2026-02-14 20:20:51 --> login: Invalid password for email: slimen@gmail.com
+WARNING - 2026-02-14 20:20:55 --> login: Invalid password for email: slimen@gmail.com
+WARNING - 2026-02-14 20:26:49 --> login: Invalid password for email: alaa@gmail.com
+WARNING - 2026-02-14 20:27:30 --> login: Invalid password for email: slimen@gmail.com
+INFO - 2026-02-14 20:34:02 --> registerCompany: Client created successfully - ID: 1, Company: Test Company
+INFO - 2026-02-14 20:34:29 --> registerContact: Contact created successfully - ID: 1, Email: john.doe@example.com
+INFO - 2026-02-14 20:35:04 --> login: Successful login - Email: john.doe@example.com, Contact ID: 1
+INFO - 2026-02-14 20:35:15 --> login: Successful login - Email: john.doe@example.com, Contact ID: 1
+INFO - 2026-02-14 20:36:46 --> login: Successful login - Email: john.doe@example.com, Contact ID: 1
+INFO - 2026-02-14 20:37:02 --> logout: User logged out - Contact ID: 1
