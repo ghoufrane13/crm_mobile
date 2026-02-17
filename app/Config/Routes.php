@@ -41,4 +41,9 @@ $routes->group('api', function ($routes) {
     $routes->post('password/request-reset', 'PasswordResetController::requestReset');
     $routes->post('password/verify-code', 'PasswordResetController::verifyResetCode');
     $routes->post('password/reset', 'PasswordResetController::resetPassword');
+    $routes->get('profile', 'ProfileController::getProfile');
+$routes->post('profile/update', 'ProfileController::updateContact');
+$routes->post('profile/update-company', 'ProfileController::updateCompany');
+$routes->post('profile/upload-image', 'ProfileController::uploadImage');
+$routes->post('profile/change-password', 'ProfileController::changePassword');
 });

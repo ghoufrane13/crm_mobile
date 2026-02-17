@@ -17,7 +17,16 @@ class ContactModel extends Model
         'password',
         'phonenumber',
         'is_primary',
-        'active'
+        'active',
+        'new_pass_key',
+        'new_pass_key_requested',
+        'password',
+        'last_password_change',
+        'email_verification_key',
+        'email_verification_sent_at',
+        'profile_image',
+        'title',
+        'direction',
     ];
 
     protected $useTimestamps = false;
