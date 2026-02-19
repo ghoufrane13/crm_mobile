@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use CodeIgniter\RESTful\ResourceController;
 use App\Models\ContactModel;
-use App\Models\ClientModel; // modèle pour la table clients/companies
+use App\Models\ClientModel;
 
 class ProfileController extends ResourceController
 {
@@ -29,10 +29,17 @@ class ProfileController extends ResourceController
             return $this->fail('Contact introuvable', 404);
         }
 
-        // Récupérer la société liée
+        // Récupérer la société liée avec les noms de pays
         $db = \Config\Database::connect();
-        $client = $db->table('tblclients')
-            ->where('userid', $contact['userid'])
+        $client = $db->table('tblclients c')
+            ->select('c.*, 
+                      tc.short_name  as country_name,
+                      tc2.short_name as billing_country_name,
+                      tc3.short_name as shipping_country_name')
+            ->join('tblcountries tc',  'tc.country_id  = c.country',          'left')
+            ->join('tblcountries tc2', 'tc2.country_id = c.billing_country',  'left')
+            ->join('tblcountries tc3', 'tc3.country_id = c.shipping_country', 'left')
+            ->where('c.userid', $contact['userid'])
             ->get()
             ->getRowArray();
 
@@ -49,26 +56,48 @@ class ProfileController extends ResourceController
                 'profile_image' => $contact['profile_image'],
             ],
             'company' => $client ? [
-                'company'          => $client['company'],
-                'vat'              => $client['vat'],
-                'phonenumber'      => $client['phonenumber'],
-                'country'          => $client['country'],
-                'city'             => $client['city'],
-                'zip'              => $client['zip'],
-                'state'            => $client['state'],
-                'address'          => $client['address'],
-                'website'          => $client['website'],
-                'billing_street'   => $client['billing_street'],
-                'billing_city'     => $client['billing_city'],
-                'billing_state'    => $client['billing_state'],
-                'billing_zip'      => $client['billing_zip'],
-                'billing_country'  => $client['billing_country'],
-                'shipping_street'  => $client['shipping_street'],
-                'shipping_city'    => $client['shipping_city'],
-                'shipping_state'   => $client['shipping_state'],
-                'shipping_zip'     => $client['shipping_zip'],
-                'shipping_country' => $client['shipping_country'],
+                'company'              => $client['company'],
+                'vat'                  => $client['vat'],
+                'phonenumber'          => $client['phonenumber'],
+                'country_id'           => (int) $client['country'],           // ID entier pour le dropdown Flutter
+                'country'              => $client['country_name'] ?? '',       // Nom affiché
+                'city'                 => $client['city'],
+                'zip'                  => $client['zip'],
+                'state'                => $client['state'],
+                'address'              => $client['address'],
+                'website'              => $client['website'],
+                'billing_street'       => $client['billing_street'],
+                'billing_city'         => $client['billing_city'],
+                'billing_state'        => $client['billing_state'],
+                'billing_zip'          => $client['billing_zip'],
+                'billing_country_id'   => (int) $client['billing_country'],
+                'billing_country'      => $client['billing_country_name'] ?? '',
+                'shipping_street'      => $client['shipping_street'],
+                'shipping_city'        => $client['shipping_city'],
+                'shipping_state'       => $client['shipping_state'],
+                'shipping_zip'         => $client['shipping_zip'],
+                'shipping_country_id'  => (int) $client['shipping_country'],
+                'shipping_country'     => $client['shipping_country_name'] ?? '',
             ] : null,
+        ]);
+    }
+
+    /**
+     * GET /profile/countries
+     * Retourne la liste de tous les pays
+     */
+    public function getCountries()
+    {
+        $db = \Config\Database::connect();
+        $countries = $db->table('tblcountries')
+            ->select('country_id, short_name')
+            ->orderBy('short_name', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        return $this->respond([
+            'status'    => true,
+            'countries' => $countries,
         ]);
     }
 
@@ -141,25 +170,25 @@ class ProfileController extends ResourceController
 
         $updateData = [];
 
-        if (isset($data['company']))         $updateData['company']         = trim($data['company']);
-        if (isset($data['vat']))             $updateData['vat']             = trim($data['vat']);
-        if (isset($data['phonenumber']))     $updateData['phonenumber']     = trim($data['phonenumber']);
-        if (isset($data['country']))         $updateData['country']         = trim($data['country']);
-        if (isset($data['city']))            $updateData['city']            = trim($data['city']);
-        if (isset($data['zip']))             $updateData['zip']             = trim($data['zip']);
-        if (isset($data['state']))           $updateData['state']           = trim($data['state']);
-        if (isset($data['address']))         $updateData['address']         = trim($data['address']);
-        if (isset($data['website']))         $updateData['website']         = trim($data['website']);
-        if (isset($data['billing_street']))  $updateData['billing_street']  = trim($data['billing_street']);
-        if (isset($data['billing_city']))    $updateData['billing_city']    = trim($data['billing_city']);
-        if (isset($data['billing_state']))   $updateData['billing_state']   = trim($data['billing_state']);
-        if (isset($data['billing_zip']))     $updateData['billing_zip']     = trim($data['billing_zip']);
-        if (isset($data['billing_country'])) $updateData['billing_country'] = trim($data['billing_country']);
-        if (isset($data['shipping_street'])) $updateData['shipping_street'] = trim($data['shipping_street']);
-        if (isset($data['shipping_city']))   $updateData['shipping_city']   = trim($data['shipping_city']);
-        if (isset($data['shipping_state']))  $updateData['shipping_state']  = trim($data['shipping_state']);
-        if (isset($data['shipping_zip']))    $updateData['shipping_zip']    = trim($data['shipping_zip']);
-        if (isset($data['shipping_country']))$updateData['shipping_country']= trim($data['shipping_country']);
+        if (isset($data['company']))          $updateData['company']          = trim($data['company']);
+        if (isset($data['vat']))              $updateData['vat']              = trim($data['vat']);
+        if (isset($data['phonenumber']))      $updateData['phonenumber']      = trim($data['phonenumber']);
+        if (isset($data['country']))          $updateData['country']          = (int) $data['country'];          // ID entier
+        if (isset($data['city']))             $updateData['city']             = trim($data['city']);
+        if (isset($data['zip']))              $updateData['zip']              = trim($data['zip']);
+        if (isset($data['state']))            $updateData['state']            = trim($data['state']);
+        if (isset($data['address']))          $updateData['address']          = trim($data['address']);
+        if (isset($data['website']))          $updateData['website']          = trim($data['website']);
+        if (isset($data['billing_street']))   $updateData['billing_street']   = trim($data['billing_street']);
+        if (isset($data['billing_city']))     $updateData['billing_city']     = trim($data['billing_city']);
+        if (isset($data['billing_state']))    $updateData['billing_state']    = trim($data['billing_state']);
+        if (isset($data['billing_zip']))      $updateData['billing_zip']      = trim($data['billing_zip']);
+        if (isset($data['billing_country']))  $updateData['billing_country']  = (int) $data['billing_country'];  // ID entier
+        if (isset($data['shipping_street']))  $updateData['shipping_street']  = trim($data['shipping_street']);
+        if (isset($data['shipping_city']))    $updateData['shipping_city']    = trim($data['shipping_city']);
+        if (isset($data['shipping_state']))   $updateData['shipping_state']   = trim($data['shipping_state']);
+        if (isset($data['shipping_zip']))     $updateData['shipping_zip']     = trim($data['shipping_zip']);
+        if (isset($data['shipping_country'])) $updateData['shipping_country'] = (int) $data['shipping_country']; // ID entier
 
         if (empty($updateData)) {
             return $this->fail('Aucune donnée à mettre à jour', 400);
@@ -196,12 +225,11 @@ class ProfileController extends ResourceController
             return $this->fail('Format non supporté (jpg, png, gif, webp)', 400);
         }
 
-        // Max 5MB
         if ($file->getSize() > 5 * 1024 * 1024) {
             return $this->fail('Image trop lourde (max 5MB)', 400);
         }
 
-        $newName   = 'profile_' . $contactId . '_' . time() . '.' . $file->getExtension();
+        $newName    = 'profile_' . $contactId . '_' . time() . '.' . $file->getExtension();
         $uploadPath = WRITEPATH . 'uploads/profiles/';
 
         if (!is_dir($uploadPath)) {
@@ -211,9 +239,7 @@ class ProfileController extends ResourceController
         $file->move($uploadPath, $newName);
 
         $contactModel = new ContactModel();
-        $contactModel->update($contactId, [
-            'profile_image' => $newName,
-        ]);
+        $contactModel->update($contactId, ['profile_image' => $newName]);
 
         return $this->respond([
             'status'        => true,
@@ -230,9 +256,9 @@ class ProfileController extends ResourceController
     public function changePassword()
     {
         $data      = $this->request->getJSON(true);
-        $contactId = $data['contact_id']   ?? null;
-        $oldPass   = $data['old_password']  ?? null;
-        $newPass   = $data['new_password']  ?? null;
+        $contactId = $data['contact_id']  ?? null;
+        $oldPass   = $data['old_password'] ?? null;
+        $newPass   = $data['new_password'] ?? null;
 
         if (!$contactId || !$oldPass || !$newPass) {
             return $this->fail('contact_id, old_password et new_password requis', 400);

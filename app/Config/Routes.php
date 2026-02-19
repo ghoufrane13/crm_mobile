@@ -44,6 +44,7 @@ $routes->group('api', function ($routes) {
     $routes->get('profile', 'ProfileController::getProfile');
 $routes->post('profile/update', 'ProfileController::updateContact');
 $routes->post('profile/update-company', 'ProfileController::updateCompany');
+$routes->get('profile/countries', 'ProfileController::getCountries');
 $routes->post('profile/upload-image', 'ProfileController::uploadImage');
 $routes->post('profile/change-password', 'ProfileController::changePassword');
 });
