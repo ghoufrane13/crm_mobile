@@ -4,25 +4,21 @@ namespace App\Controllers;
 
 use CodeIgniter\RESTful\ResourceController;
 use App\Models\ContactModel;
-use Config\Services;
-use CodeIgniter\Email\Email;
+use App\Models\StaffModel;
 
 class PasswordResetController extends ResourceController
 {
     protected $format = 'json';
 
-    private function generateResetCode()
+    private function generateResetCode(): string
     {
-        return str_pad(rand(100000, 999999), 6, '0', STR_PAD_LEFT);
+        return str_pad((string)rand(100000, 999999), 6, '0', STR_PAD_LEFT);
     }
 
-    /**
-     * Envoie un email via SMTP (Brevo)
-     */
-    private function sendResetEmail($to, $resetCode, $firstname, $lastname)
+    private function sendResetEmail(string $to, string $resetCode,
+                                    string $firstname, string $lastname): bool
     {
         $subject = "Code de réinitialisation - CRM Mobile";
-
         $message = "
 <!DOCTYPE html>
 <html>
@@ -32,22 +28,23 @@ class PasswordResetController extends ResourceController
 body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#f5f5f5; padding:20px; }
 .email-container { max-width:600px; margin:0 auto; background:#fff; padding:30px; border-radius:15px; }
 .header { text-align:center; margin-bottom:20px; }
-.code-box { text-align:center; background:#9c27b0; padding:20px; border-radius:12px; margin:20px 0; color:white; font-size:36px; letter-spacing:8px; }
+.code-box { text-align:center; background:#1D4ED8; padding:20px; border-radius:12px;
+            margin:20px 0; color:white; font-size:36px; letter-spacing:8px; font-weight:800; }
+.note { color:#64748B; font-size:13px; text-align:center; }
 </style>
 </head>
 <body>
 <div class='email-container'>
-<div class='header'>
-<h2>Réinitialisation de mot de passe</h2>
-<p>Bonjour <strong>$firstname $lastname</strong>, utilisez ce code pour réinitialiser votre mot de passe :</p>
-</div>
-<div class='code-box'>$resetCode</div>
-<p>Ce code est valable pendant <strong>10 minutes</strong>.</p>
-<p>Si vous n'avez pas demandé ce code, ignorez cet email.</p>
+  <div class='header'>
+    <h2>Réinitialisation de mot de passe</h2>
+    <p>Bonjour <strong>$firstname $lastname</strong>, utilisez ce code pour réinitialiser votre mot de passe :</p>
+  </div>
+  <div class='code-box'>$resetCode</div>
+  <p class='note'>⏱ Ce code est valable <strong>10 minutes</strong>.<br>
+     Si vous n'avez pas demandé ce code, ignorez cet email.</p>
 </div>
 </body>
-</html>
-        ";
+</html>";
 
         $config = [
             'protocol'   => 'smtp',
@@ -64,100 +61,109 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 
         $email = \Config\Services::email();
         $email->initialize($config);
-
         $email->setFrom('ghoufranbensassy@gmail.com', 'CRM Mobile');
         $email->setTo($to);
         $email->setSubject($subject);
         $email->setMessage($message);
 
         if (!$email->send()) {
-            log_message('error', 'Erreur envoi email: ' . $email->printDebugger(['headers']));
+            log_message('error', 'Erreur envoi email reset: ' . $email->printDebugger(['headers']));
             return false;
         }
-
-        log_message('info', "✅ Email envoyé avec succès à: $to");
         return true;
     }
 
-    /**
-     * Étape 1 : Demande de réinitialisation → envoi du code par email
-     */
+    // =====================================================================
+    // POST /api/password/request-reset
+    // =====================================================================
     public function requestReset()
     {
-        $data = $this->request->getJSON(true);
+        $data  = $this->request->getJSON(true);
+        $email = strtolower(trim($data['email'] ?? ''));
 
-        if (empty($data['email'])) {
+        if (empty($email)) {
             return $this->fail('Email requis', 400);
         }
 
-        $email = trim(strtolower($data['email']));
+        $code      = $this->generateResetCode();
+        $expiresAt = date('Y-m-d H:i:s', time() + 600); // +10 min
+
+        // ── 1. Chercher dans tblcontacts ──────────────────────────────────
+        // Colonnes : email_verification_key + email_verification_sent_at
         $contactModel = new ContactModel();
         $contact = $contactModel->where('email', $email)->first();
 
-        if (!$contact || $contact['active'] == 0) {
-            return $this->respond([
-                'status'  => true,
-                'message' => 'Si cet email est enregistré, un code a été envoyé.'
+        if ($contact && (int)$contact['active'] === 1) {
+            $contactModel->update($contact['id'], [
+                'email_verification_key'     => $code,
+                'email_verification_sent_at' => $expiresAt,
             ]);
+            $this->sendResetEmail($email, $code,
+                $contact['firstname'] ?? '', $contact['lastname'] ?? '');
+
+            return $this->respond(['status' => true,
+                'message' => 'Si cet email est enregistré, un code a été envoyé.']);
         }
 
-        $resetCode = $this->generateResetCode();
+        // ── 2. Chercher dans tblstaff ─────────────────────────────────────
+        // Colonnes : two_factor_auth_code + two_factor_auth_code_requested
+        $staffModel = new StaffModel();
+        $staff = $staffModel->where('email', $email)->where('active', 1)->first();
 
-        // ✅ Code stocké dans email_verification_key
-        // ✅ email_verification_sent_at = maintenant + 10 min (heure d'expiration)
-        $contactModel->update($contact['id'], [
-            'email_verification_key'     => $resetCode,
-            'email_verification_sent_at' => date('Y-m-d H:i:s', time() + 600),
-        ]);
+        if ($staff) {
+            $staffModel->update($staff['staffid'], [
+                'two_factor_auth_code'           => $code,
+                'two_factor_auth_code_requested' => $expiresAt,
+            ]);
+            $this->sendResetEmail($email, $code,
+                $staff['firstname'] ?? '', $staff['lastname'] ?? '');
+        }
 
-        $this->sendResetEmail($email, $resetCode, $contact['firstname'], $contact['lastname']);
-
-        return $this->respond([
-            'status'  => true,
-            'message' => 'Si cet email est enregistré, un code a été envoyé.'
-        ]);
+        // Réponse générique (sécurité)
+        return $this->respond(['status' => true,
+            'message' => 'Si cet email est enregistré, un code a été envoyé.']);
     }
 
-    /**
-     * Étape 2 : Vérification du code saisi par l'utilisateur
-     */
+    // =====================================================================
+    // POST /api/password/verify-code
+    // =====================================================================
     public function verifyResetCode()
     {
         $data  = $this->request->getJSON(true);
-        $email = isset($data['email']) ? strtolower(trim($data['email'])) : null;
-        $code  = isset($data['code'])  ? trim($data['code'])              : null;
+        $email = strtolower(trim($data['email'] ?? ''));
+        $code  = trim($data['code'] ?? '');
 
         if (!$email || !$code) {
             return $this->respond(['status' => false, 'message' => 'Email et code requis'], 200);
         }
 
-        $contact = (new ContactModel())->where('email', $email)->first();
+        [$record, $type] = $this->_findByEmail($email);
 
-        if (!$contact || empty($contact['email_verification_key']) || empty($contact['email_verification_sent_at'])) {
+        if (!$record) {
             return $this->respond(['status' => false, 'message' => 'Code invalide ou expiré'], 200);
         }
 
-        // ✅ email_verification_sent_at contient la deadline directement
-        $expiresAt = strtotime($contact['email_verification_sent_at']);
-        if (!$expiresAt || time() > $expiresAt) {
+        // Colonnes selon le type
+        [$storedCode, $storedExpiry] = $this->_getCodeFields($record, $type);
+
+        if (empty($storedCode) || empty($storedExpiry)) {
+            return $this->respond(['status' => false, 'message' => 'Code invalide ou expiré'], 200);
+        }
+
+        if (time() > strtotime($storedExpiry)) {
             return $this->respond(['status' => false, 'message' => 'Code expiré'], 200);
         }
 
-        // ✅ Comparaison directe du code
-        if ($contact['email_verification_key'] !== $code) {
+        if ($storedCode !== $code) {
             return $this->respond(['status' => false, 'message' => 'Code incorrect'], 200);
         }
 
-        return $this->respond([
-            'status'     => true,
-            'message'    => 'Code vérifié avec succès',
-            'contact_id' => $contact['id']
-        ], 200);
+        return $this->respond(['status' => true, 'message' => 'Code vérifié avec succès'], 200);
     }
 
-    /**
-     * Étape 3 : Enregistrement du nouveau mot de passe
-     */
+    // =====================================================================
+    // POST /api/password/reset
+    // =====================================================================
     public function resetPassword()
     {
         $data = $this->request->getJSON(true);
@@ -166,55 +172,91 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             return $this->fail('Email, code et nouveau mot de passe requis', 400);
         }
 
-        $email       = trim(strtolower($data['email']));
+        $email       = strtolower(trim($data['email']));
         $code        = trim($data['code']);
         $newPassword = $data['new_password'];
 
-        $contactModel = new ContactModel();
-        $contact = $contactModel->where('email', $email)->first();
+        if (strlen($newPassword) < 8
+            || !preg_match('/[A-Z]/', $newPassword)
+            || !preg_match('/[a-z]/', $newPassword)
+            || !preg_match('/[0-9]/', $newPassword)) {
+            return $this->fail('Mot de passe non conforme (8 min, majuscule, minuscule, chiffre)', 400);
+        }
 
-        if (!$contact || empty($contact['email_verification_key']) || empty($contact['email_verification_sent_at'])) {
+        [$record, $type] = $this->_findByEmail($email);
+
+        if (!$record) {
             return $this->fail('Code invalide ou expiré', 400);
         }
 
-        // ✅ Vérification expiration
-        $expiresAt = strtotime($contact['email_verification_sent_at']);
-        if (!$expiresAt || time() > $expiresAt) {
+        [$storedCode, $storedExpiry] = $this->_getCodeFields($record, $type);
+
+        if (empty($storedCode) || empty($storedExpiry)) {
+            return $this->fail('Code invalide ou expiré', 400);
+        }
+        if (time() > strtotime($storedExpiry)) {
             return $this->fail('Code expiré', 400);
         }
-
-        // ✅ Vérification du code
-        if ($contact['email_verification_key'] !== $code) {
+        if ($storedCode !== $code) {
             return $this->fail('Code incorrect', 400);
         }
 
-        // ✅ Validation du mot de passe
-        if (
-            strlen($newPassword) < 8 ||
-            !preg_match('/[A-Z]/', $newPassword) ||
-            !preg_match('/[a-z]/', $newPassword) ||
-            !preg_match('/[0-9]/', $newPassword)
-        ) {
-            return $this->fail('Mot de passe non conforme (8 caractères min, majuscule, minuscule, chiffre)', 400);
+        $hashed = password_hash($newPassword, PASSWORD_DEFAULT);
+
+        if ($type === 'contact') {
+            (new ContactModel())->update($record['id'], [
+                'password'                   => $hashed,
+                'new_pass_key'               => null,
+                'email_verification_key'     => null,
+                'email_verification_sent_at' => null,
+                'last_password_change'       => date('Y-m-d H:i:s'),
+            ]);
+        } else {
+            (new StaffModel())->update($record['staffid'], [
+                'password'                       => $hashed,
+                'two_factor_auth_code'           => null,
+                'two_factor_auth_code_requested' => null,
+                'last_password_change'           => date('Y-m-d H:i:s'),
+            ]);
         }
 
-        // ✅ Étape 1 : stocker le nouveau mot de passe en clair dans new_pass_key (temporaire)
-        $contactModel->update($contact['id'], [
-            'new_pass_key' => $newPassword,
-        ]);
+        return $this->respond(['status' => true,
+            'message' => 'Mot de passe réinitialisé avec succès']);
+    }
 
-        // ✅ Étape 2 : hasher et enregistrer dans password, puis tout nettoyer
-        $contactModel->update($contact['id'], [
-            'password'                   => password_hash($newPassword, PASSWORD_DEFAULT),
-            'new_pass_key'               => null,
-            'email_verification_key'     => null,
-            'email_verification_sent_at' => null,
-            'last_password_change'       => date('Y-m-d H:i:s'),
-        ]);
+    // =====================================================================
+    // HELPERS
+    // =====================================================================
 
-        return $this->respond([
-            'status'  => true,
-            'message' => 'Mot de passe réinitialisé avec succès'
-        ]);
+    /** Retourne [record, 'contact'|'staff'] ou [null, null] */
+    private function _findByEmail(string $email): array
+    {
+        $contact = (new ContactModel())->where('email', $email)->first();
+        if ($contact) return [$contact, 'contact'];
+
+        $staff = (new StaffModel())->where('email', $email)->first();
+        if ($staff) return [$staff, 'staff'];
+
+        return [null, null];
+    }
+
+    /**
+     * Retourne [code, expiry] selon le type d'utilisateur
+     *
+     * contact → email_verification_key       / email_verification_sent_at
+     * staff   → two_factor_auth_code         / two_factor_auth_code_requested
+     */
+    private function _getCodeFields(array $record, string $type): array
+    {
+        if ($type === 'contact') {
+            return [
+                $record['email_verification_key']     ?? null,
+                $record['email_verification_sent_at'] ?? null,
+            ];
+        }
+        return [
+            $record['two_factor_auth_code']           ?? null,
+            $record['two_factor_auth_code_requested'] ?? null,
+        ];
     }
 }

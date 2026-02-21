@@ -1,0 +1,21 @@
+CRITICAL - 2026-02-21 16:03:44 --> ErrorException: Undefined array key "id"
+in APPPATH\Controllers\PasswordResetController.php on line 133.
+ 1 APPPATH\Controllers\PasswordResetController.php(133): CodeIgniter\Debug\Exceptions->errorHandler(2, 'Undefined array key "id"', 'C:\\xampp81\\htdocs\\CodeIgniter4-4.4.7\\app\\Controllers\\PasswordResetController.php', 133)
+ 2 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\PasswordResetController->requestReset()
+ 3 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PasswordResetController))
+ 4 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 5 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-21 16:03:52 --> ErrorException: Undefined array key "id"
+in APPPATH\Controllers\PasswordResetController.php on line 133.
+ 1 APPPATH\Controllers\PasswordResetController.php(133): CodeIgniter\Debug\Exceptions->errorHandler(2, 'Undefined array key "id"', 'C:\\xampp81\\htdocs\\CodeIgniter4-4.4.7\\app\\Controllers\\PasswordResetController.php', 133)
+ 2 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\PasswordResetController->requestReset()
+ 3 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PasswordResetController))
+ 4 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 5 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-21 16:04:28 --> ErrorException: Undefined array key "id"
+in APPPATH\Controllers\PasswordResetController.php on line 133.
+ 1 APPPATH\Controllers\PasswordResetController.php(133): CodeIgniter\Debug\Exceptions->errorHandler(2, 'Undefined array key "id"', 'C:\\xampp81\\htdocs\\CodeIgniter4-4.4.7\\app\\Controllers\\PasswordResetController.php', 133)
+ 2 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\PasswordResetController->requestReset()
+ 3 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\PasswordResetController))
+ 4 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 5 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
