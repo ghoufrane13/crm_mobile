@@ -9,18 +9,13 @@ class StaffController extends ResourceController
 {
     protected $format = 'json';
 
-    // Clé secrète pour chiffrer le token (32 caractères)
     private string $secretKey = 'CRM_STAFF_SECRET_KEY_2024_SECURE';
 
-    // ── Génération OTP ────────────────────────────────────────────────────
     private function generateOtpCode(): string
     {
         return str_pad(rand(100000, 999999), 6, '0', STR_PAD_LEFT);
     }
 
-    // ── Créer un token chiffré contenant les données + OTP ────────────────
-    // Le token est renvoyé à Flutter qui le stocke en mémoire
-    // et le renvoie lors de la vérification → pas besoin de session/BDD
     private function createToken(array $data): string
     {
         $json      = json_encode($data);
@@ -29,7 +24,6 @@ class StaffController extends ResourceController
         return base64_encode($iv . '::' . $encrypted);
     }
 
-    // ── Décoder le token reçu depuis Flutter ──────────────────────────────
     private function decodeToken(string $token): ?array
     {
         try {
@@ -43,7 +37,6 @@ class StaffController extends ResourceController
         }
     }
 
-    // ── Envoi email OTP via Brevo SMTP ────────────────────────────────────
     private function sendOtpEmail(string $to, string $otpCode, string $firstname, string $lastname): bool
     {
         $subject = "Code de vérification - CRM Mobile Staff";
@@ -54,7 +47,7 @@ class StaffController extends ResourceController
 <style>
 body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#f1f5f9; padding:20px; margin:0; }
 .email-container { max-width:600px; margin:0 auto; background:#fff; padding:36px; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,.08); }
-.header { text-align:center; background:linear-gradient(135deg,#1e1b4b,#2563eb,#0ea5e9); padding:28px; border-radius:12px; margin-bottom:28px; }
+.header { text-align:center; background:linear-gradient(135deg,#0f172a,#1e3a5f,#2563eb); padding:28px; border-radius:12px; margin-bottom:28px; }
 .header h2 { color:#fff; margin:0; font-size:20px; font-weight:800; }
 .header p  { color:rgba(255,255,255,.8); margin:6px 0 0; font-size:13px; }
 .code-box  { text-align:center; background:#eff6ff; border:2px dashed #2563eb; padding:24px; border-radius:12px; margin:24px 0; }
@@ -113,8 +106,142 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     }
 
     // ═══════════════════════════════════════════════════════════════════════
+    // POST /api/staff/login
+    // ═══════════════════════════════════════════════════════════════════════
+    public function login()
+    {
+        $data     = $this->request->getJSON(true);
+        $email    = strtolower(trim($data['email']    ?? ''));
+        $password = trim($data['password'] ?? '');
+
+        if (empty($email) || empty($password)) {
+            return $this->respond([
+                'success' => false,
+                'message' => 'Email et mot de passe requis.',
+            ], 200);
+        }
+
+        $staffModel = new StaffModel();
+        $staff = $staffModel->where('email', $email)
+                            ->where('active', 1)
+                            ->where('is_not_staff', 0)
+                            ->first();
+
+        if (!$staff) {
+            return $this->respond([
+                'success' => false,
+                'message' => 'Email ou mot de passe incorrect.',
+            ], 200);
+        }
+
+        if (!password_verify($password, $staff['password'])) {
+            return $this->respond([
+                'success' => false,
+                'message' => 'Email ou mot de passe incorrect.',
+            ], 200);
+        }
+
+        // Mettre à jour last_login et last_ip
+        $staffModel->update($staff['staffid'], [
+            'last_login'    => date('Y-m-d H:i:s'),
+            'last_ip'       => $this->request->getIPAddress(),
+            'last_activity' => date('Y-m-d H:i:s'),
+        ]);
+
+        // Ne jamais renvoyer le mot de passe au client
+        unset($staff['password']);
+        unset($staff['new_pass_key']);
+        unset($staff['two_factor_auth_code']);
+        unset($staff['google_auth_secret']);
+
+        return $this->respond([
+            'success' => true,
+            'message' => 'Connexion réussie.',
+            'staff'   => $staff,
+        ], 200);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // POST /api/staff/update-profile
+    // ═══════════════════════════════════════════════════════════════════════
+    public function updateProfile()
+    {
+        $data     = $this->request->getJSON(true);
+        $staffId  = isset($data['staff_id']) ? (int) $data['staff_id'] : 0;
+
+        if (!$staffId) {
+            return $this->respond([
+                'success' => false,
+                'message' => 'staff_id requis.',
+            ], 200);
+        }
+
+        $staffModel = new StaffModel();
+        $staff = $staffModel->find($staffId);
+
+        if (!$staff) {
+            return $this->respond([
+                'success' => false,
+                'message' => 'Membre du staff introuvable.',
+            ], 200);
+        }
+
+        // skipValidation pour ne pas exiger password/email lors d'une MAJ profil
+        $staffModel->skipValidation(true);
+
+        $updateData = [];
+
+        if (!empty($data['firstname']))
+            $updateData['firstname']   = trim($data['firstname']);
+        if (!empty($data['lastname']))
+            $updateData['lastname']    = trim($data['lastname']);
+        if (isset($data['phonenumber']))
+            $updateData['phonenumber'] = trim($data['phonenumber']);
+        if (isset($data['facebook']))
+            $updateData['facebook']    = trim($data['facebook']);
+        if (isset($data['linkedin']))
+            $updateData['linkedin']    = trim($data['linkedin']);
+        if (isset($data['skype']))
+            $updateData['skype']       = trim($data['skype']);
+
+        // Changement de mot de passe (optionnel)
+        if (!empty($data['password'])) {
+            $updateData['password']              = password_hash($data['password'], PASSWORD_BCRYPT);
+            $updateData['last_password_change']  = date('Y-m-d H:i:s');
+        }
+
+        if (empty($updateData)) {
+            return $this->respond([
+                'success' => false,
+                'message' => 'Aucune donnée à mettre à jour.',
+            ], 200);
+        }
+
+        $updated = $staffModel->update($staffId, $updateData);
+
+        if (!$updated) {
+            return $this->respond([
+                'success' => false,
+                'message' => 'Erreur lors de la mise à jour.',
+            ], 200);
+        }
+
+        // Récupérer les données mises à jour (sans données sensibles)
+        $updatedStaff = $staffModel->find($staffId);
+        unset($updatedStaff['password']);
+        unset($updatedStaff['new_pass_key']);
+        unset($updatedStaff['two_factor_auth_code']);
+        unset($updatedStaff['google_auth_secret']);
+
+        return $this->respond([
+            'success' => true,
+            'message' => 'Profil mis à jour avec succès.',
+            'staff'   => $updatedStaff,
+        ], 200);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
     // POST /api/staff/register
-    // → Renvoie un token chiffré à Flutter (rien en BDD)
     // ═══════════════════════════════════════════════════════════════════════
     public function register()
     {
@@ -129,42 +256,43 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 
         $email = strtolower(trim($data['email']));
 
-        // Vérifier si email déjà en BDD
         if ((new StaffModel())->where('email', $email)->first()) {
-            return $this->respond(['success' => false, 'message' => 'Cet email est déjà utilisé.'], 409);
+            return $this->respond([
+                'success' => false,
+                'message' => 'Cet email est déjà utilisé.',
+            ], 409);
         }
 
         $otpCode = $this->generateOtpCode();
 
-        // Créer le token avec toutes les données + OTP + expiration
         $token = $this->createToken([
             'firstname'   => trim($data['firstname']),
             'lastname'    => trim($data['lastname']),
             'email'       => $email,
             'password'    => password_hash($data['password'], PASSWORD_BCRYPT),
             'otp_code'    => $otpCode,
-            'otp_expires' => time() + 600, // expire dans 10 min
+            'otp_expires' => time() + 600,
         ]);
 
-        // Envoyer le mail OTP
-        $sent = $this->sendOtpEmail($email, $otpCode, trim($data['firstname']), trim($data['lastname']));
+        $sent = $this->sendOtpEmail(
+            $email, $otpCode,
+            trim($data['firstname']),
+            trim($data['lastname'])
+        );
 
         if (!$sent) {
             return $this->fail("Impossible d'envoyer l'email de vérification.", 500);
         }
 
-        // Renvoyer le token à Flutter → Flutter le stocke en mémoire
         return $this->respond([
             'success' => true,
             'message' => 'Code de vérification envoyé à ' . $email,
-            'token'   => $token, // ← Flutter stocke ça et le renvoie pour verify-otp
+            'token'   => $token,
         ], 200);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
     // POST /api/staff/verify-otp
-    // → Flutter renvoie le token + le code saisi
-    // → On décode le token, vérifie le code, insère en BDD si OK
     // ═══════════════════════════════════════════════════════════════════════
     public function verifyOtp()
     {
@@ -173,31 +301,42 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         $code  = isset($data['code'])  ? trim($data['code'])  : null;
 
         if (!$token || !$code) {
-            return $this->respond(['success' => false, 'message' => 'Token et code requis.'], 200);
+            return $this->respond([
+                'success' => false,
+                'message' => 'Token et code requis.',
+            ], 200);
         }
 
-        // Décoder le token
         $pending = $this->decodeToken($token);
 
         if (!$pending) {
-            return $this->respond(['success' => false, 'message' => 'Token invalide.'], 200);
+            return $this->respond([
+                'success' => false,
+                'message' => 'Token invalide.',
+            ], 200);
         }
 
-        // Vérifier expiration
         if (time() > $pending['otp_expires']) {
-            return $this->respond(['success' => false, 'message' => 'Code expiré. Veuillez recommencer l\'inscription.'], 200);
+            return $this->respond([
+                'success' => false,
+                'message' => 'Code expiré. Veuillez recommencer l\'inscription.',
+            ], 200);
         }
 
-        // Vérifier le code OTP
         if ($pending['otp_code'] !== $code) {
-            return $this->respond(['success' => false, 'message' => 'Code incorrect.'], 200);
+            return $this->respond([
+                'success' => false,
+                'message' => 'Code incorrect.',
+            ], 200);
         }
 
-        // ✅ Code correct → insérer en BDD
         $staffModel = new StaffModel();
 
         if ($staffModel->where('email', $pending['email'])->first()) {
-            return $this->respond(['success' => false, 'message' => 'Ce compte existe déjà.'], 200);
+            return $this->respond([
+                'success' => false,
+                'message' => 'Ce compte existe déjà.',
+            ], 200);
         }
 
         $staffId = $staffModel->insert([
@@ -213,7 +352,10 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         ]);
 
         if (!$staffId) {
-            return $this->respond(['success' => false, 'message' => 'Erreur lors de la création du compte.'], 200);
+            return $this->respond([
+                'success' => false,
+                'message' => 'Erreur lors de la création du compte.',
+            ], 200);
         }
 
         return $this->respond([
@@ -225,8 +367,6 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 
     // ═══════════════════════════════════════════════════════════════════════
     // POST /api/staff/resend-otp
-    // → Flutter renvoie le token existant
-    // → On décode, génère un nouveau code, crée un nouveau token
     // ═══════════════════════════════════════════════════════════════════════
     public function resendOtp()
     {
@@ -234,33 +374,44 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         $token = isset($data['token']) ? trim($data['token']) : null;
 
         if (!$token) {
-            return $this->respond(['success' => false, 'message' => 'Token requis.'], 200);
+            return $this->respond([
+                'success' => false,
+                'message' => 'Token requis.',
+            ], 200);
         }
 
         $pending = $this->decodeToken($token);
 
         if (!$pending) {
-            return $this->respond(['success' => false, 'message' => 'Token invalide. Veuillez recommencer l\'inscription.'], 200);
+            return $this->respond([
+                'success' => false,
+                'message' => 'Token invalide. Veuillez recommencer l\'inscription.',
+            ], 200);
         }
 
-        // Nouveau code + nouvelle expiration
         $newOtp = $this->generateOtpCode();
         $pending['otp_code']    = $newOtp;
         $pending['otp_expires'] = time() + 600;
 
-        // Nouveau token avec le nouveau code
         $newToken = $this->createToken($pending);
 
-        $sent = $this->sendOtpEmail($pending['email'], $newOtp, $pending['firstname'], $pending['lastname']);
+        $sent = $this->sendOtpEmail(
+            $pending['email'], $newOtp,
+            $pending['firstname'],
+            $pending['lastname']
+        );
 
         if (!$sent) {
-            return $this->respond(['success' => false, 'message' => "Impossible d'envoyer l'email."], 200);
+            return $this->respond([
+                'success' => false,
+                'message' => "Impossible d'envoyer l'email.",
+            ], 200);
         }
 
         return $this->respond([
             'success' => true,
             'message' => 'Nouveau code envoyé à ' . $pending['email'],
-            'token'   => $newToken, // ← Flutter met à jour son token
+            'token'   => $newToken,
         ], 200);
     }
 }

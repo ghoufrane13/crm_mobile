@@ -18,6 +18,7 @@ class ClientModel extends Model
         'company',
         'vat',
         'phonenumber',
+        'email',
         'country',
         'city',
         'zip',
