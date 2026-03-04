@@ -1,0 +1,243 @@
+ERROR - 2026-03-03 17:10:51 --> mysqli_sql_exception: Unknown column 't.taxid' in 'field list' in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `i`.`des...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `i`.`des...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `i`.`des...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `i`.`des...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(309): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->convert('1')
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+CRITICAL - 2026-03-03 17:10:51 --> CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 't.taxid' in 'field list'
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `i`.`description`, `i`.`long_description`, `i`.`qty`, `i`.`rate`, `i`.`unit`, `i`.`item_order`, `i`.`is_optional`, `i`.`is_selected`, COALESCE(t.taxrate, 0) AS taxrate, COALESCE(t.taxname, "")  AS taxname, COALESCE(t.taxid, 0)    AS taxid
+FROM `tblitemable` `i`
+LEFT JOIN `tblitem_tax` `t` ON `t`.`itemid` = `i`.`id` AND `t`.`rel_type` = "proposal"
+WHERE `i`.`rel_id` = :i.rel_id:
+AND `i`.`rel_type` = :i.rel_type:
+ORDER BY `i`.`item_order` ASC', [...], false)
+ 2 APPPATH\Controllers\ProposalController.php(309): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->convert('1')
+ 4 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 5 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-03 17:10:51 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 't.taxid' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `i`.`description`, `i`.`long_description`, `i`.`qty`, `i`.`rate`, `i`.`unit`, `i`.`item_order`, `i`.`is_optional`, `i`.`is_selected`, COALESCE(t.taxrate, 0) AS taxrate, COALESCE(t.taxname, "")  AS taxname, COALESCE(t.taxid, 0)    AS taxid
+FROM `tblitemable` `i`
+LEFT JOIN `tblitem_tax` `t` ON `t`.`itemid` = `i`.`id` AND `t`.`rel_type` = "proposal"
+WHERE `i`.`rel_id` = 1
+AND `i`.`rel_type` = \'proposal\'
+ORDER BY `i`.`item_order` ASC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `i`.`description`, `i`.`long_description`, `i`.`qty`, `i`.`rate`, `i`.`unit`, `i`.`item_order`, `i`.`is_optional`, `i`.`is_selected`, COALESCE(t.taxrate, 0) AS taxrate, COALESCE(t.taxname, "")  AS taxname, COALESCE(t.taxid, 0)    AS taxid
+FROM `tblitemable` `i`
+LEFT JOIN `tblitem_tax` `t` ON `t`.`itemid` = `i`.`id` AND `t`.`rel_type` = "proposal"
+WHERE `i`.`rel_id` = 1
+AND `i`.`rel_type` = \'proposal\'
+ORDER BY `i`.`item_order` ASC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `i`.`description`, `i`.`long_description`, `i`.`qty`, `i`.`rate`, `i`.`unit`, `i`.`item_order`, `i`.`is_optional`, `i`.`is_selected`, COALESCE(t.taxrate, 0) AS taxrate, COALESCE(t.taxname, "")  AS taxname, COALESCE(t.taxid, 0)    AS taxid
+FROM `tblitemable` `i`
+LEFT JOIN `tblitem_tax` `t` ON `t`.`itemid` = `i`.`id` AND `t`.`rel_type` = "proposal"
+WHERE `i`.`rel_id` = :i.rel_id:
+AND `i`.`rel_type` = :i.rel_type:
+ORDER BY `i`.`item_order` ASC', [...], false)
+ 4 APPPATH\Controllers\ProposalController.php(309): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->convert('1')
+ 6 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 7 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-03 17:10:51 --> [Caused by] mysqli_sql_exception: Unknown column 't.taxid' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `i`.`description`, `i`.`long_description`, `i`.`qty`, `i`.`rate`, `i`.`unit`, `i`.`item_order`, `i`.`is_optional`, `i`.`is_selected`, COALESCE(t.taxrate, 0) AS taxrate, COALESCE(t.taxname, "")  AS taxname, COALESCE(t.taxid, 0)    AS taxid
+FROM `tblitemable` `i`
+LEFT JOIN `tblitem_tax` `t` ON `t`.`itemid` = `i`.`id` AND `t`.`rel_type` = "proposal"
+WHERE `i`.`rel_id` = 1
+AND `i`.`rel_type` = \'proposal\'
+ORDER BY `i`.`item_order` ASC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `i`.`description`, `i`.`long_description`, `i`.`qty`, `i`.`rate`, `i`.`unit`, `i`.`item_order`, `i`.`is_optional`, `i`.`is_selected`, COALESCE(t.taxrate, 0) AS taxrate, COALESCE(t.taxname, "")  AS taxname, COALESCE(t.taxid, 0)    AS taxid
+FROM `tblitemable` `i`
+LEFT JOIN `tblitem_tax` `t` ON `t`.`itemid` = `i`.`id` AND `t`.`rel_type` = "proposal"
+WHERE `i`.`rel_id` = 1
+AND `i`.`rel_type` = \'proposal\'
+ORDER BY `i`.`item_order` ASC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `i`.`description`, `i`.`long_description`, `i`.`qty`, `i`.`rate`, `i`.`unit`, `i`.`item_order`, `i`.`is_optional`, `i`.`is_selected`, COALESCE(t.taxrate, 0) AS taxrate, COALESCE(t.taxname, "")  AS taxname, COALESCE(t.taxid, 0)    AS taxid
+FROM `tblitemable` `i`
+LEFT JOIN `tblitem_tax` `t` ON `t`.`itemid` = `i`.`id` AND `t`.`rel_type` = "proposal"
+WHERE `i`.`rel_id` = 1
+AND `i`.`rel_type` = \'proposal\'
+ORDER BY `i`.`item_order` ASC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `i`.`description`, `i`.`long_description`, `i`.`qty`, `i`.`rate`, `i`.`unit`, `i`.`item_order`, `i`.`is_optional`, `i`.`is_selected`, COALESCE(t.taxrate, 0) AS taxrate, COALESCE(t.taxname, "")  AS taxname, COALESCE(t.taxid, 0)    AS taxid
+FROM `tblitemable` `i`
+LEFT JOIN `tblitem_tax` `t` ON `t`.`itemid` = `i`.`id` AND `t`.`rel_type` = "proposal"
+WHERE `i`.`rel_id` = :i.rel_id:
+AND `i`.`rel_type` = :i.rel_type:
+ORDER BY `i`.`item_order` ASC', [...], false)
+ 5 APPPATH\Controllers\ProposalController.php(309): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->convert('1')
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-03 17:11:02 --> mysqli_sql_exception: Unknown column 't.taxid' in 'field list' in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `i`.`des...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `i`.`des...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `i`.`des...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `i`.`des...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(309): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->convert('1')
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+CRITICAL - 2026-03-03 17:11:02 --> CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 't.taxid' in 'field list'
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `i`.`description`, `i`.`long_description`, `i`.`qty`, `i`.`rate`, `i`.`unit`, `i`.`item_order`, `i`.`is_optional`, `i`.`is_selected`, COALESCE(t.taxrate, 0) AS taxrate, COALESCE(t.taxname, "")  AS taxname, COALESCE(t.taxid, 0)    AS taxid
+FROM `tblitemable` `i`
+LEFT JOIN `tblitem_tax` `t` ON `t`.`itemid` = `i`.`id` AND `t`.`rel_type` = "proposal"
+WHERE `i`.`rel_id` = :i.rel_id:
+AND `i`.`rel_type` = :i.rel_type:
+ORDER BY `i`.`item_order` ASC', [...], false)
+ 2 APPPATH\Controllers\ProposalController.php(309): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->convert('1')
+ 4 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 5 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-03 17:11:02 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 't.taxid' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `i`.`description`, `i`.`long_description`, `i`.`qty`, `i`.`rate`, `i`.`unit`, `i`.`item_order`, `i`.`is_optional`, `i`.`is_selected`, COALESCE(t.taxrate, 0) AS taxrate, COALESCE(t.taxname, "")  AS taxname, COALESCE(t.taxid, 0)    AS taxid
+FROM `tblitemable` `i`
+LEFT JOIN `tblitem_tax` `t` ON `t`.`itemid` = `i`.`id` AND `t`.`rel_type` = "proposal"
+WHERE `i`.`rel_id` = 1
+AND `i`.`rel_type` = \'proposal\'
+ORDER BY `i`.`item_order` ASC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `i`.`description`, `i`.`long_description`, `i`.`qty`, `i`.`rate`, `i`.`unit`, `i`.`item_order`, `i`.`is_optional`, `i`.`is_selected`, COALESCE(t.taxrate, 0) AS taxrate, COALESCE(t.taxname, "")  AS taxname, COALESCE(t.taxid, 0)    AS taxid
+FROM `tblitemable` `i`
+LEFT JOIN `tblitem_tax` `t` ON `t`.`itemid` = `i`.`id` AND `t`.`rel_type` = "proposal"
+WHERE `i`.`rel_id` = 1
+AND `i`.`rel_type` = \'proposal\'
+ORDER BY `i`.`item_order` ASC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `i`.`description`, `i`.`long_description`, `i`.`qty`, `i`.`rate`, `i`.`unit`, `i`.`item_order`, `i`.`is_optional`, `i`.`is_selected`, COALESCE(t.taxrate, 0) AS taxrate, COALESCE(t.taxname, "")  AS taxname, COALESCE(t.taxid, 0)    AS taxid
+FROM `tblitemable` `i`
+LEFT JOIN `tblitem_tax` `t` ON `t`.`itemid` = `i`.`id` AND `t`.`rel_type` = "proposal"
+WHERE `i`.`rel_id` = :i.rel_id:
+AND `i`.`rel_type` = :i.rel_type:
+ORDER BY `i`.`item_order` ASC', [...], false)
+ 4 APPPATH\Controllers\ProposalController.php(309): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->convert('1')
+ 6 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 7 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-03 17:11:02 --> [Caused by] mysqli_sql_exception: Unknown column 't.taxid' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `i`.`description`, `i`.`long_description`, `i`.`qty`, `i`.`rate`, `i`.`unit`, `i`.`item_order`, `i`.`is_optional`, `i`.`is_selected`, COALESCE(t.taxrate, 0) AS taxrate, COALESCE(t.taxname, "")  AS taxname, COALESCE(t.taxid, 0)    AS taxid
+FROM `tblitemable` `i`
+LEFT JOIN `tblitem_tax` `t` ON `t`.`itemid` = `i`.`id` AND `t`.`rel_type` = "proposal"
+WHERE `i`.`rel_id` = 1
+AND `i`.`rel_type` = \'proposal\'
+ORDER BY `i`.`item_order` ASC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `i`.`description`, `i`.`long_description`, `i`.`qty`, `i`.`rate`, `i`.`unit`, `i`.`item_order`, `i`.`is_optional`, `i`.`is_selected`, COALESCE(t.taxrate, 0) AS taxrate, COALESCE(t.taxname, "")  AS taxname, COALESCE(t.taxid, 0)    AS taxid
+FROM `tblitemable` `i`
+LEFT JOIN `tblitem_tax` `t` ON `t`.`itemid` = `i`.`id` AND `t`.`rel_type` = "proposal"
+WHERE `i`.`rel_id` = 1
+AND `i`.`rel_type` = \'proposal\'
+ORDER BY `i`.`item_order` ASC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `i`.`description`, `i`.`long_description`, `i`.`qty`, `i`.`rate`, `i`.`unit`, `i`.`item_order`, `i`.`is_optional`, `i`.`is_selected`, COALESCE(t.taxrate, 0) AS taxrate, COALESCE(t.taxname, "")  AS taxname, COALESCE(t.taxid, 0)    AS taxid
+FROM `tblitemable` `i`
+LEFT JOIN `tblitem_tax` `t` ON `t`.`itemid` = `i`.`id` AND `t`.`rel_type` = "proposal"
+WHERE `i`.`rel_id` = 1
+AND `i`.`rel_type` = \'proposal\'
+ORDER BY `i`.`item_order` ASC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `i`.`description`, `i`.`long_description`, `i`.`qty`, `i`.`rate`, `i`.`unit`, `i`.`item_order`, `i`.`is_optional`, `i`.`is_selected`, COALESCE(t.taxrate, 0) AS taxrate, COALESCE(t.taxname, "")  AS taxname, COALESCE(t.taxid, 0)    AS taxid
+FROM `tblitemable` `i`
+LEFT JOIN `tblitem_tax` `t` ON `t`.`itemid` = `i`.`id` AND `t`.`rel_type` = "proposal"
+WHERE `i`.`rel_id` = :i.rel_id:
+AND `i`.`rel_type` = :i.rel_type:
+ORDER BY `i`.`item_order` ASC', [...], false)
+ 5 APPPATH\Controllers\ProposalController.php(309): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->convert('1')
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-03 17:13:47 --> mysqli_sql_exception: Unknown column 't.taxid' in 'field list' in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `i`.`des...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `i`.`des...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `i`.`des...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `i`.`des...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(309): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->convert('1')
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+CRITICAL - 2026-03-03 17:13:47 --> CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 't.taxid' in 'field list'
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `i`.`description`, `i`.`long_description`, `i`.`qty`, `i`.`rate`, `i`.`unit`, `i`.`item_order`, `i`.`is_optional`, `i`.`is_selected`, COALESCE(t.taxrate, 0) AS taxrate, COALESCE(t.taxname, "")  AS taxname, COALESCE(t.taxid, 0)    AS taxid
+FROM `tblitemable` `i`
+LEFT JOIN `tblitem_tax` `t` ON `t`.`itemid` = `i`.`id` AND `t`.`rel_type` = "proposal"
+WHERE `i`.`rel_id` = :i.rel_id:
+AND `i`.`rel_type` = :i.rel_type:
+ORDER BY `i`.`item_order` ASC', [...], false)
+ 2 APPPATH\Controllers\ProposalController.php(309): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->convert('1')
+ 4 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 5 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-03 17:13:47 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 't.taxid' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `i`.`description`, `i`.`long_description`, `i`.`qty`, `i`.`rate`, `i`.`unit`, `i`.`item_order`, `i`.`is_optional`, `i`.`is_selected`, COALESCE(t.taxrate, 0) AS taxrate, COALESCE(t.taxname, "")  AS taxname, COALESCE(t.taxid, 0)    AS taxid
+FROM `tblitemable` `i`
+LEFT JOIN `tblitem_tax` `t` ON `t`.`itemid` = `i`.`id` AND `t`.`rel_type` = "proposal"
+WHERE `i`.`rel_id` = 1
+AND `i`.`rel_type` = \'proposal\'
+ORDER BY `i`.`item_order` ASC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `i`.`description`, `i`.`long_description`, `i`.`qty`, `i`.`rate`, `i`.`unit`, `i`.`item_order`, `i`.`is_optional`, `i`.`is_selected`, COALESCE(t.taxrate, 0) AS taxrate, COALESCE(t.taxname, "")  AS taxname, COALESCE(t.taxid, 0)    AS taxid
+FROM `tblitemable` `i`
+LEFT JOIN `tblitem_tax` `t` ON `t`.`itemid` = `i`.`id` AND `t`.`rel_type` = "proposal"
+WHERE `i`.`rel_id` = 1
+AND `i`.`rel_type` = \'proposal\'
+ORDER BY `i`.`item_order` ASC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `i`.`description`, `i`.`long_description`, `i`.`qty`, `i`.`rate`, `i`.`unit`, `i`.`item_order`, `i`.`is_optional`, `i`.`is_selected`, COALESCE(t.taxrate, 0) AS taxrate, COALESCE(t.taxname, "")  AS taxname, COALESCE(t.taxid, 0)    AS taxid
+FROM `tblitemable` `i`
+LEFT JOIN `tblitem_tax` `t` ON `t`.`itemid` = `i`.`id` AND `t`.`rel_type` = "proposal"
+WHERE `i`.`rel_id` = :i.rel_id:
+AND `i`.`rel_type` = :i.rel_type:
+ORDER BY `i`.`item_order` ASC', [...], false)
+ 4 APPPATH\Controllers\ProposalController.php(309): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->convert('1')
+ 6 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 7 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-03 17:13:47 --> [Caused by] mysqli_sql_exception: Unknown column 't.taxid' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `i`.`description`, `i`.`long_description`, `i`.`qty`, `i`.`rate`, `i`.`unit`, `i`.`item_order`, `i`.`is_optional`, `i`.`is_selected`, COALESCE(t.taxrate, 0) AS taxrate, COALESCE(t.taxname, "")  AS taxname, COALESCE(t.taxid, 0)    AS taxid
+FROM `tblitemable` `i`
+LEFT JOIN `tblitem_tax` `t` ON `t`.`itemid` = `i`.`id` AND `t`.`rel_type` = "proposal"
+WHERE `i`.`rel_id` = 1
+AND `i`.`rel_type` = \'proposal\'
+ORDER BY `i`.`item_order` ASC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `i`.`description`, `i`.`long_description`, `i`.`qty`, `i`.`rate`, `i`.`unit`, `i`.`item_order`, `i`.`is_optional`, `i`.`is_selected`, COALESCE(t.taxrate, 0) AS taxrate, COALESCE(t.taxname, "")  AS taxname, COALESCE(t.taxid, 0)    AS taxid
+FROM `tblitemable` `i`
+LEFT JOIN `tblitem_tax` `t` ON `t`.`itemid` = `i`.`id` AND `t`.`rel_type` = "proposal"
+WHERE `i`.`rel_id` = 1
+AND `i`.`rel_type` = \'proposal\'
+ORDER BY `i`.`item_order` ASC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `i`.`description`, `i`.`long_description`, `i`.`qty`, `i`.`rate`, `i`.`unit`, `i`.`item_order`, `i`.`is_optional`, `i`.`is_selected`, COALESCE(t.taxrate, 0) AS taxrate, COALESCE(t.taxname, "")  AS taxname, COALESCE(t.taxid, 0)    AS taxid
+FROM `tblitemable` `i`
+LEFT JOIN `tblitem_tax` `t` ON `t`.`itemid` = `i`.`id` AND `t`.`rel_type` = "proposal"
+WHERE `i`.`rel_id` = 1
+AND `i`.`rel_type` = \'proposal\'
+ORDER BY `i`.`item_order` ASC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `i`.`description`, `i`.`long_description`, `i`.`qty`, `i`.`rate`, `i`.`unit`, `i`.`item_order`, `i`.`is_optional`, `i`.`is_selected`, COALESCE(t.taxrate, 0) AS taxrate, COALESCE(t.taxname, "")  AS taxname, COALESCE(t.taxid, 0)    AS taxid
+FROM `tblitemable` `i`
+LEFT JOIN `tblitem_tax` `t` ON `t`.`itemid` = `i`.`id` AND `t`.`rel_type` = "proposal"
+WHERE `i`.`rel_id` = :i.rel_id:
+AND `i`.`rel_type` = :i.rel_type:
+ORDER BY `i`.`item_order` ASC', [...], false)
+ 5 APPPATH\Controllers\ProposalController.php(309): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->convert('1')
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()

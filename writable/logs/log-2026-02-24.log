@@ -1,0 +1,1579 @@
+ERROR - 2026-02-24 14:02:31 --> mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblprop...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblprop...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblprop...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblprop...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, NULL)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+#9 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#10 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#12 {main}
+CRITICAL - 2026-02-24 14:02:31 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 2 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 4 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 5 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, null)
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 14:02:31 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 4 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 6 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 7 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, null)
+ 8 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 9 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+10 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 14:02:31 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 5 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 7 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 8 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, null)
+ 9 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+10 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+11 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+12 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-02-24 14:02:41 --> mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblprop...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblprop...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblprop...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblprop...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, NULL)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+#9 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#10 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#12 {main}
+CRITICAL - 2026-02-24 14:02:41 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 2 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 4 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 5 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, null)
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 14:02:41 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 4 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 6 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 7 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, null)
+ 8 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 9 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+10 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 14:02:41 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 5 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 7 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 8 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, null)
+ 9 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+10 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+11 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+12 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-02-24 14:02:43 --> mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblprop...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblprop...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblprop...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblprop...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, NULL)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+#9 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#10 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#12 {main}
+CRITICAL - 2026-02-24 14:02:43 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 2 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 4 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 5 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, null)
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 14:02:43 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 4 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 6 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 7 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, null)
+ 8 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 9 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+10 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 14:02:43 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 5 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 7 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 8 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, null)
+ 9 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+10 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+11 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+12 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-02-24 14:02:44 --> mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblprop...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblprop...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblprop...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblprop...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, NULL)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+#9 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#10 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#12 {main}
+CRITICAL - 2026-02-24 14:02:44 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 2 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 4 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 5 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, null)
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 14:02:44 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 4 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 6 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 7 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, null)
+ 8 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 9 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+10 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 14:02:44 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 5 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 7 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 8 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, null)
+ 9 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+10 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+11 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+12 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-02-24 14:02:46 --> mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblprop...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblprop...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblprop...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblprop...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, NULL)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+#9 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#10 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#12 {main}
+CRITICAL - 2026-02-24 14:02:46 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 2 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 4 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 5 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, null)
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 14:02:46 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 4 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 6 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 7 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, null)
+ 8 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 9 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+10 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 14:02:46 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 5 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 7 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 8 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, null)
+ 9 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+10 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+11 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+12 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-02-24 14:02:57 --> mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblprop...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblprop...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblprop...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblprop...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 1)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+#9 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#10 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#12 {main}
+CRITICAL - 2026-02-24 14:02:57 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+AND `tblproposals`.`status` = :tblproposals.status:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 2 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 4 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 5 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 1)
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 14:02:57 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 1
+ORDER BY `tblproposals`.`id` DESC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 1
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+AND `tblproposals`.`status` = :tblproposals.status:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 4 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 6 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 7 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 1)
+ 8 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 9 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+10 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 14:02:57 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 1
+ORDER BY `tblproposals`.`id` DESC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 1
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 1
+ORDER BY `tblproposals`.`id` DESC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+AND `tblproposals`.`status` = :tblproposals.status:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 5 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 7 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 8 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 1)
+ 9 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+10 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+11 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+12 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-02-24 14:02:59 --> mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblprop...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblprop...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblprop...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblprop...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 2)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+#9 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#10 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#12 {main}
+CRITICAL - 2026-02-24 14:02:59 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+AND `tblproposals`.`status` = :tblproposals.status:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 2 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 4 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 5 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 2)
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 14:02:59 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 2
+ORDER BY `tblproposals`.`id` DESC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 2
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+AND `tblproposals`.`status` = :tblproposals.status:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 4 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 6 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 7 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 2)
+ 8 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 9 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+10 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 14:02:59 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 2
+ORDER BY `tblproposals`.`id` DESC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 2
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 2
+ORDER BY `tblproposals`.`id` DESC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+AND `tblproposals`.`status` = :tblproposals.status:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 5 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 7 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 8 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 2)
+ 9 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+10 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+11 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+12 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-02-24 14:03:00 --> mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblprop...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblprop...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblprop...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblprop...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 3)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+#9 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#10 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#12 {main}
+CRITICAL - 2026-02-24 14:03:00 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+AND `tblproposals`.`status` = :tblproposals.status:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 2 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 4 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 5 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 3)
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 14:03:00 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+AND `tblproposals`.`status` = :tblproposals.status:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 4 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 6 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 7 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 3)
+ 8 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 9 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+10 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 14:03:00 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 3
+ORDER BY `tblproposals`.`id` DESC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+AND `tblproposals`.`status` = :tblproposals.status:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 5 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 7 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 8 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 3)
+ 9 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+10 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+11 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+12 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-02-24 14:03:01 --> mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblprop...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblprop...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblprop...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblprop...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 4)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+#9 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#10 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#12 {main}
+CRITICAL - 2026-02-24 14:03:01 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+AND `tblproposals`.`status` = :tblproposals.status:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 2 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 4 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 5 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 4)
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 14:03:01 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 4
+ORDER BY `tblproposals`.`id` DESC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 4
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+AND `tblproposals`.`status` = :tblproposals.status:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 4 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 6 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 7 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 4)
+ 8 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 9 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+10 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 14:03:01 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 4
+ORDER BY `tblproposals`.`id` DESC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 4
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 4
+ORDER BY `tblproposals`.`id` DESC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+AND `tblproposals`.`status` = :tblproposals.status:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 5 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 7 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 8 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 4)
+ 9 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+10 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+11 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+12 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-02-24 14:03:06 --> mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblprop...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblprop...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblprop...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblprop...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 5)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+#9 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#10 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#12 {main}
+CRITICAL - 2026-02-24 14:03:06 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+AND `tblproposals`.`status` = :tblproposals.status:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 2 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 4 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 5 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 5)
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 14:03:06 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 5
+ORDER BY `tblproposals`.`id` DESC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 5
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+AND `tblproposals`.`status` = :tblproposals.status:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 4 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 6 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 7 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 5)
+ 8 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 9 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+10 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 14:03:06 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 5
+ORDER BY `tblproposals`.`id` DESC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 5
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 5
+ORDER BY `tblproposals`.`id` DESC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+AND `tblproposals`.`status` = :tblproposals.status:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 5 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 7 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 8 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 5)
+ 9 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+10 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+11 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+12 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-02-24 14:03:10 --> mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblprop...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblprop...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblprop...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblprop...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 4)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+#9 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#10 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#12 {main}
+CRITICAL - 2026-02-24 14:03:10 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+AND `tblproposals`.`status` = :tblproposals.status:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 2 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 4 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 5 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 4)
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 14:03:10 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 4
+ORDER BY `tblproposals`.`id` DESC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 4
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+AND `tblproposals`.`status` = :tblproposals.status:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 4 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 6 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 7 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 4)
+ 8 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 9 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+10 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 14:03:10 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 4
+ORDER BY `tblproposals`.`id` DESC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 4
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 4
+ORDER BY `tblproposals`.`id` DESC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+AND `tblproposals`.`status` = :tblproposals.status:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 5 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 7 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 8 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 4)
+ 9 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+10 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+11 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+12 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-02-24 14:03:11 --> mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblprop...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblprop...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblprop...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblprop...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 3)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+#9 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#10 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#12 {main}
+CRITICAL - 2026-02-24 14:03:11 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+AND `tblproposals`.`status` = :tblproposals.status:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 2 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 4 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 5 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 3)
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 14:03:11 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+AND `tblproposals`.`status` = :tblproposals.status:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 4 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 6 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 7 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 3)
+ 8 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 9 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+10 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 14:03:11 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 3
+ORDER BY `tblproposals`.`id` DESC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+AND `tblproposals`.`status` = :tblproposals.status:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 5 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 7 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 8 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 3)
+ 9 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+10 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+11 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+12 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-02-24 14:03:12 --> mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblprop...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblprop...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblprop...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblprop...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 2)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+#9 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#10 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#12 {main}
+CRITICAL - 2026-02-24 14:03:12 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+AND `tblproposals`.`status` = :tblproposals.status:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 2 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 4 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 5 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 2)
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 14:03:12 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 2
+ORDER BY `tblproposals`.`id` DESC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 2
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+AND `tblproposals`.`status` = :tblproposals.status:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 4 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 6 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 7 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 2)
+ 8 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 9 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+10 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 14:03:12 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 2
+ORDER BY `tblproposals`.`id` DESC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 2
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+AND `tblproposals`.`status` = 2
+ORDER BY `tblproposals`.`id` DESC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+AND `tblproposals`.`status` = :tblproposals.status:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 5 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 7 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 8 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, 2)
+ 9 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+10 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+11 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+12 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-02-24 15:17:35 --> mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblprop...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblprop...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblprop...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblprop...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, NULL)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+#9 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#10 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#12 {main}
+CRITICAL - 2026-02-24 15:17:35 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 2 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 4 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 5 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, null)
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 15:17:35 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 4 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 6 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 7 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, null)
+ 8 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 9 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+10 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 15:17:35 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 5 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 7 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 8 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, null)
+ 9 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+10 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+11 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+12 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-02-24 15:17:39 --> mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblprop...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblprop...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblprop...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblprop...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, NULL)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+#9 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#10 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#12 {main}
+CRITICAL - 2026-02-24 15:17:39 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 2 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 4 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 5 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, null)
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 15:17:39 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 4 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 6 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 7 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, null)
+ 8 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+ 9 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+10 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-02-24 15:17:39 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblleads' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = 3
+ORDER BY `tblproposals`.`id` DESC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `tblproposals`.`id`, `tblproposals`.`subject`, `tblproposals`.`proposal_to`, `tblproposals`.`status`, `tblproposals`.`total`, `tblproposals`.`subtotal`, `tblproposals`.`date`, `tblproposals`.`open_till`, `tblproposals`.`datecreated`, `tblproposals`.`currency`, `tblproposals`.`rel_type`, `tblproposals`.`rel_id`, `tblproposals`.`email`, `tblproposals`.`estimate_id`, `tblproposals`.`invoice_id`, COALESCE(c.company, l.name) AS client_name, `curr`.`symbol` AS `currency_symbol`, `curr`.`name` AS `currency_name`
+FROM `tblproposals`
+LEFT JOIN `tblclients` `c` ON `c`.`userid` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "customer"
+LEFT JOIN `tblleads` `l` ON `l`.`id` = `tblproposals`.`rel_id` AND `tblproposals`.`rel_type` = "lead"
+LEFT JOIN `tblcurrencies` `curr` ON `curr`.`id` = `tblproposals`.`currency`
+WHERE `tblproposals`.`addedfrom` = :tblproposals.addedfrom:
+ORDER BY `tblproposals`.`id` DESC', [...], false)
+ 5 SYSTEMPATH\Model.php(243): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\BaseModel.php(638): CodeIgniter\Model->doFindAll(0, 0)
+ 7 APPPATH\Models\ProposalModel.php(125): CodeIgniter\BaseModel->findAll()
+ 8 APPPATH\Controllers\ProposalController.php(44): App\Models\ProposalModel->getByStaff(3, null)
+ 9 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->list()
+10 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+11 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+12 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()

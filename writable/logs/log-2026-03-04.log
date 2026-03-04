@@ -1,0 +1,285 @@
+ERROR - 2026-03-04 08:49:19 --> mysqli_sql_exception: Unknown column 'phone' in 'field list' in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `userid`...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `userid`...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `userid`...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `userid`...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(441): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->contacts()
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+CRITICAL - 2026-03-04 08:49:19 --> CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'phone' in 'field list'
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `userid`, `company` AS `name`, `email` AS `client_email`, `phone` AS `client_phone`
+FROM `tblclients`
+WHERE `userid` = :userid:', [...], false)
+ 2 APPPATH\Controllers\ProposalController.php(441): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->contacts()
+ 4 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 5 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-04 08:49:19 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'phone' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `userid`, `company` AS `name`, `email` AS `client_email`, `phone` AS `client_phone`
+FROM `tblclients`
+WHERE `userid` = 3')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `userid`, `company` AS `name`, `email` AS `client_email`, `phone` AS `client_phone`
+FROM `tblclients`
+WHERE `userid` = 3')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `userid`, `company` AS `name`, `email` AS `client_email`, `phone` AS `client_phone`
+FROM `tblclients`
+WHERE `userid` = :userid:', [...], false)
+ 4 APPPATH\Controllers\ProposalController.php(441): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->contacts()
+ 6 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 7 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-04 08:49:19 --> [Caused by] mysqli_sql_exception: Unknown column 'phone' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `userid`, `company` AS `name`, `email` AS `client_email`, `phone` AS `client_phone`
+FROM `tblclients`
+WHERE `userid` = 3', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `userid`, `company` AS `name`, `email` AS `client_email`, `phone` AS `client_phone`
+FROM `tblclients`
+WHERE `userid` = 3')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `userid`, `company` AS `name`, `email` AS `client_email`, `phone` AS `client_phone`
+FROM `tblclients`
+WHERE `userid` = 3')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `userid`, `company` AS `name`, `email` AS `client_email`, `phone` AS `client_phone`
+FROM `tblclients`
+WHERE `userid` = :userid:', [...], false)
+ 5 APPPATH\Controllers\ProposalController.php(441): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->contacts()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-04 08:49:24 --> mysqli_sql_exception: Unknown column 'phone' in 'field list' in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `userid`...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `userid`...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `userid`...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `userid`...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(441): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->contacts()
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+CRITICAL - 2026-03-04 08:49:24 --> CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'phone' in 'field list'
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `userid`, `company` AS `name`, `email` AS `client_email`, `phone` AS `client_phone`
+FROM `tblclients`
+WHERE `userid` = :userid:', [...], false)
+ 2 APPPATH\Controllers\ProposalController.php(441): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->contacts()
+ 4 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 5 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-04 08:49:24 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'phone' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `userid`, `company` AS `name`, `email` AS `client_email`, `phone` AS `client_phone`
+FROM `tblclients`
+WHERE `userid` = 4')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `userid`, `company` AS `name`, `email` AS `client_email`, `phone` AS `client_phone`
+FROM `tblclients`
+WHERE `userid` = 4')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `userid`, `company` AS `name`, `email` AS `client_email`, `phone` AS `client_phone`
+FROM `tblclients`
+WHERE `userid` = :userid:', [...], false)
+ 4 APPPATH\Controllers\ProposalController.php(441): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->contacts()
+ 6 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 7 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-04 08:49:24 --> [Caused by] mysqli_sql_exception: Unknown column 'phone' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `userid`, `company` AS `name`, `email` AS `client_email`, `phone` AS `client_phone`
+FROM `tblclients`
+WHERE `userid` = 4', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `userid`, `company` AS `name`, `email` AS `client_email`, `phone` AS `client_phone`
+FROM `tblclients`
+WHERE `userid` = 4')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `userid`, `company` AS `name`, `email` AS `client_email`, `phone` AS `client_phone`
+FROM `tblclients`
+WHERE `userid` = 4')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `userid`, `company` AS `name`, `email` AS `client_email`, `phone` AS `client_phone`
+FROM `tblclients`
+WHERE `userid` = :userid:', [...], false)
+ 5 APPPATH\Controllers\ProposalController.php(441): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->contacts()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-04 08:49:28 --> mysqli_sql_exception: Unknown column 'phone' in 'field list' in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `userid`...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `userid`...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `userid`...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `userid`...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(441): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->contacts()
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+CRITICAL - 2026-03-04 08:49:28 --> CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'phone' in 'field list'
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `userid`, `company` AS `name`, `email` AS `client_email`, `phone` AS `client_phone`
+FROM `tblclients`
+WHERE `userid` = :userid:', [...], false)
+ 2 APPPATH\Controllers\ProposalController.php(441): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->contacts()
+ 4 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 5 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-04 08:49:28 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Unknown column 'phone' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `userid`, `company` AS `name`, `email` AS `client_email`, `phone` AS `client_phone`
+FROM `tblclients`
+WHERE `userid` = 5')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `userid`, `company` AS `name`, `email` AS `client_email`, `phone` AS `client_phone`
+FROM `tblclients`
+WHERE `userid` = 5')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `userid`, `company` AS `name`, `email` AS `client_email`, `phone` AS `client_phone`
+FROM `tblclients`
+WHERE `userid` = :userid:', [...], false)
+ 4 APPPATH\Controllers\ProposalController.php(441): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->contacts()
+ 6 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 7 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-04 08:49:28 --> [Caused by] mysqli_sql_exception: Unknown column 'phone' in 'field list'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `userid`, `company` AS `name`, `email` AS `client_email`, `phone` AS `client_phone`
+FROM `tblclients`
+WHERE `userid` = 5', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `userid`, `company` AS `name`, `email` AS `client_email`, `phone` AS `client_phone`
+FROM `tblclients`
+WHERE `userid` = 5')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `userid`, `company` AS `name`, `email` AS `client_email`, `phone` AS `client_phone`
+FROM `tblclients`
+WHERE `userid` = 5')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `userid`, `company` AS `name`, `email` AS `client_email`, `phone` AS `client_phone`
+FROM `tblclients`
+WHERE `userid` = :userid:', [...], false)
+ 5 APPPATH\Controllers\ProposalController.php(441): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->contacts()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-04 13:27:16 --> mysqli_sql_exception: Table 'crm_mobile.tblsettings' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `value`\n...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `value`\n...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `value`\n...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`\n...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(617): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+CRITICAL - 2026-03-04 13:27:16 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblsettings' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = :setting_name:', [...], false)
+ 2 APPPATH\Controllers\ProposalController.php(617): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+ 4 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 5 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-04 13:27:16 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblsettings' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = :setting_name:', [...], false)
+ 4 APPPATH\Controllers\ProposalController.php(617): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+ 6 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 7 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-04 13:27:16 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblsettings' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = :setting_name:', [...], false)
+ 5 APPPATH\Controllers\ProposalController.php(617): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-04 13:55:28 --> mysqli_sql_exception: Table 'crm_mobile.tblsettings' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `value`\n...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `value`\n...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `value`\n...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`\n...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(617): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+CRITICAL - 2026-03-04 13:55:28 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblsettings' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = :setting_name:', [...], false)
+ 2 APPPATH\Controllers\ProposalController.php(617): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+ 4 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 5 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-04 13:55:28 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblsettings' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = :setting_name:', [...], false)
+ 4 APPPATH\Controllers\ProposalController.php(617): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+ 6 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 7 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-04 13:55:28 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblsettings' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = :setting_name:', [...], false)
+ 5 APPPATH\Controllers\ProposalController.php(617): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()

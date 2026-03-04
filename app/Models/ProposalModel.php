@@ -106,14 +106,12 @@ class ProposalModel extends Model
             tblproposals.email,
             tblproposals.estimate_id,
             tblproposals.invoice_id,
-            COALESCE(c.company, l.name) AS client_name,
+            c.company AS client_name,
             curr.symbol AS currency_symbol,
             curr.name   AS currency_name
         ')
         ->join('tblclients c',
                'c.userid = tblproposals.rel_id AND tblproposals.rel_type = "customer"', 'left')
-        ->join('tblleads l',
-               'l.id = tblproposals.rel_id AND tblproposals.rel_type = "lead"', 'left')
         ->join('tblcurrencies curr', 'curr.id = tblproposals.currency', 'left')
         ->where('tblproposals.addedfrom', $staffId)
         ->orderBy('tblproposals.id', 'DESC');
@@ -133,8 +131,8 @@ class ProposalModel extends Model
     {
         $proposal = $this->select('
             tblproposals.*,
-            COALESCE(c.company, l.name)  AS client_name,
-            COALESCE(c.email,   l.email) AS client_email_default,
+            c.company AS client_name,
+            c.email   AS client_email_default,
             curr.symbol AS currency_symbol,
             curr.name   AS currency_name,
             s.firstname AS staff_firstname,
@@ -142,8 +140,6 @@ class ProposalModel extends Model
         ')
         ->join('tblclients c',
                'c.userid = tblproposals.rel_id AND tblproposals.rel_type = "customer"', 'left')
-        ->join('tblleads l',
-               'l.id = tblproposals.rel_id AND tblproposals.rel_type = "lead"', 'left')
         ->join('tblcurrencies curr', 'curr.id = tblproposals.currency',    'left')
         ->join('tblstaff s',         's.staffid = tblproposals.addedfrom', 'left')
         ->where('tblproposals.id', $id)
@@ -162,11 +158,22 @@ class ProposalModel extends Model
      */
     private function _getItems(int $proposalId): array
     {
-        return $this->db->table('tblitems')
+        $items = $this->db->table('tblitemable')
             ->where('rel_id',   $proposalId)
             ->where('rel_type', 'proposal')
             ->orderBy('item_order', 'ASC')
             ->get()->getResultArray();
+
+        // Attacher les taxes à chaque item
+        foreach ($items as &$item) {
+            $tax = $this->db->table('tblitem_tax')
+                ->where('itemid', $item['id'])
+                ->get()->getRowArray();
+            $item['taxrate'] = $tax['taxrate'] ?? 0;
+            $item['taxname'] = $tax['taxname'] ?? '';
+        }
+
+        return $items;
     }
 
     /**
@@ -176,16 +183,30 @@ class ProposalModel extends Model
     {
         foreach ($items as $idx => $item) {
             if (empty(trim($item['description'] ?? ''))) continue;
-            $this->db->table('tblitems')->insert([
+            $this->db->table('tblitemable')->insert([
                 'rel_id'           => $proposalId,
                 'rel_type'         => 'proposal',
                 'description'      => trim($item['description']),
                 'long_description' => trim($item['long_description'] ?? ''),
-                'qty'              => (float)($item['qty']     ?? 1),
-                'rate'             => (float)($item['rate']    ?? 0),
-                'unit'             => trim($item['unit']       ?? ''),
-                'item_order'       => (int)($item['item_order'] ?? $idx),
+                'qty'              => (float)($item['qty']      ?? 1),
+                'rate'             => (float)($item['rate']     ?? 0),
+                'unit'             => trim($item['unit']        ?? ''),
+                'is_optional'      => (int)($item['is_optional'] ?? 0),
+                'is_selected'      => (int)($item['is_selected'] ?? 1),
+                'item_order'       => (int)($item['item_order']  ?? $idx),
             ]);
+            $itemId = $this->db->insertID();
+
+            // Insérer la taxe si présente
+            if (!empty($item['taxname']) && isset($item['taxrate'])) {
+                $this->db->table('tblitem_tax')->insert([
+                    'itemid'   => $itemId,
+                    'rel_id'   => $proposalId,
+                    'rel_type' => 'proposal',
+                    'taxrate'  => (float)$item['taxrate'],
+                    'taxname'  => trim($item['taxname']),
+                ]);
+            }
         }
     }
 
@@ -194,7 +215,13 @@ class ProposalModel extends Model
      */
     public function deleteItems(int $proposalId): void
     {
-        $this->db->table('tblitems')
+        // Supprimer d'abord les taxes liées aux items
+        $this->db->table('tblitem_tax')
+            ->where('rel_id',   $proposalId)
+            ->where('rel_type', 'proposal')
+            ->delete();
+        // Puis les items
+        $this->db->table('tblitemable')
             ->where('rel_id',   $proposalId)
             ->where('rel_type', 'proposal')
             ->delete();
@@ -255,4 +282,37 @@ class ProposalModel extends Model
             round($grandTotal,    2),
         ];
     }
+
+    /**
+     * Retourne les offres d'un client (par son userid).
+     * Le client ne voit que ses propres offres.
+     */
+    public function getByClient(int $clientId): array
+    {
+        return $this->select('
+            tblproposals.id,
+            tblproposals.subject,
+            tblproposals.proposal_to,
+            tblproposals.status,
+            tblproposals.total,
+            tblproposals.date,
+            tblproposals.open_till,
+            tblproposals.datecreated,
+            tblproposals.currency,
+            tblproposals.email,
+            tblproposals.estimate_id,
+            tblproposals.invoice_id,
+            curr.symbol AS currency_symbol,
+            curr.name   AS currency_name,
+            s.firstname AS staff_firstname,
+            s.lastname  AS staff_lastname
+        ')
+        ->join('tblcurrencies curr', 'curr.id = tblproposals.currency', 'left')
+        ->join('tblstaff s',         's.staffid = tblproposals.addedfrom', 'left')
+        ->where('tblproposals.rel_id',   $clientId)
+        ->where('tblproposals.rel_type', 'customer')
+        ->orderBy('tblproposals.id', 'DESC')
+        ->findAll();
+    }
+
 }

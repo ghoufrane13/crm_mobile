@@ -54,4 +54,33 @@ $routes->group('api', function ($routes) {
     $routes->post('staff/verify-otp',      'StaffController::verifyOtp');
     $routes->post('staff/resend-otp',      'StaffController::resendOtp');
     $routes->post('staff/update-profile',  'StaffController::updateProfile');
+
+    // ========================================
+    // PROPOSALS
+    // ========================================
+    $routes->get('proposals/list',               'ProposalController::list');
+    $routes->get('proposals/detail/(:num)',       'ProposalController::detail/$1');
+    $routes->post('proposals/create',             'ProposalController::create');
+    $routes->post('proposals/update/(:num)',      'ProposalController::update/$1');
+    $routes->post('proposals/change-status',      'ProposalController::changeStatus');
+    $routes->post('proposals/send-email/(:num)',  'ProposalController::sendEmail/$1');
+    $routes->get('proposals/pdf/(:num)',          'ProposalController::pdf/$1');
+    $routes->post('proposals/convert/(:num)',     'ProposalController::convert/$1');
+    $routes->delete('proposals/delete/(:num)',    'ProposalController::delete/$1');
+
+    // ── Données formulaire ──────────────────────────────────
+    $routes->get('proposals/clients',             'ProposalController::clients');
+    $routes->get('proposals/contacts',            'ProposalController::contacts');
+    $routes->get('proposals/taxes',               'ProposalController::taxes');
+    $routes->get('proposals/currencies',          'ProposalController::currencies');
+    $routes->get('proposals/staff-list',          'ProposalController::staffList');
+    $routes->get('proposals/countries',           'ProposalController::countries');
+    $routes->get('proposals/next-number',         'ProposalController::nextNumber');
+
+    // ── Client (lecture seule) ──────────────────────────────
+    $routes->get('proposals/client-list',             'ProposalController::clientList');
+    $routes->get('proposals/client-detail/(:num)',    'ProposalController::clientDetail/$1');
+    $routes->get('proposals/client-pdf/(:num)',       'ProposalController::clientPdf/$1');
+    $routes->post('proposals/client-respond/(:num)',  'ProposalController::clientRespond/$1');
+
 });

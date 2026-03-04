@@ -4,6 +4,8 @@ namespace App\Controllers;
 
 use CodeIgniter\RESTful\ResourceController;
 use App\Models\StaffModel;
+use App\Models\ClientModel;
+use App\Models\ContactModel;
 
 class StaffController extends ResourceController
 {
@@ -37,7 +39,8 @@ class StaffController extends ResourceController
         }
     }
 
-    private function sendOtpEmail(string $to, string $otpCode, string $firstname, string $lastname): bool
+    private function sendOtpEmail(string $to, string $otpCode,
+        string $firstname, string $lastname): bool
     {
         $subject = "Code de vérification - CRM Mobile Staff";
         $message = "
@@ -79,25 +82,18 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 </html>";
 
         $config = [
-            'protocol'   => 'smtp',
-            'SMTPHost'   => 'smtp-relay.brevo.com',
-            'SMTPPort'   => 587,
-            'SMTPUser'   => 'a27d6e001@smtp-brevo.com',
-            'SMTPPass'   => 'yGpqFVEwstIh2Mjr',
-            'SMTPCrypto' => 'tls',
-            'mailType'   => 'html',
-            'charset'    => 'utf-8',
-            'wordWrap'   => true,
-            'newline'    => "\r\n",
+            'protocol' => 'smtp', 'SMTPHost' => 'smtp-relay.brevo.com',
+            'SMTPPort' => 587,    'SMTPUser' => 'a27d6e001@smtp-brevo.com',
+            'SMTPPass' => 'yGpqFVEwstIh2Mjr', 'SMTPCrypto' => 'tls',
+            'mailType' => 'html', 'charset'  => 'utf-8',
+            'wordWrap' => true,   'newline'   => "\r\n",
         ];
-
         $email = \Config\Services::email();
         $email->initialize($config);
         $email->setFrom('ghoufranbensassy@gmail.com', 'CRM Mobile');
         $email->setTo($to);
         $email->setSubject($subject);
         $email->setMessage($message);
-
         if (!$email->send()) {
             log_message('error', 'Erreur OTP staff: ' . $email->printDebugger(['headers']));
             return false;
@@ -115,10 +111,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         $password = trim($data['password'] ?? '');
 
         if (empty($email) || empty($password)) {
-            return $this->respond([
-                'success' => false,
-                'message' => 'Email et mot de passe requis.',
-            ], 200);
+            return $this->respond(['success' => false,
+                'message' => 'Email et mot de passe requis.'], 200);
         }
 
         $staffModel = new StaffModel();
@@ -127,32 +121,19 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                             ->where('is_not_staff', 0)
                             ->first();
 
-        if (!$staff) {
-            return $this->respond([
-                'success' => false,
-                'message' => 'Email ou mot de passe incorrect.',
-            ], 200);
+        if (!$staff || !password_verify($password, $staff['password'])) {
+            return $this->respond(['success' => false,
+                'message' => 'Email ou mot de passe incorrect.'], 200);
         }
 
-        if (!password_verify($password, $staff['password'])) {
-            return $this->respond([
-                'success' => false,
-                'message' => 'Email ou mot de passe incorrect.',
-            ], 200);
-        }
-
-        // Mettre à jour last_login et last_ip
         $staffModel->update($staff['staffid'], [
             'last_login'    => date('Y-m-d H:i:s'),
             'last_ip'       => $this->request->getIPAddress(),
             'last_activity' => date('Y-m-d H:i:s'),
         ]);
 
-        // Ne jamais renvoyer le mot de passe au client
-        unset($staff['password']);
-        unset($staff['new_pass_key']);
-        unset($staff['two_factor_auth_code']);
-        unset($staff['google_auth_secret']);
+        unset($staff['password'], $staff['new_pass_key'],
+              $staff['two_factor_auth_code'], $staff['google_auth_secret']);
 
         return $this->respond([
             'success' => true,
@@ -162,86 +143,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // POST /api/staff/update-profile
-    // ═══════════════════════════════════════════════════════════════════════
-    public function updateProfile()
-    {
-        $data     = $this->request->getJSON(true);
-        $staffId  = isset($data['staff_id']) ? (int) $data['staff_id'] : 0;
-
-        if (!$staffId) {
-            return $this->respond([
-                'success' => false,
-                'message' => 'staff_id requis.',
-            ], 200);
-        }
-
-        $staffModel = new StaffModel();
-        $staff = $staffModel->find($staffId);
-
-        if (!$staff) {
-            return $this->respond([
-                'success' => false,
-                'message' => 'Membre du staff introuvable.',
-            ], 200);
-        }
-
-        // skipValidation pour ne pas exiger password/email lors d'une MAJ profil
-        $staffModel->skipValidation(true);
-
-        $updateData = [];
-
-        if (!empty($data['firstname']))
-            $updateData['firstname']   = trim($data['firstname']);
-        if (!empty($data['lastname']))
-            $updateData['lastname']    = trim($data['lastname']);
-        if (isset($data['phonenumber']))
-            $updateData['phonenumber'] = trim($data['phonenumber']);
-        if (isset($data['facebook']))
-            $updateData['facebook']    = trim($data['facebook']);
-        if (isset($data['linkedin']))
-            $updateData['linkedin']    = trim($data['linkedin']);
-        if (isset($data['skype']))
-            $updateData['skype']       = trim($data['skype']);
-
-        // Changement de mot de passe (optionnel)
-        if (!empty($data['password'])) {
-            $updateData['password']              = password_hash($data['password'], PASSWORD_BCRYPT);
-            $updateData['last_password_change']  = date('Y-m-d H:i:s');
-        }
-
-        if (empty($updateData)) {
-            return $this->respond([
-                'success' => false,
-                'message' => 'Aucune donnée à mettre à jour.',
-            ], 200);
-        }
-
-        $updated = $staffModel->update($staffId, $updateData);
-
-        if (!$updated) {
-            return $this->respond([
-                'success' => false,
-                'message' => 'Erreur lors de la mise à jour.',
-            ], 200);
-        }
-
-        // Récupérer les données mises à jour (sans données sensibles)
-        $updatedStaff = $staffModel->find($staffId);
-        unset($updatedStaff['password']);
-        unset($updatedStaff['new_pass_key']);
-        unset($updatedStaff['two_factor_auth_code']);
-        unset($updatedStaff['google_auth_secret']);
-
-        return $this->respond([
-            'success' => true,
-            'message' => 'Profil mis à jour avec succès.',
-            'staff'   => $updatedStaff,
-        ], 200);
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════
     // POST /api/staff/register
+    // + Vérifie que l'email n'existe PAS dans tblclients ni tblcontacts
     // ═══════════════════════════════════════════════════════════════════════
     public function register()
     {
@@ -256,16 +159,32 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 
         $email = strtolower(trim($data['email']));
 
+        // Email déjà utilisé par un staff ?
         if ((new StaffModel())->where('email', $email)->first()) {
             return $this->respond([
                 'success' => false,
-                'message' => 'Cet email est déjà utilisé.',
+                'message' => 'Cet email est déjà utilisé par un compte commercial.',
+            ], 409);
+        }
+
+        // Email staff ne peut PAS être un email client
+        if ((new ClientModel())->where('email', $email)->first()) {
+            return $this->respond([
+                'success' => false,
+                'message' => 'Cet email est déjà associé à un compte client. Utilisez un autre email.',
+            ], 409);
+        }
+
+        // Email staff ne peut PAS être un email contact
+        if ((new ContactModel())->where('email', $email)->first()) {
+            return $this->respond([
+                'success' => false,
+                'message' => 'Cet email est déjà associé à un contact client. Utilisez un autre email.',
             ], 409);
         }
 
         $otpCode = $this->generateOtpCode();
-
-        $token = $this->createToken([
+        $token   = $this->createToken([
             'firstname'   => trim($data['firstname']),
             'lastname'    => trim($data['lastname']),
             'email'       => $email,
@@ -274,13 +193,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             'otp_expires' => time() + 600,
         ]);
 
-        $sent = $this->sendOtpEmail(
-            $email, $otpCode,
-            trim($data['firstname']),
-            trim($data['lastname'])
-        );
-
-        if (!$sent) {
+        if (!$this->sendOtpEmail($email, $otpCode,
+                trim($data['firstname']), trim($data['lastname']))) {
             return $this->fail("Impossible d'envoyer l'email de vérification.", 500);
         }
 
@@ -293,6 +207,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 
     // ═══════════════════════════════════════════════════════════════════════
     // POST /api/staff/verify-otp
+    // + Retourne toutes les données staff pour redirection directe
+    //   vers StaffMainScreen sans repasser par LoginScreen
     // ═══════════════════════════════════════════════════════════════════════
     public function verifyOtp()
     {
@@ -301,42 +217,30 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         $code  = isset($data['code'])  ? trim($data['code'])  : null;
 
         if (!$token || !$code) {
-            return $this->respond([
-                'success' => false,
-                'message' => 'Token et code requis.',
-            ], 200);
+            return $this->respond(['success' => false,
+                'message' => 'Token et code requis.'], 200);
         }
 
         $pending = $this->decodeToken($token);
 
         if (!$pending) {
-            return $this->respond([
-                'success' => false,
-                'message' => 'Token invalide.',
-            ], 200);
+            return $this->respond(['success' => false,
+                'message' => 'Token invalide.'], 200);
         }
-
         if (time() > $pending['otp_expires']) {
-            return $this->respond([
-                'success' => false,
-                'message' => 'Code expiré. Veuillez recommencer l\'inscription.',
-            ], 200);
+            return $this->respond(['success' => false,
+                'message' => 'Code expiré. Veuillez recommencer l\'inscription.'], 200);
         }
-
         if ($pending['otp_code'] !== $code) {
-            return $this->respond([
-                'success' => false,
-                'message' => 'Code incorrect.',
-            ], 200);
+            return $this->respond(['success' => false,
+                'message' => 'Code incorrect.'], 200);
         }
 
         $staffModel = new StaffModel();
 
         if ($staffModel->where('email', $pending['email'])->first()) {
-            return $this->respond([
-                'success' => false,
-                'message' => 'Ce compte existe déjà.',
-            ], 200);
+            return $this->respond(['success' => false,
+                'message' => 'Ce compte existe déjà.'], 200);
         }
 
         $staffId = $staffModel->insert([
@@ -352,16 +256,23 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         ]);
 
         if (!$staffId) {
-            return $this->respond([
-                'success' => false,
-                'message' => 'Erreur lors de la création du compte.',
-            ], 200);
+            return $this->respond(['success' => false,
+                'message' => 'Erreur lors de la création du compte.'], 200);
         }
 
+        // Récupérer le staff créé (sans données sensibles)
+        $staff = $staffModel->find($staffId);
+        unset($staff['password'], $staff['new_pass_key'],
+              $staff['two_factor_auth_code'], $staff['google_auth_secret']);
+
+        // Retourner toutes les infos pour redirection directe
+        // vers StaffMainScreen sans repasser par LoginScreen
         return $this->respond([
-            'success'  => true,
-            'message'  => 'Email vérifié ! Votre compte a été créé avec succès.',
-            'staff_id' => $staffId,
+            'success'   => true,
+            'message'   => 'Email vérifié ! Votre compte a été créé avec succès.',
+            'user_type' => 'staff',
+            'staff_id'  => $staffId,
+            'staff'     => $staff,
         ], 200);
     }
 
@@ -374,44 +285,83 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         $token = isset($data['token']) ? trim($data['token']) : null;
 
         if (!$token) {
-            return $this->respond([
-                'success' => false,
-                'message' => 'Token requis.',
-            ], 200);
+            return $this->respond(['success' => false, 'message' => 'Token requis.'], 200);
         }
 
         $pending = $this->decodeToken($token);
-
         if (!$pending) {
-            return $this->respond([
-                'success' => false,
-                'message' => 'Token invalide. Veuillez recommencer l\'inscription.',
-            ], 200);
+            return $this->respond(['success' => false,
+                'message' => 'Token invalide. Veuillez recommencer l\'inscription.'], 200);
         }
 
-        $newOtp = $this->generateOtpCode();
-        $pending['otp_code']    = $newOtp;
+        $pending['otp_code']    = $this->generateOtpCode();
         $pending['otp_expires'] = time() + 600;
-
         $newToken = $this->createToken($pending);
 
-        $sent = $this->sendOtpEmail(
-            $pending['email'], $newOtp,
-            $pending['firstname'],
-            $pending['lastname']
-        );
-
-        if (!$sent) {
-            return $this->respond([
-                'success' => false,
-                'message' => "Impossible d'envoyer l'email.",
-            ], 200);
+        if (!$this->sendOtpEmail($pending['email'], $pending['otp_code'],
+                $pending['firstname'], $pending['lastname'])) {
+            return $this->respond(['success' => false,
+                'message' => "Impossible d'envoyer l'email."], 200);
         }
 
         return $this->respond([
             'success' => true,
             'message' => 'Nouveau code envoyé à ' . $pending['email'],
             'token'   => $newToken,
+        ], 200);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // POST /api/staff/update-profile
+    // ═══════════════════════════════════════════════════════════════════════
+    public function updateProfile()
+    {
+        $data    = $this->request->getJSON(true);
+        $staffId = isset($data['staff_id']) ? (int)$data['staff_id'] : 0;
+
+        if (!$staffId) {
+            return $this->respond(['success' => false, 'message' => 'staff_id requis.'], 200);
+        }
+
+        $staffModel = new StaffModel();
+        if (!$staffModel->find($staffId)) {
+            return $this->respond(['success' => false,
+                'message' => 'Membre du staff introuvable.'], 200);
+        }
+
+        $staffModel->skipValidation(true);
+        $updateData = [];
+
+        if (!empty($data['firstname']))  $updateData['firstname']   = trim($data['firstname']);
+        if (!empty($data['lastname']))   $updateData['lastname']    = trim($data['lastname']);
+        if (isset($data['phonenumber'])) $updateData['phonenumber'] = trim($data['phonenumber']);
+        if (isset($data['facebook']))    $updateData['facebook']    = trim($data['facebook']);
+        if (isset($data['linkedin']))    $updateData['linkedin']    = trim($data['linkedin']);
+        if (isset($data['skype']))       $updateData['skype']       = trim($data['skype']);
+
+        if (!empty($data['password'])) {
+            $updateData['password']             = password_hash($data['password'], PASSWORD_BCRYPT);
+            $updateData['last_password_change'] = date('Y-m-d H:i:s');
+        }
+
+        if (empty($updateData)) {
+            return $this->respond(['success' => false,
+                'message' => 'Aucune donnée à mettre à jour.'], 200);
+        }
+
+        if (!$staffModel->update($staffId, $updateData)) {
+            return $this->respond(['success' => false,
+                'message' => 'Erreur lors de la mise à jour.'], 200);
+        }
+
+        $updatedStaff = $staffModel->find($staffId);
+        unset($updatedStaff['password'], $updatedStaff['new_pass_key'],
+              $updatedStaff['two_factor_auth_code'], $updatedStaff['google_auth_secret']);
+
+        return $this->respond([
+            'success' => true,
+            'message' => 'Profil mis à jour avec succès.',
+            'staff'   => $updatedStaff,
         ], 200);
     }
 }

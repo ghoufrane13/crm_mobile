@@ -5,28 +5,25 @@ namespace App\Controllers;
 use App\Controllers\BaseController;
 use App\Models\ClientModel;
 use App\Models\ContactModel;
+use App\Models\StaffModel;
 use CodeIgniter\API\ResponseTrait;
 
 class RegisterController extends BaseController
 {
     use ResponseTrait;
 
-    // ── Clé secrète de chiffrement ────────────────────────────────────────
     private string $secretKey = 'CRM_CLIENT_SECRET_KEY_2024_SECURE';
 
-    // ── Normalisation téléphone ───────────────────────────────────────────
     private function normalizePhone(string $phone): string
     {
         return preg_replace('/[^0-9]/', '', $phone);
     }
 
-    // ── Génération OTP 6 chiffres ─────────────────────────────────────────
     private function generateOtpCode(): string
     {
         return str_pad(rand(100000, 999999), 6, '0', STR_PAD_LEFT);
     }
 
-    // ── Créer un token chiffré AES-256-CBC ────────────────────────────────
     private function createToken(array $data): string
     {
         $json      = json_encode($data);
@@ -35,7 +32,6 @@ class RegisterController extends BaseController
         return base64_encode($iv . '::' . $encrypted);
     }
 
-    // ── Décoder le token ──────────────────────────────────────────────────
     private function decodeToken(string $token): ?array
     {
         try {
@@ -49,7 +45,6 @@ class RegisterController extends BaseController
         }
     }
 
-    // ── Envoi email OTP via Brevo SMTP ────────────────────────────────────
     private function sendOtpEmail(string $to, string $otpCode, string $company): bool
     {
         $subject = "Code de vérification - Inscription société";
@@ -92,25 +87,18 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 </html>";
 
         $config = [
-            'protocol'   => 'smtp',
-            'SMTPHost'   => 'smtp-relay.brevo.com',
-            'SMTPPort'   => 587,
-            'SMTPUser'   => 'a27d6e001@smtp-brevo.com',
-            'SMTPPass'   => 'yGpqFVEwstIh2Mjr',
-            'SMTPCrypto' => 'tls',
-            'mailType'   => 'html',
-            'charset'    => 'utf-8',
-            'wordWrap'   => true,
-            'newline'    => "\r\n",
+            'protocol' => 'smtp', 'SMTPHost' => 'smtp-relay.brevo.com',
+            'SMTPPort' => 587,    'SMTPUser' => 'a27d6e001@smtp-brevo.com',
+            'SMTPPass' => 'yGpqFVEwstIh2Mjr', 'SMTPCrypto' => 'tls',
+            'mailType' => 'html', 'charset'  => 'utf-8',
+            'wordWrap' => true,   'newline'   => "\r\n",
         ];
-
         $email = \Config\Services::email();
         $email->initialize($config);
         $email->setFrom('ghoufranbensassy@gmail.com', 'CRM Mobile');
         $email->setTo($to);
         $email->setSubject($subject);
         $email->setMessage($message);
-
         if (!$email->send()) {
             log_message('error', 'Erreur OTP client: ' . $email->printDebugger(['headers']));
             return false;
@@ -120,10 +108,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 
     /* ============================================================
      * 1️⃣ SEND EMAIL CODE
-     * Valide l'email, génère un OTP, crée un token chiffré
-     * contenant toutes les données société + OTP + expiration.
-     * Envoie le mail et renvoie le token à Flutter.
-     * Rien n'est écrit en BDD ici.
+     * + Vérifie que l'email n'existe PAS dans tblstaff
      * ============================================================ */
     public function sendEmailCode()
     {
@@ -135,27 +120,33 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             return $this->failValidationErrors('Email invalide');
         }
 
-        // Vérifier doublon email dans tblclients
+        // Email déjà utilisé par un client ?
         if ((new ClientModel())->where('email', $email)->first()) {
-            return $this->respond(['status' => false, 'message' => 'Cet email est déjà utilisé.'], 409);
+            return $this->respond([
+                'status'  => false,
+                'message' => 'Cet email est déjà utilisé par un compte client.',
+            ], 409);
+        }
+
+        // Email déjà utilisé par un staff ? → interdit
+        if ((new StaffModel())->where('email', $email)->first()) {
+            return $this->respond([
+                'status'  => false,
+                'message' => 'Cet email est déjà associé à un compte commercial. Utilisez un autre email.',
+            ], 409);
         }
 
         $otpCode = $this->generateOtpCode();
-
-        // Toutes les données société sont chiffrées dans le token
-        // Flutter le stocke en mémoire et le renvoie pour verify-email-code
-        $token = $this->createToken([
+        $token   = $this->createToken([
             'company'     => $company,
             'email'       => $email,
             'phonenumber' => trim($data['phonenumber'] ?? ''),
-            'country'     => isset($data['country']) ? (int) $data['country'] : null,
+            'country'     => isset($data['country']) ? (int)$data['country'] : null,
             'otp_code'    => $otpCode,
             'otp_expires' => time() + 600,
         ]);
 
-        $sent = $this->sendOtpEmail($email, $otpCode, $company ?: 'votre société');
-
-        if (!$sent) {
+        if (!$this->sendOtpEmail($email, $otpCode, $company ?: 'votre société')) {
             return $this->failServerError("Impossible d'envoyer l'email de vérification.");
         }
 
@@ -168,9 +159,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 
     /* ============================================================
      * 2️⃣ VERIFY EMAIL CODE
-     * Flutter envoie le token + le code saisi.
-     * On décode, vérifie, insère la société si OK.
-     * Renvoie le client_id pour la suite (ContactFormScreen).
+     * Insère la société, renvoie client_id
      * ============================================================ */
     public function verifyEmailCode()
     {
@@ -187,23 +176,19 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         if (!$pending) {
             return $this->respond(['status' => false, 'message' => 'Token invalide.'], 200);
         }
-
         if (time() > $pending['otp_expires']) {
             return $this->respond(['status' => false, 'message' => 'Code expiré. Veuillez recommencer.'], 200);
         }
-
         if ($pending['otp_code'] !== $code) {
             return $this->respond(['status' => false, 'message' => 'Code incorrect.'], 200);
         }
 
-        // ✅ Code correct → insérer la société en BDD
         $clientModel = new ClientModel();
         $phone       = $this->normalizePhone($pending['phonenumber'] ?? '');
 
         if ($clientModel->where('email', $pending['email'])->first()) {
             return $this->respond(['status' => false, 'message' => 'Email déjà utilisé.'], 200);
         }
-
         if (!empty($phone) && $clientModel->where('phonenumber', $phone)->first()) {
             return $this->respond(['status' => false, 'message' => 'Numéro de téléphone déjà utilisé.'], 200);
         }
@@ -229,8 +214,6 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 
     /* ============================================================
      * 3️⃣ RESEND EMAIL CODE
-     * Flutter renvoie l'ancien token.
-     * On décode, génère un nouveau OTP, renvoie un nouveau token.
      * ============================================================ */
     public function resendEmailCode()
     {
@@ -242,37 +225,31 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         }
 
         $pending = $this->decodeToken($token);
-
         if (!$pending) {
             return $this->respond(['status' => false, 'message' => 'Token invalide. Veuillez recommencer.'], 200);
         }
 
-        $newOtp = $this->generateOtpCode();
-        $pending['otp_code']    = $newOtp;
+        $pending['otp_code']    = $this->generateOtpCode();
         $pending['otp_expires'] = time() + 600;
-
         $newToken = $this->createToken($pending);
 
-        $sent = $this->sendOtpEmail(
-            $pending['email'],
-            $newOtp,
-            $pending['company'] ?? 'votre société'
-        );
-
-        if (!$sent) {
+        if (!$this->sendOtpEmail($pending['email'], $pending['otp_code'],
+                $pending['company'] ?? 'votre société')) {
             return $this->respond(['status' => false, 'message' => "Impossible d'envoyer l'email."], 200);
         }
 
         return $this->respond([
             'status'  => true,
             'message' => 'Nouveau code envoyé à ' . $pending['email'],
-            'token'   => $newToken, // ← Flutter met à jour son token en mémoire
+            'token'   => $newToken,
         ]);
     }
 
     /* ============================================================
      * 4️⃣ REGISTER CONTACT
-     * Appelé après vérification email — client_id déjà créé.
+     * + Vérifie que l'email contact n'existe PAS dans tblstaff
+     * + Retourne toutes les données pour redirection directe
+     *   vers MainScreen (dashboard client) sans repasser par login
      * ============================================================ */
     public function registerContact()
     {
@@ -289,18 +266,28 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             return $this->failValidationErrors('Données contact incomplètes');
         }
 
+        $email        = strtolower(trim($data['email']));
         $contactModel = new ContactModel();
-        $phone        = $this->normalizePhone($data['phonenumber']);
 
-        if ($contactModel->where('email', $data['email'])->first()) {
-            return $this->fail('Email déjà utilisé');
+        // Email contact déjà utilisé par un autre contact ?
+        if ($contactModel->where('email', $email)->first()) {
+            return $this->fail('Cet email est déjà utilisé par un contact.', 409);
         }
 
+        // Email contact ne peut PAS être un email staff
+        if ((new StaffModel())->where('email', $email)->first()) {
+            return $this->respond([
+                'status'  => false,
+                'message' => 'Cet email est déjà associé à un compte commercial. Utilisez un autre email.',
+            ], 409);
+        }
+
+        $phone     = $this->normalizePhone($data['phonenumber']);
         $contactId = $contactModel->insert([
-            'userid'      => (int) $data['client_id'],
-            'firstname'   => $data['firstname'],
-            'lastname'    => $data['lastname'],
-            'email'       => $data['email'],
+            'userid'      => (int)$data['client_id'],
+            'firstname'   => trim($data['firstname']),
+            'lastname'    => trim($data['lastname']),
+            'email'       => $email,
             'phonenumber' => $phone,
             'password'    => password_hash($data['password'], PASSWORD_DEFAULT),
             'is_primary'  => 1,
@@ -311,9 +298,25 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             return $this->failServerError('Erreur création contact');
         }
 
+        // Récupérer les infos du client pour le dashboard
+        $client = (new ClientModel())->find((int)$data['client_id']);
+
+        // Retourner toutes les infos nécessaires pour la redirection
+        // directe vers MainScreen sans repasser par LoginScreen
         return $this->respondCreated([
             'status'     => true,
+            'message'    => 'Compte créé avec succès.',
+            'user_type'  => 'client',
             'contact_id' => $contactId,
+            'client_id'  => (int)$data['client_id'],
+            'user'       => [
+                'contact_id' => $contactId,
+                'firstname'  => trim($data['firstname']),
+                'lastname'   => trim($data['lastname']),
+                'email'      => $email,
+                'phone'      => $phone,
+                'company'    => $client['company'] ?? '',
+            ],
         ]);
     }
 }

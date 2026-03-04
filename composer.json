@@ -16,7 +16,8 @@
         "ext-mbstring": "*",
         "firebase/php-jwt": "6.10",
         "laminas/laminas-escaper": "^2.9",
-        "psr/log": "^1.1"
+        "psr/log": "^1.1",
+        "tecnickcom/tcpdf": "^6.10"
     },
     "require-dev": {
         "codeigniter/coding-standard": "^1.7",
