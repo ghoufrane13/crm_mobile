@@ -1,0 +1,285 @@
+ERROR - 2026-03-05 13:01:45 --> mysqli_sql_exception: Table 'crm_mobile.tblsettings' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `value`\n...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `value`\n...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `value`\n...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`\n...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(617): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+CRITICAL - 2026-03-05 13:01:45 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblsettings' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = :setting_name:', [...], false)
+ 2 APPPATH\Controllers\ProposalController.php(617): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+ 4 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 5 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-05 13:01:45 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblsettings' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = :setting_name:', [...], false)
+ 4 APPPATH\Controllers\ProposalController.php(617): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+ 6 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 7 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-05 13:01:45 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblsettings' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = :setting_name:', [...], false)
+ 5 APPPATH\Controllers\ProposalController.php(617): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-05 13:01:54 --> mysqli_sql_exception: Table 'crm_mobile.tblsettings' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `value`\n...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `value`\n...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `value`\n...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`\n...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(612): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+CRITICAL - 2026-03-05 13:01:54 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblsettings' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = :setting_name:', [...], false)
+ 2 APPPATH\Controllers\ProposalController.php(612): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+ 4 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 5 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-05 13:01:54 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblsettings' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'invoice_prefix\'')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'invoice_prefix\'')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = :setting_name:', [...], false)
+ 4 APPPATH\Controllers\ProposalController.php(612): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+ 6 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 7 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-05 13:01:54 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblsettings' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'invoice_prefix\'', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'invoice_prefix\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'invoice_prefix\'')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = :setting_name:', [...], false)
+ 5 APPPATH\Controllers\ProposalController.php(612): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-05 18:27:22 --> mysqli_sql_exception: Table 'crm_mobile.tblsettings' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `value`\n...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `value`\n...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `value`\n...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`\n...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(617): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+CRITICAL - 2026-03-05 18:27:22 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblsettings' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = :setting_name:', [...], false)
+ 2 APPPATH\Controllers\ProposalController.php(617): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+ 4 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 5 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-05 18:27:22 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblsettings' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = :setting_name:', [...], false)
+ 4 APPPATH\Controllers\ProposalController.php(617): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+ 6 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 7 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-05 18:27:22 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblsettings' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = :setting_name:', [...], false)
+ 5 APPPATH\Controllers\ProposalController.php(617): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-05 18:42:10 --> mysqli_sql_exception: Table 'crm_mobile.tblsettings' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `value`\n...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `value`\n...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `value`\n...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`\n...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(617): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+CRITICAL - 2026-03-05 18:42:10 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblsettings' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = :setting_name:', [...], false)
+ 2 APPPATH\Controllers\ProposalController.php(617): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+ 4 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 5 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-05 18:42:10 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblsettings' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = :setting_name:', [...], false)
+ 4 APPPATH\Controllers\ProposalController.php(617): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+ 6 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 7 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-05 18:42:10 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblsettings' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = :setting_name:', [...], false)
+ 5 APPPATH\Controllers\ProposalController.php(617): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-05 18:57:48 --> mysqli_sql_exception: Table 'crm_mobile.tblsettings' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `value`\n...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `value`\n...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `value`\n...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`\n...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\ProposalController.php(617): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+CRITICAL - 2026-03-05 18:57:48 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblsettings' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = :setting_name:', [...], false)
+ 2 APPPATH\Controllers\ProposalController.php(617): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+ 4 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 5 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-05 18:57:48 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblsettings' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = :setting_name:', [...], false)
+ 4 APPPATH\Controllers\ProposalController.php(617): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+ 6 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 7 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-05 18:57:48 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblsettings' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = \'estimate_prefix\'')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `value`
+FROM `tblsettings`
+WHERE `setting_name` = :setting_name:', [...], false)
+ 5 APPPATH\Controllers\ProposalController.php(617): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\ProposalController->nextNumber()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()

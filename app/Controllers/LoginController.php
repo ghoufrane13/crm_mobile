@@ -53,7 +53,10 @@ class LoginController extends ResourceController
                 'token'      => $token,
                 'contact_id' => $contact['id'],
                 'user'       => [
+                    'id'         => $contact['id'],      // contact_id pour Flutter
                     'contact_id' => $contact['id'],
+                    'userid'     => $contact['userid'],  // client_id (société)
+                    'client_id'  => $contact['userid'],
                     'firstname'  => $contact['firstname'],
                     'lastname'   => $contact['lastname'],
                     'email'      => $contact['email'],

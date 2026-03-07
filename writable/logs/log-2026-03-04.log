@@ -283,3 +283,352 @@ WHERE `setting_name` = :setting_name:', [...], false)
  7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\ProposalController))
  8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
  9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-04 20:54:45 --> mysqli_sql_exception: Table 'crm_mobile.tbldepartments' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `t`.`tic...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `t`.`tic...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `t`.`tic...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `t`.`tic...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\TicketController.php(157): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\TicketController->clientList()
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+CRITICAL - 2026-03-04 20:54:45 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tbldepartments' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `t`.`ticketid`, `t`.`subject`, `t`.`date`, `t`.`lastreply`, `t`.`status`, `t`.`priority`, `ts`.`name` as `status_name`, `ts`.`statuscolor`, `tp`.`name` as `priority_name`, `td`.`name` as `department_name`
+FROM `tbltickets` `t`
+LEFT JOIN `tbltickets_status` `ts` ON `ts`.`ticketstatusid` = `t`.`status`
+LEFT JOIN `tbltickets_priorities` `tp` ON `tp`.`priorityid` = `t`.`priority`
+LEFT JOIN `tbldepartments` `td` ON `td`.`departmentid` = `t`.`department`
+WHERE `t`.`userid` = :t.userid:
+ORDER BY `t`.`date` DESC', [...], false)
+ 2 APPPATH\Controllers\TicketController.php(157): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->clientList()
+ 4 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 5 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-04 20:54:45 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tbldepartments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `t`.`ticketid`, `t`.`subject`, `t`.`date`, `t`.`lastreply`, `t`.`status`, `t`.`priority`, `ts`.`name` as `status_name`, `ts`.`statuscolor`, `tp`.`name` as `priority_name`, `td`.`name` as `department_name`
+FROM `tbltickets` `t`
+LEFT JOIN `tbltickets_status` `ts` ON `ts`.`ticketstatusid` = `t`.`status`
+LEFT JOIN `tbltickets_priorities` `tp` ON `tp`.`priorityid` = `t`.`priority`
+LEFT JOIN `tbldepartments` `td` ON `td`.`departmentid` = `t`.`department`
+WHERE `t`.`userid` = \'null\'
+ORDER BY `t`.`date` DESC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `t`.`ticketid`, `t`.`subject`, `t`.`date`, `t`.`lastreply`, `t`.`status`, `t`.`priority`, `ts`.`name` as `status_name`, `ts`.`statuscolor`, `tp`.`name` as `priority_name`, `td`.`name` as `department_name`
+FROM `tbltickets` `t`
+LEFT JOIN `tbltickets_status` `ts` ON `ts`.`ticketstatusid` = `t`.`status`
+LEFT JOIN `tbltickets_priorities` `tp` ON `tp`.`priorityid` = `t`.`priority`
+LEFT JOIN `tbldepartments` `td` ON `td`.`departmentid` = `t`.`department`
+WHERE `t`.`userid` = \'null\'
+ORDER BY `t`.`date` DESC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `t`.`ticketid`, `t`.`subject`, `t`.`date`, `t`.`lastreply`, `t`.`status`, `t`.`priority`, `ts`.`name` as `status_name`, `ts`.`statuscolor`, `tp`.`name` as `priority_name`, `td`.`name` as `department_name`
+FROM `tbltickets` `t`
+LEFT JOIN `tbltickets_status` `ts` ON `ts`.`ticketstatusid` = `t`.`status`
+LEFT JOIN `tbltickets_priorities` `tp` ON `tp`.`priorityid` = `t`.`priority`
+LEFT JOIN `tbldepartments` `td` ON `td`.`departmentid` = `t`.`department`
+WHERE `t`.`userid` = :t.userid:
+ORDER BY `t`.`date` DESC', [...], false)
+ 4 APPPATH\Controllers\TicketController.php(157): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->clientList()
+ 6 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 7 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-04 20:54:45 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tbldepartments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `t`.`ticketid`, `t`.`subject`, `t`.`date`, `t`.`lastreply`, `t`.`status`, `t`.`priority`, `ts`.`name` as `status_name`, `ts`.`statuscolor`, `tp`.`name` as `priority_name`, `td`.`name` as `department_name`
+FROM `tbltickets` `t`
+LEFT JOIN `tbltickets_status` `ts` ON `ts`.`ticketstatusid` = `t`.`status`
+LEFT JOIN `tbltickets_priorities` `tp` ON `tp`.`priorityid` = `t`.`priority`
+LEFT JOIN `tbldepartments` `td` ON `td`.`departmentid` = `t`.`department`
+WHERE `t`.`userid` = \'null\'
+ORDER BY `t`.`date` DESC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `t`.`ticketid`, `t`.`subject`, `t`.`date`, `t`.`lastreply`, `t`.`status`, `t`.`priority`, `ts`.`name` as `status_name`, `ts`.`statuscolor`, `tp`.`name` as `priority_name`, `td`.`name` as `department_name`
+FROM `tbltickets` `t`
+LEFT JOIN `tbltickets_status` `ts` ON `ts`.`ticketstatusid` = `t`.`status`
+LEFT JOIN `tbltickets_priorities` `tp` ON `tp`.`priorityid` = `t`.`priority`
+LEFT JOIN `tbldepartments` `td` ON `td`.`departmentid` = `t`.`department`
+WHERE `t`.`userid` = \'null\'
+ORDER BY `t`.`date` DESC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `t`.`ticketid`, `t`.`subject`, `t`.`date`, `t`.`lastreply`, `t`.`status`, `t`.`priority`, `ts`.`name` as `status_name`, `ts`.`statuscolor`, `tp`.`name` as `priority_name`, `td`.`name` as `department_name`
+FROM `tbltickets` `t`
+LEFT JOIN `tbltickets_status` `ts` ON `ts`.`ticketstatusid` = `t`.`status`
+LEFT JOIN `tbltickets_priorities` `tp` ON `tp`.`priorityid` = `t`.`priority`
+LEFT JOIN `tbldepartments` `td` ON `td`.`departmentid` = `t`.`department`
+WHERE `t`.`userid` = \'null\'
+ORDER BY `t`.`date` DESC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `t`.`ticketid`, `t`.`subject`, `t`.`date`, `t`.`lastreply`, `t`.`status`, `t`.`priority`, `ts`.`name` as `status_name`, `ts`.`statuscolor`, `tp`.`name` as `priority_name`, `td`.`name` as `department_name`
+FROM `tbltickets` `t`
+LEFT JOIN `tbltickets_status` `ts` ON `ts`.`ticketstatusid` = `t`.`status`
+LEFT JOIN `tbltickets_priorities` `tp` ON `tp`.`priorityid` = `t`.`priority`
+LEFT JOIN `tbldepartments` `td` ON `td`.`departmentid` = `t`.`department`
+WHERE `t`.`userid` = :t.userid:
+ORDER BY `t`.`date` DESC', [...], false)
+ 5 APPPATH\Controllers\TicketController.php(157): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->clientList()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-04 20:55:43 --> mysqli_sql_exception: Table 'crm_mobile.tbldepartments' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `departm...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `departm...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `departm...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `departm...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\TicketController.php(23): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\TicketController->getDepartments()
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+CRITICAL - 2026-03-04 20:55:43 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tbldepartments' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `departmentid`, `name`
+FROM `tbldepartments`
+WHERE `hidefromclient` = :hidefromclient:', [...], false)
+ 2 APPPATH\Controllers\TicketController.php(23): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->getDepartments()
+ 4 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 5 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-04 20:55:43 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tbldepartments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `departmentid`, `name`
+FROM `tbldepartments`
+WHERE `hidefromclient` = 0')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `departmentid`, `name`
+FROM `tbldepartments`
+WHERE `hidefromclient` = 0')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `departmentid`, `name`
+FROM `tbldepartments`
+WHERE `hidefromclient` = :hidefromclient:', [...], false)
+ 4 APPPATH\Controllers\TicketController.php(23): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->getDepartments()
+ 6 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 7 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-04 20:55:43 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tbldepartments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `departmentid`, `name`
+FROM `tbldepartments`
+WHERE `hidefromclient` = 0', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `departmentid`, `name`
+FROM `tbldepartments`
+WHERE `hidefromclient` = 0')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `departmentid`, `name`
+FROM `tbldepartments`
+WHERE `hidefromclient` = 0')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `departmentid`, `name`
+FROM `tbldepartments`
+WHERE `hidefromclient` = :hidefromclient:', [...], false)
+ 5 APPPATH\Controllers\TicketController.php(23): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->getDepartments()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-04 21:01:54 --> mysqli_sql_exception: Table 'crm_mobile.tbldepartments' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `departm...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `departm...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `departm...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `departm...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\TicketController.php(23): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\TicketController->getDepartments()
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+CRITICAL - 2026-03-04 21:01:54 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tbldepartments' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `departmentid`, `name`
+FROM `tbldepartments`
+WHERE `hidefromclient` = :hidefromclient:', [...], false)
+ 2 APPPATH\Controllers\TicketController.php(23): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->getDepartments()
+ 4 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 5 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-04 21:01:54 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tbldepartments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `departmentid`, `name`
+FROM `tbldepartments`
+WHERE `hidefromclient` = 0')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `departmentid`, `name`
+FROM `tbldepartments`
+WHERE `hidefromclient` = 0')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `departmentid`, `name`
+FROM `tbldepartments`
+WHERE `hidefromclient` = :hidefromclient:', [...], false)
+ 4 APPPATH\Controllers\TicketController.php(23): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->getDepartments()
+ 6 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 7 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-04 21:01:54 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tbldepartments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `departmentid`, `name`
+FROM `tbldepartments`
+WHERE `hidefromclient` = 0', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `departmentid`, `name`
+FROM `tbldepartments`
+WHERE `hidefromclient` = 0')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `departmentid`, `name`
+FROM `tbldepartments`
+WHERE `hidefromclient` = 0')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `departmentid`, `name`
+FROM `tbldepartments`
+WHERE `hidefromclient` = :hidefromclient:', [...], false)
+ 5 APPPATH\Controllers\TicketController.php(23): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->getDepartments()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-04 21:02:15 --> mysqli_sql_exception: Table 'crm_mobile.tbldepartments' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `t`.`tic...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `t`.`tic...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `t`.`tic...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `t`.`tic...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\TicketController.php(157): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\TicketController->clientList()
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+CRITICAL - 2026-03-04 21:02:15 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tbldepartments' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `t`.`ticketid`, `t`.`subject`, `t`.`date`, `t`.`lastreply`, `t`.`status`, `t`.`priority`, `ts`.`name` as `status_name`, `ts`.`statuscolor`, `tp`.`name` as `priority_name`, `td`.`name` as `department_name`
+FROM `tbltickets` `t`
+LEFT JOIN `tbltickets_status` `ts` ON `ts`.`ticketstatusid` = `t`.`status`
+LEFT JOIN `tbltickets_priorities` `tp` ON `tp`.`priorityid` = `t`.`priority`
+LEFT JOIN `tbldepartments` `td` ON `td`.`departmentid` = `t`.`department`
+WHERE `t`.`userid` = :t.userid:
+ORDER BY `t`.`date` DESC', [...], false)
+ 2 APPPATH\Controllers\TicketController.php(157): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->clientList()
+ 4 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 5 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-04 21:02:15 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tbldepartments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `t`.`ticketid`, `t`.`subject`, `t`.`date`, `t`.`lastreply`, `t`.`status`, `t`.`priority`, `ts`.`name` as `status_name`, `ts`.`statuscolor`, `tp`.`name` as `priority_name`, `td`.`name` as `department_name`
+FROM `tbltickets` `t`
+LEFT JOIN `tbltickets_status` `ts` ON `ts`.`ticketstatusid` = `t`.`status`
+LEFT JOIN `tbltickets_priorities` `tp` ON `tp`.`priorityid` = `t`.`priority`
+LEFT JOIN `tbldepartments` `td` ON `td`.`departmentid` = `t`.`department`
+WHERE `t`.`userid` = \'null\'
+ORDER BY `t`.`date` DESC')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `t`.`ticketid`, `t`.`subject`, `t`.`date`, `t`.`lastreply`, `t`.`status`, `t`.`priority`, `ts`.`name` as `status_name`, `ts`.`statuscolor`, `tp`.`name` as `priority_name`, `td`.`name` as `department_name`
+FROM `tbltickets` `t`
+LEFT JOIN `tbltickets_status` `ts` ON `ts`.`ticketstatusid` = `t`.`status`
+LEFT JOIN `tbltickets_priorities` `tp` ON `tp`.`priorityid` = `t`.`priority`
+LEFT JOIN `tbldepartments` `td` ON `td`.`departmentid` = `t`.`department`
+WHERE `t`.`userid` = \'null\'
+ORDER BY `t`.`date` DESC')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `t`.`ticketid`, `t`.`subject`, `t`.`date`, `t`.`lastreply`, `t`.`status`, `t`.`priority`, `ts`.`name` as `status_name`, `ts`.`statuscolor`, `tp`.`name` as `priority_name`, `td`.`name` as `department_name`
+FROM `tbltickets` `t`
+LEFT JOIN `tbltickets_status` `ts` ON `ts`.`ticketstatusid` = `t`.`status`
+LEFT JOIN `tbltickets_priorities` `tp` ON `tp`.`priorityid` = `t`.`priority`
+LEFT JOIN `tbldepartments` `td` ON `td`.`departmentid` = `t`.`department`
+WHERE `t`.`userid` = :t.userid:
+ORDER BY `t`.`date` DESC', [...], false)
+ 4 APPPATH\Controllers\TicketController.php(157): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->clientList()
+ 6 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 7 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-04 21:02:15 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tbldepartments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `t`.`ticketid`, `t`.`subject`, `t`.`date`, `t`.`lastreply`, `t`.`status`, `t`.`priority`, `ts`.`name` as `status_name`, `ts`.`statuscolor`, `tp`.`name` as `priority_name`, `td`.`name` as `department_name`
+FROM `tbltickets` `t`
+LEFT JOIN `tbltickets_status` `ts` ON `ts`.`ticketstatusid` = `t`.`status`
+LEFT JOIN `tbltickets_priorities` `tp` ON `tp`.`priorityid` = `t`.`priority`
+LEFT JOIN `tbldepartments` `td` ON `td`.`departmentid` = `t`.`department`
+WHERE `t`.`userid` = \'null\'
+ORDER BY `t`.`date` DESC', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `t`.`ticketid`, `t`.`subject`, `t`.`date`, `t`.`lastreply`, `t`.`status`, `t`.`priority`, `ts`.`name` as `status_name`, `ts`.`statuscolor`, `tp`.`name` as `priority_name`, `td`.`name` as `department_name`
+FROM `tbltickets` `t`
+LEFT JOIN `tbltickets_status` `ts` ON `ts`.`ticketstatusid` = `t`.`status`
+LEFT JOIN `tbltickets_priorities` `tp` ON `tp`.`priorityid` = `t`.`priority`
+LEFT JOIN `tbldepartments` `td` ON `td`.`departmentid` = `t`.`department`
+WHERE `t`.`userid` = \'null\'
+ORDER BY `t`.`date` DESC')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `t`.`ticketid`, `t`.`subject`, `t`.`date`, `t`.`lastreply`, `t`.`status`, `t`.`priority`, `ts`.`name` as `status_name`, `ts`.`statuscolor`, `tp`.`name` as `priority_name`, `td`.`name` as `department_name`
+FROM `tbltickets` `t`
+LEFT JOIN `tbltickets_status` `ts` ON `ts`.`ticketstatusid` = `t`.`status`
+LEFT JOIN `tbltickets_priorities` `tp` ON `tp`.`priorityid` = `t`.`priority`
+LEFT JOIN `tbldepartments` `td` ON `td`.`departmentid` = `t`.`department`
+WHERE `t`.`userid` = \'null\'
+ORDER BY `t`.`date` DESC')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `t`.`ticketid`, `t`.`subject`, `t`.`date`, `t`.`lastreply`, `t`.`status`, `t`.`priority`, `ts`.`name` as `status_name`, `ts`.`statuscolor`, `tp`.`name` as `priority_name`, `td`.`name` as `department_name`
+FROM `tbltickets` `t`
+LEFT JOIN `tbltickets_status` `ts` ON `ts`.`ticketstatusid` = `t`.`status`
+LEFT JOIN `tbltickets_priorities` `tp` ON `tp`.`priorityid` = `t`.`priority`
+LEFT JOIN `tbldepartments` `td` ON `td`.`departmentid` = `t`.`department`
+WHERE `t`.`userid` = :t.userid:
+ORDER BY `t`.`date` DESC', [...], false)
+ 5 APPPATH\Controllers\TicketController.php(157): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->clientList()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-04 21:02:19 --> mysqli_sql_exception: Table 'crm_mobile.tbldepartments' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `departm...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `departm...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `departm...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `departm...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\TicketController.php(23): CodeIgniter\Database\BaseBuilder->get()
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\TicketController->getDepartments()
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+CRITICAL - 2026-03-04 21:02:19 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tbldepartments' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `departmentid`, `name`
+FROM `tbldepartments`
+WHERE `hidefromclient` = :hidefromclient:', [...], false)
+ 2 APPPATH\Controllers\TicketController.php(23): CodeIgniter\Database\BaseBuilder->get()
+ 3 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->getDepartments()
+ 4 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 5 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-04 21:02:19 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tbldepartments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `departmentid`, `name`
+FROM `tbldepartments`
+WHERE `hidefromclient` = 0')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `departmentid`, `name`
+FROM `tbldepartments`
+WHERE `hidefromclient` = 0')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `departmentid`, `name`
+FROM `tbldepartments`
+WHERE `hidefromclient` = :hidefromclient:', [...], false)
+ 4 APPPATH\Controllers\TicketController.php(23): CodeIgniter\Database\BaseBuilder->get()
+ 5 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->getDepartments()
+ 6 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 7 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-04 21:02:19 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tbldepartments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('SELECT `departmentid`, `name`
+FROM `tbldepartments`
+WHERE `hidefromclient` = 0', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('SELECT `departmentid`, `name`
+FROM `tbldepartments`
+WHERE `hidefromclient` = 0')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('SELECT `departmentid`, `name`
+FROM `tbldepartments`
+WHERE `hidefromclient` = 0')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(1616): CodeIgniter\Database\BaseConnection->query('SELECT `departmentid`, `name`
+FROM `tbldepartments`
+WHERE `hidefromclient` = :hidefromclient:', [...], false)
+ 5 APPPATH\Controllers\TicketController.php(23): CodeIgniter\Database\BaseBuilder->get()
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->getDepartments()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()

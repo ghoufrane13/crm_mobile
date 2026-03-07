@@ -83,4 +83,19 @@ $routes->group('api', function ($routes) {
     $routes->get('proposals/client-pdf/(:num)',       'ProposalController::clientPdf/$1');
     $routes->post('proposals/client-respond/(:num)',  'ProposalController::clientRespond/$1');
 
+    // ========================================
+    // TICKETS
+    // ========================================
+    $routes->get('tickets/departments',                      'TicketController::getDepartments');
+    $routes->get('tickets/priorities',                       'TicketController::getPriorities');
+    $routes->get('tickets/statuses',                         'TicketController::getStatuses');
+    $routes->post('tickets/create',                          'TicketController::create');
+    $routes->get('tickets/list',                             'TicketController::clientList');
+    $routes->get('tickets/all',                              'TicketController::staffList');
+    $routes->get('tickets/detail/(:num)',                    'TicketController::detail/$1');
+    $routes->post('tickets/reply',                           'TicketController::reply');
+    $routes->post('tickets/change-status',                   'TicketController::changeStatus');
+    $routes->post('tickets/upload',                          'TicketController::uploadAttachment');
+    $routes->get('tickets/attachment/(:num)/(:segment)',     'TicketController::serveAttachment/$1/$2');
+
 });

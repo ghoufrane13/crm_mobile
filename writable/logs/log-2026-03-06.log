@@ -1,0 +1,205 @@
+ERROR - 2026-03-06 13:33:18 --> mysqli_sql_exception: Table 'crm_mobile.tblticket_attachments' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('INSERT INTO `tb...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `tb...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `tb...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(2307): CodeIgniter\Database\BaseConnection->query('INSERT INTO `tb...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\TicketController.php(365): CodeIgniter\Database\BaseBuilder->insert(Array)
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\TicketController->uploadAttachment()
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+CRITICAL - 2026-03-06 13:33:18 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblticket_attachments' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(2307): CodeIgniter\Database\BaseConnection->query('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (:ticketid:, :replyid:, :file_name:, :filetype:, :dateadded:)', [...], false)
+ 2 APPPATH\Controllers\TicketController.php(365): CodeIgniter\Database\BaseBuilder->insert([...])
+ 3 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->uploadAttachment()
+ 4 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 5 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-06 13:33:18 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblticket_attachments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (1, NULL, \'1772803997_61df7ab4af2ed157af4f.jpg\', \'application/octet-stream\', \'2026-03-06 13:33:17\')')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (1, NULL, \'1772803997_61df7ab4af2ed157af4f.jpg\', \'application/octet-stream\', \'2026-03-06 13:33:17\')')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(2307): CodeIgniter\Database\BaseConnection->query('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (:ticketid:, :replyid:, :file_name:, :filetype:, :dateadded:)', [...], false)
+ 4 APPPATH\Controllers\TicketController.php(365): CodeIgniter\Database\BaseBuilder->insert([...])
+ 5 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->uploadAttachment()
+ 6 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 7 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-06 13:33:18 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblticket_attachments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (1, NULL, \'1772803997_61df7ab4af2ed157af4f.jpg\', \'application/octet-stream\', \'2026-03-06 13:33:17\')', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (1, NULL, \'1772803997_61df7ab4af2ed157af4f.jpg\', \'application/octet-stream\', \'2026-03-06 13:33:17\')')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (1, NULL, \'1772803997_61df7ab4af2ed157af4f.jpg\', \'application/octet-stream\', \'2026-03-06 13:33:17\')')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(2307): CodeIgniter\Database\BaseConnection->query('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (:ticketid:, :replyid:, :file_name:, :filetype:, :dateadded:)', [...], false)
+ 5 APPPATH\Controllers\TicketController.php(365): CodeIgniter\Database\BaseBuilder->insert([...])
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->uploadAttachment()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-06 13:33:27 --> mysqli_sql_exception: Table 'crm_mobile.tblticket_attachments' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('INSERT INTO `tb...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `tb...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `tb...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(2307): CodeIgniter\Database\BaseConnection->query('INSERT INTO `tb...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\TicketController.php(365): CodeIgniter\Database\BaseBuilder->insert(Array)
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\TicketController->uploadAttachment()
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+CRITICAL - 2026-03-06 13:33:27 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblticket_attachments' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(2307): CodeIgniter\Database\BaseConnection->query('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (:ticketid:, :replyid:, :file_name:, :filetype:, :dateadded:)', [...], false)
+ 2 APPPATH\Controllers\TicketController.php(365): CodeIgniter\Database\BaseBuilder->insert([...])
+ 3 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->uploadAttachment()
+ 4 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 5 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-06 13:33:27 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblticket_attachments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (1, NULL, \'1772804007_403d2d5cf307b0d3a08b.jpg\', \'application/octet-stream\', \'2026-03-06 13:33:27\')')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (1, NULL, \'1772804007_403d2d5cf307b0d3a08b.jpg\', \'application/octet-stream\', \'2026-03-06 13:33:27\')')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(2307): CodeIgniter\Database\BaseConnection->query('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (:ticketid:, :replyid:, :file_name:, :filetype:, :dateadded:)', [...], false)
+ 4 APPPATH\Controllers\TicketController.php(365): CodeIgniter\Database\BaseBuilder->insert([...])
+ 5 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->uploadAttachment()
+ 6 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 7 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-06 13:33:27 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblticket_attachments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (1, NULL, \'1772804007_403d2d5cf307b0d3a08b.jpg\', \'application/octet-stream\', \'2026-03-06 13:33:27\')', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (1, NULL, \'1772804007_403d2d5cf307b0d3a08b.jpg\', \'application/octet-stream\', \'2026-03-06 13:33:27\')')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (1, NULL, \'1772804007_403d2d5cf307b0d3a08b.jpg\', \'application/octet-stream\', \'2026-03-06 13:33:27\')')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(2307): CodeIgniter\Database\BaseConnection->query('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (:ticketid:, :replyid:, :file_name:, :filetype:, :dateadded:)', [...], false)
+ 5 APPPATH\Controllers\TicketController.php(365): CodeIgniter\Database\BaseBuilder->insert([...])
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->uploadAttachment()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-06 13:33:36 --> mysqli_sql_exception: Table 'crm_mobile.tblticket_attachments' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('INSERT INTO `tb...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `tb...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `tb...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(2307): CodeIgniter\Database\BaseConnection->query('INSERT INTO `tb...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\TicketController.php(365): CodeIgniter\Database\BaseBuilder->insert(Array)
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\TicketController->uploadAttachment()
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+CRITICAL - 2026-03-06 13:33:36 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblticket_attachments' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(2307): CodeIgniter\Database\BaseConnection->query('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (:ticketid:, :replyid:, :file_name:, :filetype:, :dateadded:)', [...], false)
+ 2 APPPATH\Controllers\TicketController.php(365): CodeIgniter\Database\BaseBuilder->insert([...])
+ 3 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->uploadAttachment()
+ 4 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 5 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-06 13:33:36 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblticket_attachments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (1, NULL, \'1772804016_c11ef92e39da7589e9e9.jpg\', \'application/octet-stream\', \'2026-03-06 13:33:36\')')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (1, NULL, \'1772804016_c11ef92e39da7589e9e9.jpg\', \'application/octet-stream\', \'2026-03-06 13:33:36\')')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(2307): CodeIgniter\Database\BaseConnection->query('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (:ticketid:, :replyid:, :file_name:, :filetype:, :dateadded:)', [...], false)
+ 4 APPPATH\Controllers\TicketController.php(365): CodeIgniter\Database\BaseBuilder->insert([...])
+ 5 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->uploadAttachment()
+ 6 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 7 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-06 13:33:36 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblticket_attachments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (1, NULL, \'1772804016_c11ef92e39da7589e9e9.jpg\', \'application/octet-stream\', \'2026-03-06 13:33:36\')', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (1, NULL, \'1772804016_c11ef92e39da7589e9e9.jpg\', \'application/octet-stream\', \'2026-03-06 13:33:36\')')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (1, NULL, \'1772804016_c11ef92e39da7589e9e9.jpg\', \'application/octet-stream\', \'2026-03-06 13:33:36\')')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(2307): CodeIgniter\Database\BaseConnection->query('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (:ticketid:, :replyid:, :file_name:, :filetype:, :dateadded:)', [...], false)
+ 5 APPPATH\Controllers\TicketController.php(365): CodeIgniter\Database\BaseBuilder->insert([...])
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->uploadAttachment()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-06 13:36:10 --> mysqli_sql_exception: Table 'crm_mobile.tblticket_attachments' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('INSERT INTO `tb...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `tb...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `tb...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(2307): CodeIgniter\Database\BaseConnection->query('INSERT INTO `tb...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\TicketController.php(365): CodeIgniter\Database\BaseBuilder->insert(Array)
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\TicketController->uploadAttachment()
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+CRITICAL - 2026-03-06 13:36:10 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblticket_attachments' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(2307): CodeIgniter\Database\BaseConnection->query('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (:ticketid:, :replyid:, :file_name:, :filetype:, :dateadded:)', [...], false)
+ 2 APPPATH\Controllers\TicketController.php(365): CodeIgniter\Database\BaseBuilder->insert([...])
+ 3 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->uploadAttachment()
+ 4 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 5 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-06 13:36:10 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblticket_attachments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (1, NULL, \'1772804170_ba70944f3454c07f0785.jpg\', \'application/octet-stream\', \'2026-03-06 13:36:10\')')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (1, NULL, \'1772804170_ba70944f3454c07f0785.jpg\', \'application/octet-stream\', \'2026-03-06 13:36:10\')')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(2307): CodeIgniter\Database\BaseConnection->query('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (:ticketid:, :replyid:, :file_name:, :filetype:, :dateadded:)', [...], false)
+ 4 APPPATH\Controllers\TicketController.php(365): CodeIgniter\Database\BaseBuilder->insert([...])
+ 5 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->uploadAttachment()
+ 6 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 7 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-06 13:36:10 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblticket_attachments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (1, NULL, \'1772804170_ba70944f3454c07f0785.jpg\', \'application/octet-stream\', \'2026-03-06 13:36:10\')', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (1, NULL, \'1772804170_ba70944f3454c07f0785.jpg\', \'application/octet-stream\', \'2026-03-06 13:36:10\')')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (1, NULL, \'1772804170_ba70944f3454c07f0785.jpg\', \'application/octet-stream\', \'2026-03-06 13:36:10\')')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(2307): CodeIgniter\Database\BaseConnection->query('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (:ticketid:, :replyid:, :file_name:, :filetype:, :dateadded:)', [...], false)
+ 5 APPPATH\Controllers\TicketController.php(365): CodeIgniter\Database\BaseBuilder->insert([...])
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->uploadAttachment()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+ERROR - 2026-03-06 13:36:21 --> mysqli_sql_exception: Table 'crm_mobile.tblticket_attachments' doesn't exist in C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php:306
+Stack trace:
+#0 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\MySQLi\Connection.php(306): mysqli->query('INSERT INTO `tb...', 0)
+#1 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `tb...')
+#2 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `tb...')
+#3 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\Database\BaseBuilder.php(2307): CodeIgniter\Database\BaseConnection->query('INSERT INTO `tb...', Array, false)
+#4 C:\xampp81\htdocs\CodeIgniter4-4.4.7\app\Controllers\TicketController.php(365): CodeIgniter\Database\BaseBuilder->insert(Array)
+#5 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(943): App\Controllers\TicketController->uploadAttachment()
+#6 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+#7 C:\xampp81\htdocs\CodeIgniter4-4.4.7\system\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#8 C:\xampp81\htdocs\CodeIgniter4-4.4.7\public\index.php(79): CodeIgniter\CodeIgniter->run()
+#9 {main}
+CRITICAL - 2026-03-06 13:36:21 --> CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblticket_attachments' doesn't exist
+in SYSTEMPATH\Database\BaseConnection.php on line 647.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(2307): CodeIgniter\Database\BaseConnection->query('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (:ticketid:, :replyid:, :file_name:, :filetype:, :dateadded:)', [...], false)
+ 2 APPPATH\Controllers\TicketController.php(365): CodeIgniter\Database\BaseBuilder->insert([...])
+ 3 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->uploadAttachment()
+ 4 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 5 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 6 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-06 13:36:21 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Table 'crm_mobile.tblticket_attachments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 311.
+ 1 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (1, NULL, \'1772804181_bf4f40da24265d76d47b.jpg\', \'application/octet-stream\', \'2026-03-06 13:36:21\')')
+ 2 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (1, NULL, \'1772804181_bf4f40da24265d76d47b.jpg\', \'application/octet-stream\', \'2026-03-06 13:36:21\')')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(2307): CodeIgniter\Database\BaseConnection->query('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (:ticketid:, :replyid:, :file_name:, :filetype:, :dateadded:)', [...], false)
+ 4 APPPATH\Controllers\TicketController.php(365): CodeIgniter\Database\BaseBuilder->insert([...])
+ 5 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->uploadAttachment()
+ 6 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 7 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 8 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-03-06 13:36:21 --> [Caused by] mysqli_sql_exception: Table 'crm_mobile.tblticket_attachments' doesn't exist
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 306.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(306): mysqli->query('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (1, NULL, \'1772804181_bf4f40da24265d76d47b.jpg\', \'application/octet-stream\', \'2026-03-06 13:36:21\')', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(693): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (1, NULL, \'1772804181_bf4f40da24265d76d47b.jpg\', \'application/octet-stream\', \'2026-03-06 13:36:21\')')
+ 3 SYSTEMPATH\Database\BaseConnection.php(607): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (1, NULL, \'1772804181_bf4f40da24265d76d47b.jpg\', \'application/octet-stream\', \'2026-03-06 13:36:21\')')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(2307): CodeIgniter\Database\BaseConnection->query('INSERT INTO `tblticket_attachments` (`ticketid`, `replyid`, `file_name`, `filetype`, `dateadded`) VALUES (:ticketid:, :replyid:, :file_name:, :filetype:, :dateadded:)', [...], false)
+ 5 APPPATH\Controllers\TicketController.php(365): CodeIgniter\Database\BaseBuilder->insert([...])
+ 6 SYSTEMPATH\CodeIgniter.php(943): App\Controllers\TicketController->uploadAttachment()
+ 7 SYSTEMPATH\CodeIgniter.php(503): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\TicketController))
+ 8 SYSTEMPATH\CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 FCPATH\index.php(79): CodeIgniter\CodeIgniter->run()
