@@ -14,6 +14,10 @@ class RegisterController extends BaseController
 
     private string $secretKey = 'CRM_CLIENT_SECRET_KEY_2024_SECURE';
 
+    // ──────────────────────────────────────────────────────────────────────
+    // HELPERS PRIVÉS
+    // ──────────────────────────────────────────────────────────────────────
+
     private function normalizePhone(string $phone): string
     {
         return preg_replace('/[^0-9]/', '', $phone);
@@ -87,11 +91,16 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 </html>";
 
         $config = [
-            'protocol' => 'smtp', 'SMTPHost' => 'smtp-relay.brevo.com',
-            'SMTPPort' => 587,    'SMTPUser' => 'a27d6e001@smtp-brevo.com',
-            'SMTPPass' => 'yGpqFVEwstIh2Mjr', 'SMTPCrypto' => 'tls',
-            'mailType' => 'html', 'charset'  => 'utf-8',
-            'wordWrap' => true,   'newline'   => "\r\n",
+            'protocol'   => 'smtp',
+            'SMTPHost'   => 'smtp-relay.brevo.com',
+            'SMTPPort'   => 587,
+            'SMTPUser'   => 'a27d6e001@smtp-brevo.com',
+            'SMTPPass'   => 'yGpqFVEwstIh2Mjr',
+            'SMTPCrypto' => 'tls',
+            'mailType'   => 'html',
+            'charset'    => 'utf-8',
+            'wordWrap'   => true,
+            'newline'    => "\r\n",
         ];
         $email = \Config\Services::email();
         $email->initialize($config);
@@ -106,61 +115,141 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         return true;
     }
 
-    /* ============================================================
-     * 1️⃣ SEND EMAIL CODE
-     * + Vérifie que l'email n'existe PAS dans tblstaff
-     * ============================================================ */
+    // ══════════════════════════════════════════════════════════════════════
+    // 1️⃣  SEND EMAIL CODE
+    //
+    // Logique :
+    //   - Société existante (même nom) → vérifier que l'email fourni
+    //     correspond bien à l'email officiel de cette société,
+    //     puis envoyer OTP pour prouver l'accès → créer un nouveau contact.
+    //   - Nouvelle société → vérifier unicité email dans clients + staff
+    //     → envoyer OTP → créer société + contact.
+    // ══════════════════════════════════════════════════════════════════════
     public function sendEmailCode()
     {
         $data    = $this->request->getJSON(true);
         $email   = strtolower(trim($data['email']   ?? ''));
         $company = trim($data['company'] ?? '');
+        $phone   = trim($data['phonenumber'] ?? '');
+        $country = isset($data['country']) ? (int)$data['country'] : null;
 
+        // ── Validation basique ────────────────────────────────────────────
         if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return $this->failValidationErrors('Email invalide');
         }
+        if (empty($company)) {
+            return $this->failValidationErrors('Nom de société requis');
+        }
 
-        // Email déjà utilisé par un client ?
-        if ((new ClientModel())->where('email', $email)->first()) {
+        $clientModel = new ClientModel();
+
+        // ── CAS 1 : Société déjà existante (même nom, insensible à la casse) ──
+        $existingClient = $clientModel
+            ->where('LOWER(TRIM(company))', strtolower(trim($company)))
+            ->first();
+
+        if ($existingClient) {
+            // Sécurité : l'email fourni DOIT correspondre à l'email officiel
+            // de la société pour prouver l'appartenance
+            if (strtolower(trim($existingClient['email'])) !== $email) {
+                return $this->respond([
+                    'status'  => false,
+                    'code'    => 'COMPANY_EXISTS_WRONG_EMAIL',
+                    'message' => 'Cette société est déjà enregistrée. '
+                               . 'Pour créer un compte, utilisez l\'email officiel '
+                               . 'de la société (' . $this->maskEmail($existingClient['email']) . ').',
+                ], 409);
+            }
+
+            // L'email du contact qui s'inscrit ne doit pas déjà exister
+            // dans tblcontacts (évite doublon de compte utilisateur)
+            // Note : ici on vérifie l'email CONTACT (étape 3),
+            // mais on peut déjà vérifier si quelqu'un tente de se réinscrire
+            // avec le même email société → bloquer
+            if ((new ContactModel())->where('email', $email)->first()) {
+                return $this->respond([
+                    'status'  => false,
+                    'code'    => 'CONTACT_EMAIL_EXISTS',
+                    'message' => 'Un compte avec cet email existe déjà. '
+                               . 'Connectez-vous plutôt.',
+                ], 409);
+            }
+
+            // ✅ Société trouvée + email correct → OTP pour vérification
+            $otpCode = $this->generateOtpCode();
+            $token   = $this->createToken([
+                'company'            => $existingClient['company'],
+                'email'              => $email,
+                'phonenumber'        => $phone,
+                'country'            => $country,
+                'otp_code'           => $otpCode,
+                'otp_expires'        => time() + 600,
+                'existing_client_id' => (int)$existingClient['userid'], // ← ne pas réinsérer
+            ]);
+
+            if (!$this->sendOtpEmail($email, $otpCode, $existingClient['company'])) {
+                return $this->failServerError("Impossible d'envoyer l'email de vérification.");
+            }
+
+            return $this->respond([
+                'status'         => true,
+                'company_exists' => true,
+                'message'        => 'Société trouvée. Code de vérification envoyé à ' . $email,
+                'token'          => $token,
+            ]);
+        }
+
+        // ── CAS 2 : Nouvelle société ──────────────────────────────────────
+
+        // Email société déjà utilisé par un autre client ?
+        if ($clientModel->where('email', $email)->first()) {
             return $this->respond([
                 'status'  => false,
-                'message' => 'Cet email est déjà utilisé par un compte client.',
+                'code'    => 'EMAIL_CLIENT_EXISTS',
+                'message' => 'Cet email est déjà associé à un compte client.',
             ], 409);
         }
 
-        // Email déjà utilisé par un staff ? → interdit
+        // Email appartient déjà à un staff → interdit
         if ((new StaffModel())->where('email', $email)->first()) {
             return $this->respond([
                 'status'  => false,
-                'message' => 'Cet email est déjà associé à un compte commercial. Utilisez un autre email.',
+                'code'    => 'EMAIL_STAFF_EXISTS',
+                'message' => 'Cet email est déjà associé à un compte commercial. '
+                           . 'Utilisez un autre email.',
             ], 409);
         }
 
+        // ✅ Nouvelle société → OTP
         $otpCode = $this->generateOtpCode();
         $token   = $this->createToken([
             'company'     => $company,
             'email'       => $email,
-            'phonenumber' => trim($data['phonenumber'] ?? ''),
-            'country'     => isset($data['country']) ? (int)$data['country'] : null,
+            'phonenumber' => $phone,
+            'country'     => $country,
             'otp_code'    => $otpCode,
             'otp_expires' => time() + 600,
+            // Pas de existing_client_id → nouvelle société à créer
         ]);
 
-        if (!$this->sendOtpEmail($email, $otpCode, $company ?: 'votre société')) {
+        if (!$this->sendOtpEmail($email, $otpCode, $company)) {
             return $this->failServerError("Impossible d'envoyer l'email de vérification.");
         }
 
         return $this->respond([
-            'status'  => true,
-            'message' => 'Code de vérification envoyé à ' . $email,
-            'token'   => $token,
+            'status'         => true,
+            'company_exists' => false,
+            'message'        => 'Code de vérification envoyé à ' . $email,
+            'token'          => $token,
         ]);
     }
 
-    /* ============================================================
-     * 2️⃣ VERIFY EMAIL CODE
-     * Insère la société, renvoie client_id
-     * ============================================================ */
+    // ══════════════════════════════════════════════════════════════════════
+    // 2️⃣  VERIFY EMAIL CODE
+    //
+    // - Société existante  → NE PAS réinsérer, retourner existing_client_id
+    // - Nouvelle société   → Insérer dans tblclients, retourner nouveau id
+    // ══════════════════════════════════════════════════════════════════════
     public function verifyEmailCode()
     {
         $data  = $this->request->getJSON(true);
@@ -176,29 +265,43 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         if (!$pending) {
             return $this->respond(['status' => false, 'message' => 'Token invalide.'], 200);
         }
-        if (time() > $pending['otp_expires']) {
+        if (time() > ($pending['otp_expires'] ?? 0)) {
             return $this->respond(['status' => false, 'message' => 'Code expiré. Veuillez recommencer.'], 200);
         }
         if ($pending['otp_code'] !== $code) {
             return $this->respond(['status' => false, 'message' => 'Code incorrect.'], 200);
         }
 
+        // ── Société existante → retourner son ID sans rien insérer ────────
+        if (!empty($pending['existing_client_id'])) {
+            return $this->respond([
+                'status'    => true,
+                'message'   => 'Email vérifié.',
+                'client_id' => (int)$pending['existing_client_id'],
+            ]);
+        }
+
+        // ── Nouvelle société → insérer dans tblclients ────────────────────
         $clientModel = new ClientModel();
         $phone       = $this->normalizePhone($pending['phonenumber'] ?? '');
 
+        // Double vérification (soumissions parallèles / race condition)
         if ($clientModel->where('email', $pending['email'])->first()) {
             return $this->respond(['status' => false, 'message' => 'Email déjà utilisé.'], 200);
         }
-        if (!empty($phone) && $clientModel->where('phonenumber', $phone)->first()) {
-            return $this->respond(['status' => false, 'message' => 'Numéro de téléphone déjà utilisé.'], 200);
+
+        // Vérification doublon sur le nom de société (race condition)
+        if ($clientModel->where('LOWER(TRIM(company))', strtolower(trim($pending['company'])))->first()) {
+            return $this->respond(['status' => false, 'message' => 'Cette société existe déjà.'], 200);
         }
 
         $clientId = $clientModel->insert([
             'company'     => $pending['company'],
             'email'       => $pending['email'],
             'phonenumber' => $phone,
-            'country'     => $pending['country'],
+            'country'     => $pending['country'] ?? 0,
             'active'      => 1,
+            'datecreated' => date('Y-m-d H:i:s'),
         ]);
 
         if (!$clientId) {
@@ -207,14 +310,14 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 
         return $this->respond([
             'status'    => true,
-            'message'   => 'Email vérifié ! Société créée avec succès.',
+            'message'   => 'Email vérifié. Société créée avec succès.',
             'client_id' => $clientId,
         ]);
     }
 
-    /* ============================================================
-     * 3️⃣ RESEND EMAIL CODE
-     * ============================================================ */
+    // ══════════════════════════════════════════════════════════════════════
+    // 3️⃣  RESEND EMAIL CODE
+    // ══════════════════════════════════════════════════════════════════════
     public function resendEmailCode()
     {
         $data  = $this->request->getJSON(true);
@@ -233,8 +336,11 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         $pending['otp_expires'] = time() + 600;
         $newToken = $this->createToken($pending);
 
-        if (!$this->sendOtpEmail($pending['email'], $pending['otp_code'],
-                $pending['company'] ?? 'votre société')) {
+        if (!$this->sendOtpEmail(
+            $pending['email'],
+            $pending['otp_code'],
+            $pending['company'] ?? 'votre société'
+        )) {
             return $this->respond(['status' => false, 'message' => "Impossible d'envoyer l'email."], 200);
         }
 
@@ -245,46 +351,67 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         ]);
     }
 
-    /* ============================================================
-     * 4️⃣ REGISTER CONTACT
-     * + Vérifie que l'email contact n'existe PAS dans tblstaff
-     * + Retourne toutes les données pour redirection directe
-     *   vers MainScreen (dashboard client) sans repasser par login
-     * ============================================================ */
+    // ══════════════════════════════════════════════════════════════════════
+    // 4️⃣  REGISTER CONTACT
+    //
+    // - Vérifie unicité email contact dans tblcontacts ET tblstaff
+
+
+    // - Retourne toutes les données pour redirection directe vers MainScreen
+    // ══════════════════════════════════════════════════════════════════════
     public function registerContact()
     {
         $data = $this->request->getJSON(true);
 
-        if (
-            empty($data['client_id'])   ||
-            empty($data['firstname'])   ||
-            empty($data['lastname'])    ||
-            empty($data['email'])       ||
-            empty($data['phonenumber']) ||
-            empty($data['password'])
-        ) {
-            return $this->failValidationErrors('Données contact incomplètes');
+        // ── Validation des champs requis ──────────────────────────────────
+        $required = ['client_id', 'firstname', 'lastname', 'email', 'phonenumber', 'password'];
+        foreach ($required as $field) {
+            if (empty($data[$field])) {
+                return $this->failValidationErrors("Champ requis manquant : $field");
+            }
         }
 
         $email        = strtolower(trim($data['email']));
+        $clientId     = (int)$data['client_id'];
         $contactModel = new ContactModel();
+        $clientModel  = new ClientModel();
 
-        // Email contact déjà utilisé par un autre contact ?
-        if ($contactModel->where('email', $email)->first()) {
-            return $this->fail('Cet email est déjà utilisé par un contact.', 409);
-        }
-
-        // Email contact ne peut PAS être un email staff
-        if ((new StaffModel())->where('email', $email)->first()) {
+        // ── Vérifier que le client_id existe bien ─────────────────────────
+        $client = $clientModel->find($clientId);
+        if (!$client) {
             return $this->respond([
                 'status'  => false,
-                'message' => 'Cet email est déjà associé à un compte commercial. Utilisez un autre email.',
+                'message' => 'Société introuvable. Recommencez l\'inscription.',
+            ], 404);
+        }
+
+        // ── Email contact déjà utilisé par un contact existant ? ──────────
+        if ($contactModel->where('email', $email)->first()) {
+            return $this->respond([
+                'status'  => false,
+                'code'    => 'CONTACT_EMAIL_EXISTS',
+                'message' => 'Cet email est déjà utilisé. Connectez-vous plutôt.',
             ], 409);
         }
 
+        // ── Email contact appartient à un staff ? → interdit ─────────────
+        if ((new StaffModel())->where('email', $email)->first()) {
+            return $this->respond([
+                'status'  => false,
+                'code'    => 'EMAIL_STAFF_EXISTS',
+                'message' => 'Cet email est déjà associé à un compte commercial. '
+                           . 'Utilisez un autre email.',
+            ], 409);
+        }
+
+
+
+
+
+
         $phone     = $this->normalizePhone($data['phonenumber']);
         $contactId = $contactModel->insert([
-            'userid'      => (int)$data['client_id'],
+            'userid'      => $clientId,
             'firstname'   => trim($data['firstname']),
             'lastname'    => trim($data['lastname']),
             'email'       => $email,
@@ -292,25 +419,24 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             'password'    => password_hash($data['password'], PASSWORD_DEFAULT),
             'is_primary'  => 1,
             'active'      => 1,
+            'datecreated' => date('Y-m-d H:i:s'),
         ]);
 
         if (!$contactId) {
-            return $this->failServerError('Erreur création contact');
+            return $this->failServerError('Erreur lors de la création du contact.');
         }
 
-        // Récupérer les infos du client pour le dashboard
-        $client = (new ClientModel())->find((int)$data['client_id']);
-
-        // Retourner toutes les infos nécessaires pour la redirection
-        // directe vers MainScreen sans repasser par LoginScreen
+        // ── Retourner toutes les infos pour redirection directe MainScreen ─
         return $this->respondCreated([
             'status'     => true,
             'message'    => 'Compte créé avec succès.',
             'user_type'  => 'client',
             'contact_id' => $contactId,
-            'client_id'  => (int)$data['client_id'],
+            'client_id'  => $clientId,
             'user'       => [
                 'contact_id' => $contactId,
+                'userid'     => $clientId,
+                'client_id'  => $clientId,
                 'firstname'  => trim($data['firstname']),
                 'lastname'   => trim($data['lastname']),
                 'email'      => $email,
@@ -318,5 +444,16 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                 'company'    => $client['company'] ?? '',
             ],
         ]);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+    // HELPER : masquer partiellement un email pour l'afficher à l'utilisateur
+    // Ex: g***@gmail.com
+    // ──────────────────────────────────────────────────────────────────────
+    private function maskEmail(string $email): string
+    {
+        [$local, $domain] = explode('@', $email, 2);
+        $masked = substr($local, 0, 1) . str_repeat('*', max(1, strlen($local) - 1));
+        return $masked . '@' . $domain;
     }
 }

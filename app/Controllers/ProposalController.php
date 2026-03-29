@@ -242,43 +242,7 @@ class ProposalController extends ResourceController
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // POST /api/proposals/convert/:id  (STAFF uniquement)
-    //
-    // body JSON : {
-    //   "type"             : "estimate" | "invoice",
-    //   "staff_id"         : int,
-    //   "currency_id"      : int,
-    //   "status"           : int,           // 1 = Brouillon/Impayée
-    //   "date"             : "YYYY-MM-DD",
-    //   "expiry_date"      : "YYYY-MM-DD",  // date de validité (devis) ou d'échéance (facture)
-    //   "discount_type"    : "" | "before_tax" | "after_tax",
-    //   "discount_percent" : float,
-    //   "admin_note"       : string,
-    //   "reference_no"     : string,        // devis uniquement
-    //   "billing_street"   : string,
-    //   "billing_city"     : string,
-    //   "billing_state"    : string,
-    //   "billing_zip"      : string,
-    //   "billing_country"  : int,
-    //   "include_shipping" : 0 | 1,
-    //   "shipping_street"  : string,
-    //   "shipping_city"    : string,
-    //   "shipping_state"   : string,
-    //   "shipping_zip"     : string,
-    //   "shipping_country" : int,
-    //   // FACTURE uniquement :
-    //   "sale_agent"       : int,
-    //   "cancel_reminders" : 0 | 1,
-    //   "recurring"        : "0" | "month" | "quarter" | "year",
-    //   "payment_modes"    : ["bank","paypal","stripe"],
-    //   // Articles édités par l'utilisateur dans Flutter :
-    //   "items": [
-    //     { "description": str, "long_description": str,
-    //       "qty": float, "rate": float, "unit": str,
-    //       "taxid": int, "taxrate": float, "taxname": str,
-    //       "is_optional": 0|1 }
-    //   ]
-    // }
+    // POST /api/proposals/convert/:id
     // ═══════════════════════════════════════════════════════════════════════
     public function convert($id)
     {
@@ -292,8 +256,6 @@ class ProposalController extends ResourceController
         $proposal = $db->table('tblproposals')->where('id', (int)$id)->get()->getRowArray();
         if (!$proposal) return $this->fail('Offre introuvable', 404);
 
-        // Utiliser les articles envoyés par Flutter (modifiés par l'utilisateur),
-        // sinon fallback sur les articles originaux de l'offre.
         $items = $data['items'] ?? [];
         if (empty($items)) {
             $items = $db->table('tblitemable i')
@@ -318,7 +280,6 @@ class ProposalController extends ResourceController
 
         if (!$newId) return $this->fail("Erreur lors de la conversion en $label", 500);
 
-        // Marquer l'offre comme acceptée + lien vers le document créé
         $updateData = ['status' => 3];
         if ($type === 'invoice'  && $db->fieldExists('invoiceid',  'tblproposals'))
             $updateData['invoiceid']  = $newId;
@@ -336,8 +297,7 @@ class ProposalController extends ResourceController
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // POST /api/proposals/client-respond/:id  (CLIENT uniquement)
-    // body: { "action": "accept"|"decline", "contact_id": X }
+    // POST /api/proposals/client-respond/:id
     // ═══════════════════════════════════════════════════════════════════════
     public function clientRespond($id)
     {
@@ -425,7 +385,6 @@ class ProposalController extends ResourceController
 
         $db = \Config\Database::connect();
 
-        // Récupérer les contacts sans filtrer sur 'active' (peut être NULL dans Perfex)
         $contacts = $db->table('tblcontacts')
             ->select('id, userid, firstname, lastname, email, phonenumber, title,
                       COALESCE(is_primary, 0) AS is_primary')
@@ -434,7 +393,6 @@ class ProposalController extends ResourceController
             ->orderBy('firstname',  'ASC')
             ->get()->getResultArray();
 
-        // Récupérer aussi les infos du client (fallback si 0 contacts)
         $client = $db->table('tblclients')
             ->select('userid, company AS name, email AS client_email, phonenumber AS client_phone')
             ->where('userid', $clientId)
@@ -562,8 +520,6 @@ class ProposalController extends ResourceController
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // CRÉATION DEVIS  (tblestimates — 53 colonnes exactes)
-    // ═══════════════════════════════════════════════════════════════════════
     // GET /api/proposals/taxes
     // ═══════════════════════════════════════════════════════════════════════
     public function taxes()
@@ -576,6 +532,7 @@ class ProposalController extends ResourceController
         return $this->respond(['status' => true, 'taxes' => $taxes]);
     }
 
+    // ═══════════════════════════════════════════════════════════════════════
     // GET /api/proposals/staff-list
     // ═══════════════════════════════════════════════════════════════════════
     public function staffList()
@@ -589,6 +546,7 @@ class ProposalController extends ResourceController
         return $this->respond(['status' => true, 'staff' => $staff]);
     }
 
+    // ═══════════════════════════════════════════════════════════════════════
     // GET /api/proposals/countries
     // ═══════════════════════════════════════════════════════════════════════
     public function countries()
@@ -601,12 +559,13 @@ class ProposalController extends ResourceController
         return $this->respond(['status' => true, 'countries' => $countries]);
     }
 
+    // ═══════════════════════════════════════════════════════════════════════
     // GET /api/proposals/next-number?type=invoice|estimate
     // ═══════════════════════════════════════════════════════════════════════
     public function nextNumber()
     {
-        $type   = $this->request->getGet('type') ?? 'invoice';
-        $db     = \Config\Database::connect();
+        $type = $this->request->getGet('type') ?? 'invoice';
+        $db   = \Config\Database::connect();
 
         if ($type === 'invoice') {
             $prefixRow = $db->table('tblsettings')->select('value')->where('setting_name', 'invoice_prefix')->get()->getRowArray();
@@ -620,25 +579,22 @@ class ProposalController extends ResourceController
             $number = (int)($last->id ?? 0) + 1;
         }
 
-        return $this->respond([
-            'status' => true,
-            'prefix' => $prefix,
-            'number' => $number,
-        ]);
+        return $this->respond(['status' => true, 'prefix' => $prefix, 'number' => $number]);
     }
 
-        private function _createEstimate(\CodeIgniter\Database\BaseConnection $db, array $p, array $items, array $data): ?int
+    // ═══════════════════════════════════════════════════════════════════════
+    // CRÉATION DEVIS
+    // ═══════════════════════════════════════════════════════════════════════
+    private function _createEstimate(\CodeIgniter\Database\BaseConnection $db, array $p, array $items, array $data): ?int
     {
         $row     = $db->table('tblestimates')->selectMax('number')->get()->getRowArray();
         $number  = (int)($row['number'] ?? 0) + 1;
         $hash    = md5(uniqid(rand(), true));
         $staffId = (int)($data['staff_id'] ?? $p['addedfrom'] ?? 0);
 
-        // Recalcul des totaux depuis les articles Flutter
         [$subtotal, $totalTax, $total] = $this->_calcTotals($items, $data);
 
         $estimateData = [
-            // ── Identification ─────────────────────────────────────────
             'sent'                      => 0,
             'datesend'                  => null,
             'clientid'                  => (int)$p['rel_id'],
@@ -650,40 +606,30 @@ class ProposalController extends ResourceController
             'formatted_number'          => 'EST-' . str_pad($number, 6, '0', STR_PAD_LEFT),
             'hash'                      => $hash,
             'datecreated'               => date('Y-m-d H:i:s'),
-            // ── Dates (depuis Flutter) ─────────────────────────────────
             'date'                      => $data['date']        ?? date('Y-m-d'),
             'expirydate'                => $data['expiry_date'] ?? date('Y-m-d', strtotime('+30 days')),
-            // ── Devise / montants ──────────────────────────────────────
             'currency'                  => (int)($data['currency_id'] ?? $p['currency'] ?? 0),
             'subtotal'                  => round($subtotal, 2),
             'total_tax'                 => round($totalTax, 2),
             'total'                     => round($total,    2),
             'adjustment'                => null,
-            // ── Staff ──────────────────────────────────────────────────
             'addedfrom'                 => $staffId,
             'sale_agent'                => (int)($data['sale_agent'] ?? $staffId),
-            // ── Statut ─────────────────────────────────────────────────
             'status'                    => (int)($data['status'] ?? 1),
-            // ── Notes ──────────────────────────────────────────────────
             'clientnote'                => null,
             'adminnote'                 => $data['admin_note'] ?? null,
-            // ── Remise ─────────────────────────────────────────────────
             'discount_percent'          => (float)($data['discount_percent'] ?? 0),
             'discount_total'            => round($this->_calcDiscount($subtotal, $totalTax, $data), 2),
             'discount_type'             => $data['discount_type'] ?? '',
-            // ── Relation facture ───────────────────────────────────────
             'invoiceid'                 => null,
             'invoiced_date'             => null,
-            // ── Divers ─────────────────────────────────────────────────
             'terms'                     => $p['content'] ?? null,
             'reference_no'              => $data['reference_no'] ?? null,
-            // ── Adresse facturation ────────────────────────────────────
             'billing_street'            => $data['billing_street']  ?? $p['address'] ?? null,
             'billing_city'              => $data['billing_city']    ?? $p['city']    ?? null,
             'billing_state'             => $data['billing_state']   ?? $p['state']   ?? null,
             'billing_zip'               => $data['billing_zip']     ?? $p['zip']     ?? null,
             'billing_country'           => $data['billing_country'] ?? (((int)($p['country'] ?? 0)) ?: null),
-            // ── Adresse expédition ─────────────────────────────────────
             'include_shipping'          => (int)($data['include_shipping'] ?? 0),
             'show_shipping_on_estimate' => 1,
             'shipping_street'           => $data['shipping_street']  ?? null,
@@ -691,11 +637,9 @@ class ProposalController extends ResourceController
             'shipping_state'            => $data['shipping_state']   ?? null,
             'shipping_zip'              => $data['shipping_zip']     ?? null,
             'shipping_country'          => $data['shipping_country'] ?? null,
-            // ── Affichage ──────────────────────────────────────────────
             'show_quantity_as'          => 1,
             'pipeline_order'            => 1,
             'is_expiry_notified'        => 0,
-            // ── Acceptation (vide à la création) ───────────────────────
             'acceptance_firstname'      => null,
             'acceptance_lastname'       => null,
             'acceptance_email'          => null,
@@ -714,7 +658,7 @@ class ProposalController extends ResourceController
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // CRÉATION FACTURE  (tblinvoices — 55 colonnes exactes)
+    // CRÉATION FACTURE
     // ═══════════════════════════════════════════════════════════════════════
     private function _createInvoice(\CodeIgniter\Database\BaseConnection $db, array $p, array $items, array $data): ?int
     {
@@ -723,21 +667,14 @@ class ProposalController extends ResourceController
         $hash    = md5(uniqid(rand(), true));
         $staffId = (int)($data['staff_id'] ?? $p['addedfrom'] ?? 0);
 
-        // Recalcul des totaux depuis les articles Flutter
         [$subtotal, $totalTax, $total] = $this->_calcTotals($items, $data);
 
-        // Moyens de paiement : tableau Flutter → JSON
-        $paymentModes = !empty($data['payment_modes']) && is_array($data['payment_modes'])
-            ? json_encode($data['payment_modes'])
-            : null;
-
-        // Récurrence
+        $paymentModes  = !empty($data['payment_modes']) && is_array($data['payment_modes']) ? json_encode($data['payment_modes']) : null;
         $recurringRaw  = $data['recurring'] ?? '0';
         $isRecurring   = ($recurringRaw !== '0' && $recurringRaw !== '') ? 1 : 0;
         $recurringType = $isRecurring ? $recurringRaw : null;
 
         $invoiceData = [
-            // ── Identification ─────────────────────────────────────────
             'sent'                    => 0,
             'datesend'                => null,
             'clientid'                => (int)$p['rel_id'],
@@ -747,37 +684,27 @@ class ProposalController extends ResourceController
             'number_format'           => 1,
             'formatted_number'        => 'INV-' . str_pad($number, 6, '0', STR_PAD_LEFT),
             'datecreated'             => date('Y-m-d H:i:s'),
-            // ── Dates (depuis Flutter) ─────────────────────────────────
             'date'                    => $data['date']        ?? date('Y-m-d'),
             'duedate'                 => $data['expiry_date'] ?? date('Y-m-d', strtotime('+30 days')),
-            // ── Devise / montants ──────────────────────────────────────
             'currency'                => (int)($data['currency_id'] ?? $p['currency'] ?? 0),
             'subtotal'                => round($subtotal, 2),
             'total_tax'               => round($totalTax, 2),
             'total'                   => round($total,    2),
             'adjustment'              => null,
-            // ── Staff ──────────────────────────────────────────────────
             'addedfrom'               => $staffId,
             'sale_agent'              => (int)($data['sale_agent'] ?? $staffId),
-            // ── Sécurité ───────────────────────────────────────────────
             'hash'                    => $hash,
-            // ── Statut ─────────────────────────────────────────────────
             'status'                  => (int)($data['status'] ?? 1),
-            // ── Notes ──────────────────────────────────────────────────
             'clientnote'              => null,
             'adminnote'               => $data['admin_note'] ?? null,
-            // ── Rappels ────────────────────────────────────────────────
             'last_overdue_reminder'   => null,
             'last_due_reminder'       => null,
             'cancel_overdue_reminders'=> (int)($data['cancel_reminders'] ?? 0),
-            // ── Paiement ───────────────────────────────────────────────
             'allowed_payment_modes'   => $paymentModes,
             'token'                   => null,
-            // ── Remise ─────────────────────────────────────────────────
             'discount_percent'        => (float)($data['discount_percent'] ?? 0),
             'discount_total'          => round($this->_calcDiscount($subtotal, $totalTax, $data), 2),
             'discount_type'           => $data['discount_type'] ?? '',
-            // ── Récurrence ─────────────────────────────────────────────
             'recurring'               => $isRecurring,
             'recurring_type'          => $recurringType,
             'custom_recurring'        => 0,
@@ -785,15 +712,12 @@ class ProposalController extends ResourceController
             'total_cycles'            => 0,
             'is_recurring_from'       => null,
             'last_recurring_date'     => null,
-            // ── Divers ─────────────────────────────────────────────────
             'terms'                   => $p['content'] ?? null,
-            // ── Adresse facturation ────────────────────────────────────
             'billing_street'          => $data['billing_street']  ?? $p['address'] ?? null,
             'billing_city'            => $data['billing_city']    ?? $p['city']    ?? null,
             'billing_state'           => $data['billing_state']   ?? $p['state']   ?? null,
             'billing_zip'             => $data['billing_zip']     ?? $p['zip']     ?? null,
             'billing_country'         => $data['billing_country'] ?? (((int)($p['country'] ?? 0)) ?: null),
-            // ── Adresse livraison ──────────────────────────────────────
             'include_shipping'        => (int)($data['include_shipping'] ?? 0),
             'show_shipping_on_invoice'=> 1,
             'shipping_street'         => $data['shipping_street']  ?? null,
@@ -801,7 +725,6 @@ class ProposalController extends ResourceController
             'shipping_state'          => $data['shipping_state']   ?? null,
             'shipping_zip'            => $data['shipping_zip']     ?? null,
             'shipping_country'        => $data['shipping_country'] ?? null,
-            // ── Affichage ──────────────────────────────────────────────
             'show_quantity_as'        => 1,
             'project_id'              => 0,
             'subscription_id'         => 0,
@@ -838,7 +761,6 @@ class ProposalController extends ResourceController
             ]);
             $newItemId = (int)$db->insertID();
 
-            // Taxe : relire depuis tbltaxes pour avoir des valeurs à jour
             $taxId = (int)($item['taxid'] ?? 0);
             if ($taxId > 0) {
                 $tax = $db->table('tbltaxes')->where('id', $taxId)->get()->getRowArray();
@@ -853,7 +775,6 @@ class ProposalController extends ResourceController
                     ]);
                 }
             } elseif ((float)($item['taxrate'] ?? 0) > 0) {
-                // Fallback : taxe sans taxid (envoyée directement par Flutter)
                 $db->table('tblitem_tax')->insert([
                     'itemid'   => $newItemId,
                     'rel_id'   => $relId,
@@ -866,46 +787,31 @@ class ProposalController extends ResourceController
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    // Calcule [subtotal, totalTax, total] depuis les articles Flutter
-    // ═══════════════════════════════════════════════════════════════════════
     private function _calcTotals(array $items, array $data): array
     {
-        $subtotal = 0.0;
-        $totalTax = 0.0;
-
+        $subtotal = 0.0; $totalTax = 0.0;
         foreach ($items as $item) {
             if (empty($item['description'])) continue;
-            $qty     = (float)($item['qty']     ?? 1);
-            $rate    = (float)($item['rate']    ?? 0);
-            $taxRate = (float)($item['taxrate'] ?? 0);
-            $line    = $qty * $rate;
+            $qty  = (float)($item['qty']  ?? 1);
+            $rate = (float)($item['rate'] ?? 0);
+            $tax  = (float)($item['taxrate'] ?? 0);
+            $line = $qty * $rate;
             $subtotal += $line;
-            if ($taxRate > 0) $totalTax += $line * ($taxRate / 100);
+            if ($tax > 0) $totalTax += $line * ($tax / 100);
         }
-
         $discount = $this->_calcDiscount($subtotal, $totalTax, $data);
-        $total    = $subtotal + $totalTax - $discount;
-
-        return [$subtotal, $totalTax, $total];
+        return [$subtotal, $totalTax, $subtotal + $totalTax - $discount];
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    // Calcule le montant de remise
-    // ═══════════════════════════════════════════════════════════════════════
     private function _calcDiscount(float $subtotal, float $totalTax, array $data): float
     {
-        $type    = $data['discount_type']     ?? '';
+        $type    = $data['discount_type']    ?? '';
         $percent = (float)($data['discount_percent'] ?? 0);
         if ($type === '' || $percent <= 0) return 0.0;
-
         $base = ($type === 'before_tax') ? $subtotal : ($subtotal + $totalTax);
         return $base * ($percent / 100);
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    // HELPERS PRIVÉS
-    // ═══════════════════════════════════════════════════════════════════════
     private function _statusList(): array
     {
         $list = [];
@@ -914,6 +820,9 @@ class ProposalController extends ResourceController
         return $list;
     }
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // _generatePdfBase64 — INCHANGÉE (utilisée pour pdf + client-pdf)
+    // ═══════════════════════════════════════════════════════════════════════
     private function _generatePdfBase64(array $proposal): string
     {
         $items = $proposal['items'] ?? [];
@@ -935,8 +844,7 @@ class ProposalController extends ResourceController
         $pdf->SetAutoPageBreak(true, 20);
         $pdf->AddPage();
 
-        $pageW    = 210; $mL = 15; $mR = 15;
-        $contentW = $pageW - $mL - $mR;
+        $pageW = 210; $mL = 15; $mR = 15; $contentW = $pageW - $mL - $mR;
 
         $pdf->SetFont('helvetica', 'B', 9); $pdf->SetTextColor(50, 50, 50);
         $pdf->SetXY($mL, 15); $pdf->Cell($contentW, 5, 'To', 0, 1, 'R');
@@ -969,8 +877,7 @@ class ProposalController extends ResourceController
         foreach ($headers as $hi => $h) $pdf->Cell($colW[$hi], 7, $h, 'B', 0, $aligns[$hi], true);
         $pdf->Ln();
 
-        $rowNum = 0;
-        $pdf->SetFont('helvetica', '', 9);
+        $rowNum = 0; $pdf->SetFont('helvetica', '', 9);
         foreach ($items as $item) {
             $rowNum++;
             $qty     = (float)($item['qty']     ?? 0);
@@ -989,10 +896,10 @@ class ProposalController extends ResourceController
             $pdf->SetXY($xItem, $yRow); $pdf->Cell($colW[1], 8, '', 'B', 0, 'L', false);
             $pdf->SetFont('helvetica', '', 9); $pdf->SetTextColor(50, 50, 50);
             $pdf->SetXY($mL + $colW[0] + $colW[1], $yRow);
-            $pdf->Cell($colW[2], 8, $qtyStr,                 'B', 0, 'C', true);
-            $pdf->Cell($colW[3], 8, $this->_fmtNum($rate),   'B', 0, 'R', true);
-            $pdf->Cell($colW[4], 8, $taxLabel,                'B', 0, 'C', true);
-            $pdf->Cell($colW[5], 8, $this->_fmtNum($total),  'B', 0, 'R', true);
+            $pdf->Cell($colW[2], 8, $qtyStr,                'B', 0, 'C', true);
+            $pdf->Cell($colW[3], 8, $this->_fmtNum($rate),  'B', 0, 'R', true);
+            $pdf->Cell($colW[4], 8, $taxLabel,              'B', 0, 'C', true);
+            $pdf->Cell($colW[5], 8, $this->_fmtNum($total), 'B', 0, 'R', true);
             $pdf->Ln();
         }
 
@@ -1002,7 +909,7 @@ class ProposalController extends ResourceController
         if ((float)($proposal['total_tax']      ?? 0) > 0)
             $totalsRows[] = ['Tax',      (float)$proposal['total_tax'],       false];
         if ((float)($proposal['discount_total'] ?? 0) > 0)
-            $totalsRows[] = ['Discount', -(float)$proposal['discount_total'],  false];
+            $totalsRows[] = ['Discount', -(float)$proposal['discount_total'], false];
         $totalsRows[] = ['Total', (float)($proposal['total'] ?? 0), true];
         foreach ($totalsRows as [$label, $val, $bold]) {
             $pdf->SetFillColor(245, 245, 245);
@@ -1025,6 +932,10 @@ class ProposalController extends ResourceController
         return number_format(abs($val), 2, ',', '.');
     }
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // ✅ FIX : Brevo HTTP API — remplace CI4 SMTP + attach
+    // Le PDF est envoyé en base64 dans le JSON → aucune corruption possible
+    // ═══════════════════════════════════════════════════════════════════════
     private function _sendProposalEmail(
         string $to, string $clientName, string $subject,
         string $staffName, int $proposalId, ?array $proposalData = null
@@ -1047,47 +958,61 @@ body{font-family:'Segoe UI',sans-serif;background:#f1f5f9;padding:20px}
     <p><strong>$staffName</strong> vous a transmis une offre commerciale :</p>
     <p><strong style='font-size:16px'>$subject</strong></p>
     <div class='note'>Le PDF de votre offre est joint à cet email.</div>
-    <p style='color:#64748b;font-size:13px'>Vous pouvez aussi consulter votre offre en ligne :<br>
-      <a href='$link' style='color:#2563eb'>$link</a></p>
+    <p style='color:#64748b;font-size:13px'>Pour toute question, contactez votre commercial.<br>
+      <strong>$staffName</strong></p>
   </div>
   <div class='ft'>© " . date('Y') . " — Envoyé automatiquement.</div>
 </div></body></html>";
 
-        $cfg = [
-            'protocol'  => 'smtp', 'SMTPHost' => 'smtp-relay.brevo.com',
-            'SMTPPort'  => 587, 'SMTPUser' => 'a27d6e001@smtp-brevo.com',
-            'SMTPPass'  => 'yGpqFVEwstIh2Mjr', 'SMTPCrypto' => 'tls',
-            'mailType'  => 'html', 'charset' => 'utf-8', 'newline' => "\r\n",
+        // ── Payload Brevo ─────────────────────────────────────────────────
+        $payload = [
+            'sender'      => ['name' => 'CRM Mobile', 'email' => 'ghoufranbensassy@gmail.com'],
+            'to'          => [['email' => $to, 'name' => $clientName]],
+            'subject'     => "Offre commerciale : $subject",
+            'htmlContent' => $html,
         ];
-        $mail = \Config\Services::email();
-        $mail->initialize($cfg);
-        $mail->setFrom('ghoufranbensassy@gmail.com', 'CRM Mobile');
-        $mail->setTo($to);
-        $mail->setSubject("Offre commerciale : $subject");
-        $mail->setMessage($html);
 
-        $tmpPdf = null;
+        // PDF joint en base64 — Brevo décode lui-même → aucune corruption
         if ($proposalData !== null) {
             try {
-                $pdfBytes = base64_decode($this->_generatePdfBase64($proposalData));
-                $tmp      = tempnam(sys_get_temp_dir(), 'prop_');
-                $tmpPdf   = $tmp . '.pdf';
-                if (!@rename($tmp, $tmpPdf)) $tmpPdf = $tmp;
-                file_put_contents($tmpPdf, $pdfBytes);
-                $mail->attach($tmpPdf, 'attachment', 'offre_' . $proposalId . '.pdf', 'application/pdf');
+                $pdfBase64 = $this->_generatePdfBase64($proposalData);
+                // _generatePdfBase64 retourne déjà du base64 pur
+                $payload['attachment'] = [[
+                    'name'    => 'offre_' . $proposalId . '.pdf',
+                    'content' => $pdfBase64,
+                ]];
+                log_message('debug', 'PDF base64 len: ' . strlen($pdfBase64));
             } catch (\Throwable $e) {
-                log_message('error', 'PDF attachment error: ' . $e->getMessage());
-                if (isset($tmpPdf) && file_exists($tmpPdf)) { @unlink($tmpPdf); $tmpPdf = null; }
+                log_message('error', 'PDF proposal error: ' . $e->getMessage());
             }
         }
 
-        $sent = false;
-        try {
-            $sent = $mail->send();
-            if (!$sent) log_message('error', 'Email offre: ' . $mail->printDebugger(['headers']));
-        } finally {
-            if (isset($tmpPdf) && file_exists($tmpPdf)) @unlink($tmpPdf);
+        // ── Appel cURL → api.brevo.com ────────────────────────────────────
+        $ch = curl_init('https://api.brevo.com/v3/smtp/email');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode($payload),
+            CURLOPT_HTTPHEADER     => [
+                'accept: application/json',
+                'api-key: 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',
+                'content-type: application/json',
+            ],
+            CURLOPT_TIMEOUT        => 30,
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlErr  = curl_error($ch);
+        curl_close($ch);
+
+        log_message('debug', "Brevo proposal [$httpCode]: $response");
+
+        if ($curlErr) {
+            log_message('error', 'Brevo cURL error: ' . $curlErr);
+            return false;
         }
-        return $sent;
+
+        return $httpCode === 201;
     }
 }

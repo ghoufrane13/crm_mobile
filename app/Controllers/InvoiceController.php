@@ -1,0 +1,1007 @@
+<?php
+
+namespace App\Controllers;
+
+use CodeIgniter\RESTful\ResourceController;
+use App\Models\InvoiceModel;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// InvoiceController
+// Endpoints factures — côté client et côté staff
+// ─────────────────────────────────────────────────────────────────────────────
+class InvoiceController extends ResourceController
+{
+    protected $format = 'json';
+    protected InvoiceModel $invoiceModel;
+
+    public function initController(
+        \CodeIgniter\HTTP\RequestInterface $request,
+        \CodeIgniter\HTTP\ResponseInterface $response,
+        \Psr\Log\LoggerInterface $logger
+    ): void {
+        parent::initController($request, $response, $logger);
+        $this->invoiceModel = new InvoiceModel();
+    }
+
+    /** Statuts Perfex CRM */
+    protected array $statuses = [
+        1 => 'Impayée',
+        2 => 'Payée',
+        3 => 'Annulée',
+        4 => 'Partiellement payée',
+        5 => 'En retard',
+    ];
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // GET /api/invoices/client-list?client_id=X[&status=Y]
+    // Liste les factures d'un client avec filtre statut optionnel
+    // ─────────────────────────────────────────────────────────────────────────
+    public function clientList()
+    {
+        $clientId = (int)$this->request->getVar('client_id');
+        $status   = $this->request->getVar('status');
+
+        if (!$clientId) {
+            return $this->respond(['status' => false, 'message' => 'client_id requis'], 400);
+        }
+
+        $db = \Config\Database::connect();
+
+        $builder = $db->table('tblinvoices i')
+            ->select([
+                'i.id',
+                'i.formatted_number',
+                'i.prefix',
+                'i.number',
+                'i.date',
+                'i.duedate',
+                'i.status',
+                'i.subtotal',
+                'i.total',
+                'i.total_tax',
+                'i.discount_total',
+                'i.currency',
+                'cu.symbol   AS currency_symbol',
+                'cu.name     AS currency_name',
+                'c.company   AS client_company',
+            ])
+            ->join('tblclients c',  'c.userid = i.clientid', 'left')
+            ->join('tblcurrencies cu', 'cu.id = i.currency', 'left')
+            ->where('i.clientid', $clientId);
+
+        if ($status !== null && $status !== '') {
+            $builder->where('i.status', (int)$status);
+        }
+
+        $builder->orderBy('i.date', 'DESC');
+        $invoices = $builder->get()->getResultArray();
+
+        // Enrichissement labels + couleurs
+        foreach ($invoices as &$inv) {
+            $s = (int)$inv['status'];
+            $inv['status_label'] = $this->statuses[$s] ?? 'Inconnu';
+            $inv['status_color'] = $this->_statusColor($s);
+        }
+
+        // Résumé compteur par statut
+        $summary = [
+            'total'           => count($invoices),
+            'unpaid'          => 0,
+            'paid'            => 0,
+            'cancelled'       => 0,
+            'partial'         => 0,
+            'overdue'         => 0,
+        ];
+        foreach ($invoices as $inv) {
+            switch ((int)$inv['status']) {
+                case 1: $summary['unpaid']++;    break;
+                case 2: $summary['paid']++;      break;
+                case 3: $summary['cancelled']++; break;
+                case 4: $summary['partial']++;   break;
+                case 5: $summary['overdue']++;   break;
+            }
+        }
+
+        return $this->respond([
+            'status'   => true,
+            'data'     => $invoices,
+            'summary'  => $summary,
+        ]);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // GET /api/invoices/client-detail/:id?client_id=X
+    // Détail d'une facture + articles + paiements
+    // ─────────────────────────────────────────────────────────────────────────
+    public function clientDetail($id = null)
+    {
+        if (!$id) {
+            return $this->respond(['status' => false, 'message' => 'ID manquant'], 400);
+        }
+
+        $clientId = (int)$this->request->getVar('client_id');
+        $db = \Config\Database::connect();
+
+        $invoice = $db->table('tblinvoices i')
+            ->select([
+                'i.*',
+                'c.company       AS client_company',
+                'c.phonenumber   AS client_phone',
+                'c.address       AS client_address',
+                'c.city          AS client_city',
+                'c.state         AS client_state',
+                'c.zip           AS client_zip',
+                'cu.symbol       AS currency_symbol',
+                'cu.name         AS currency_name',
+            ])
+            ->join('tblclients c',     'c.userid = i.clientid', 'left')
+            ->join('tblcurrencies cu', 'cu.id = i.currency', 'left')
+            ->where('i.id', (int)$id)
+            ->get()->getRowArray();
+
+        if (!$invoice) {
+            return $this->respond(['status' => false, 'message' => 'Facture introuvable'], 404);
+        }
+
+        // Vérification sécurité: le client_id doit correspondre
+        if ($clientId && (int)$invoice['clientid'] !== $clientId) {
+            return $this->respond(['status' => false, 'message' => 'Non autorisé'], 403);
+        }
+
+        $s = (int)$invoice['status'];
+        $invoice['status_label'] = $this->statuses[$s] ?? 'Inconnu';
+        $invoice['status_color'] = $this->_statusColor($s);
+
+        // Articles (tblitemable)
+        $items = $db->table('tblitemable')
+            ->where('rel_id', (int)$id)
+            ->where('rel_type', 'invoice')
+            ->orderBy('item_order', 'ASC')
+            ->get()->getResultArray();
+
+        $invoice['items']    = $this->invoiceModel->getItems((int)$id);
+        $invoice['payments'] = $this->invoiceModel->getPayments((int)$id);
+        $totalPaid           = $this->invoiceModel->getTotalPaid((int)$id);
+        $invoice['total_paid'] = round($totalPaid, 2);
+        $invoice['total_due']  = round(max(0, (float)($invoice['total'] ?? 0) - $totalPaid), 2);
+
+        return $this->respond(['status' => true, 'invoice' => $invoice]);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // GET /api/invoices/pdf/:id?client_id=X
+    // Retourne le PDF en base64 (même logique que EstimateController)
+    // ─────────────────────────────────────────────────────────────────────────
+    public function pdf($id = null)
+    {
+        if (!$id) {
+            return $this->respond(['status' => false, 'message' => 'ID manquant'], 400);
+        }
+
+        $clientId = (int)$this->request->getVar('client_id');
+        $db = \Config\Database::connect();
+
+        $invoice = $db->table('tblinvoices i')
+            ->select([
+                'i.*',
+                'c.company       AS client_company',
+                'c.address       AS billing_street',
+                'c.city          AS billing_city',
+                'c.state         AS billing_state',
+                'c.zip           AS billing_zip',
+                'cu.symbol       AS currency_symbol',
+            ])
+            ->join('tblclients c',     'c.userid = i.clientid', 'left')
+            ->join('tblcurrencies cu', 'cu.id = i.currency',    'left')
+            ->where('i.id', (int)$id)
+            ->get()->getRowArray();
+
+        if (!$invoice) {
+            return $this->respond(['status' => false, 'message' => 'Facture introuvable'], 404);
+        }
+
+        if ($clientId && (int)$invoice['clientid'] !== $clientId) {
+            return $this->respond(['status' => false, 'message' => 'Non autorisé'], 403);
+        }
+
+        $items = $db->table('tblitemable')
+            ->where('rel_id', (int)$id)
+            ->where('rel_type', 'invoice')
+            ->orderBy('item_order', 'ASC')
+            ->get()->getResultArray();
+
+        $invoice['items'] = $items;
+
+        try {
+            $pdfBytes = $this->_generatePdfBytes($invoice);
+            return $this->respond([
+                'status' => true,
+                'pdf'    => base64_encode($pdfBytes),
+            ]);
+        } catch (\Exception $e) {
+            return $this->respond(['status' => false, 'message' => 'Erreur PDF : ' . $e->getMessage()], 500);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // GET /api/invoices/list?staff_id=X[&status=Y]
+    // Liste toutes les factures (staff)
+    // ─────────────────────────────────────────────────────────────────────────
+    public function list()
+    {
+        $staffId = (int)$this->request->getVar('staff_id');
+        $status  = $this->request->getVar('status');
+
+        $db = \Config\Database::connect();
+        $builder = $db->table('tblinvoices i')
+            ->select([
+                'i.id', 'i.formatted_number', 'i.date', 'i.duedate',
+                'i.status', 'i.subtotal', 'i.total', 'i.clientid',
+                'c.company AS client_company',
+                'cu.symbol AS currency_symbol',
+            ])
+            ->join('tblclients c',     'c.userid = i.clientid', 'left')
+            ->join('tblcurrencies cu', 'cu.id = i.currency',    'left');
+
+        if ($status !== null && $status !== '') {
+            $builder->where('i.status', (int)$status);
+        }
+
+        $builder->orderBy('i.date', 'DESC');
+        $invoices = $builder->get()->getResultArray();
+
+        foreach ($invoices as &$inv) {
+            $s = (int)$inv['status'];
+            $inv['status_label'] = $this->statuses[$s] ?? 'Inconnu';
+            $inv['status_color'] = $this->_statusColor($s);
+        }
+
+        return $this->respond(['status' => true, 'data' => $invoices]);
+    }
+
+   
+    // Détail facture staff (pas de vérification clientid)
+    // ─────────────────────────────────────────────────────────────────────────
+    // GET /api/invoices/detail/:id
+    public function detail($id = null)
+    {
+        if (!$id) {
+            return $this->respond(
+                ['status' => false, 'message' => 'ID manquant'], 400);
+        }
+ 
+        try {
+            $invoice = $this->invoiceModel->getFullDetail((int)$id);
+        } catch (\Exception $e) {
+            return $this->respond([
+                'status'  => false,
+                'message' => 'Erreur SQL : ' . $e->getMessage(),
+            ], 500);
+        }
+ 
+        if (!$invoice) {
+            return $this->respond([
+                'status'  => false,
+                'message' => 'Facture introuvable (id=' . $id . ')',
+            ], 404);
+        }
+ 
+        $s = (int)$invoice['status'];
+        $invoice['status_label'] = $this->statuses[$s] ?? 'Inconnu';
+        $invoice['status_color'] = $this->_statusColor($s);
+ 
+        return $this->respond(['status' => true, 'invoice' => $invoice]);
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+    // POST /api/invoices/change-status
+    // Body: { invoice_id, status }
+    // ─────────────────────────────────────────────────────────────────────────
+    public function changeStatus()
+    {
+        $data = $this->request->getJSON(true);
+        if (empty($data['invoice_id']) || !isset($data['status'])) {
+            return $this->respond(['status' => false, 'message' => 'invoice_id et status requis'], 400);
+        }
+
+        $db = \Config\Database::connect();
+        $db->table('tblinvoices')
+            ->where('id', (int)$data['invoice_id'])
+            ->update(['status' => (int)$data['status']]);
+
+        $s = (int)$data['status'];
+        return $this->respond([
+            'status'       => true,
+            'message'      => 'Statut : ' . ($this->statuses[$s] ?? ''),
+            'status_label' => $this->statuses[$s] ?? '',
+        ]);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // HELPERS
+    // ─────────────────────────────────────────────────────────────────────────
+    private function _statusColor(int $s): string
+    {
+        return match($s) {
+            2 => '#10B981',   // Payée — vert
+            3 => '#94A3B8',   // Annulée — gris
+            4 => '#F59E0B',   // Partielle — ambre
+            5 => '#EF4444',   // En retard — rouge
+            default => '#6366F1', // Impayée — indigo
+        };
+    }
+
+    private function _fmtNum(float $val): string
+    {
+        return number_format(abs($val), 2, '.', ' ');
+    }
+
+    private function _generatePdfBytes(array $invoice): string
+    {
+        $items      = $invoice['items'] ?? [];
+        $sym        = $invoice['currency_symbol'] ?? '';
+        $numStr     = $invoice['formatted_number'] ?? ('INV-' . str_pad($invoice['id'], 6, '0', STR_PAD_LEFT));
+        $clientName = $invoice['client_company'] ?? '';
+
+        $addressParts = array_filter([
+            $invoice['billing_street'] ?? $invoice['address'] ?? '',
+            $invoice['billing_city']   ?? $invoice['city']    ?? '',
+            $invoice['billing_state']  ?? $invoice['state']   ?? '',
+            $invoice['billing_zip']    ?? $invoice['zip']     ?? '',
+        ], fn($v) => trim($v) !== '');
+        $addressLine = implode(', ', $addressParts);
+
+        $pdf = new \TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+        $pdf->SetCreator('CRM Mobile');
+        $pdf->SetTitle($numStr);
+        $pdf->SetMargins(15, 15, 15);
+        $pdf->SetAutoPageBreak(true, 20);
+        $pdf->AddPage();
+
+        $pageW = 210; $mL = 15; $mR = 15; $contentW = $pageW - $mL - $mR;
+
+        // En-tête client
+        $pdf->SetFont('helvetica', 'B', 9); $pdf->SetTextColor(50, 50, 50);
+        $pdf->SetXY($mL, 15);
+        $pdf->Cell($contentW, 5, 'À l\'attention de', 0, 1, 'R');
+        $pdf->SetXY($mL, $pdf->GetY());
+        $pdf->Cell($contentW, 5, $clientName, 0, 1, 'R');
+        if ($addressLine) {
+            $pdf->SetFont('helvetica', '', 8); $pdf->SetTextColor(80, 80, 80);
+            $pdf->SetXY($mL, $pdf->GetY());
+            $pdf->Cell($contentW, 4, $addressLine, 0, 1, 'R');
+        }
+
+        // Titre FACTURE
+        $pdf->SetFont('helvetica', 'B', 18); $pdf->SetTextColor(30, 30, 30);
+        $pdf->SetXY($mL, $pdf->GetY() + 4);
+        $pdf->Cell(0, 10, 'FACTURE # ' . $numStr, 0, 1, 'L');
+        $pdf->SetFont('helvetica', '', 9); $pdf->SetTextColor(50, 50, 50);
+        $pdf->SetXY($mL, $pdf->GetY());
+        $pdf->Cell(0, 5, 'Date : ' . ($invoice['date'] ?? ''), 0, 1, 'L');
+        $pdf->SetXY($mL, $pdf->GetY());
+        $pdf->Cell(0, 5, 'Échéance : ' . ($invoice['duedate'] ?? ''), 0, 1, 'L');
+
+        // Statut
+        $statusLabel = $this->statuses[(int)($invoice['status'] ?? 1)] ?? '';
+        $pdf->SetFont('helvetica', 'B', 9);
+        $pdf->SetXY($mL, $pdf->GetY());
+        $pdf->Cell(0, 5, 'Statut : ' . $statusLabel, 0, 1, 'L');
+
+        // Tableau articles
+        $pdf->SetY($pdf->GetY() + 4);
+        $colW    = [10, 82, 18, 22, 18, 30];
+        $headers = ['#', 'Désignation', 'Qté', 'P.U.', 'Taxe', 'Total'];
+        $aligns  = ['C', 'L', 'C', 'R', 'C', 'R'];
+        $pdf->SetFillColor(245, 245, 245);
+        $pdf->SetFont('helvetica', 'B', 9); $pdf->SetTextColor(50, 50, 50);
+        $pdf->SetXY($mL, $pdf->GetY());
+        foreach ($headers as $hi => $h) $pdf->Cell($colW[$hi], 7, $h, 'B', 0, $aligns[$hi], true);
+        $pdf->Ln();
+
+        $rowNum = 0; $pdf->SetFont('helvetica', '', 9);
+        foreach ($items as $item) {
+            $rowNum++;
+            $qty     = (float)($item['qty']     ?? 1);
+            $rate    = (float)($item['rate']    ?? 0);
+            $taxrate = (float)($item['taxrate'] ?? 0);
+            $total   = $qty * $rate;
+            $qtyStr  = ($qty == floor($qty)) ? (string)(int)$qty : number_format($qty, 2);
+            $taxLabel = $taxrate > 0 ? number_format($taxrate, 0) . '%' : '0%';
+            $fill    = ($rowNum % 2 === 0) ? [250, 250, 250] : [255, 255, 255];
+            $pdf->SetFillColor($fill[0], $fill[1], $fill[2]);
+            $yRow = $pdf->GetY();
+            $pdf->SetXY($mL, $yRow);
+            $pdf->Cell($colW[0], 8, $rowNum, 'B', 0, 'C', true);
+            $pdf->SetFont('helvetica', 'B', 9); $pdf->SetTextColor(30, 30, 30);
+            $xItem = $pdf->GetX();
+            $pdf->MultiCell($colW[1], 4, $item['description'] ?? '', 0, 'L', true, 0, $xItem, $yRow + 2);
+            $pdf->SetXY($xItem, $yRow); $pdf->Cell($colW[1], 8, '', 'B', 0, 'L', false);
+            $pdf->SetFont('helvetica', '', 9); $pdf->SetTextColor(50, 50, 50);
+            $pdf->SetXY($mL + $colW[0] + $colW[1], $yRow);
+            $pdf->Cell($colW[2], 8, $qtyStr,                  'B', 0, 'C', true);
+            $pdf->Cell($colW[3], 8, $this->_fmtNum($rate),    'B', 0, 'R', true);
+            $pdf->Cell($colW[4], 8, $taxLabel,                'B', 0, 'C', true);
+            $pdf->Cell($colW[5], 8, $this->_fmtNum($total),   'B', 0, 'R', true);
+            $pdf->Ln();
+        }
+
+        // Totaux
+        $pdf->SetY($pdf->GetY() + 2);
+        $lW = 40; $vW = 30; $sX = $pageW - $mR - $lW - $vW;
+        $totalsRows = [['Sous-total', (float)($invoice['subtotal'] ?? 0), false]];
+        if ((float)($invoice['total_tax']      ?? 0) > 0) $totalsRows[] = ['TVA',    (float)$invoice['total_tax'],       false];
+        if ((float)($invoice['discount_total'] ?? 0) > 0) $totalsRows[] = ['Remise', -(float)$invoice['discount_total'], false];
+        $totalsRows[] = ['TOTAL TTC', (float)($invoice['total'] ?? 0), true];
+        foreach ($totalsRows as [$label, $val, $bold]) {
+            $pdf->SetFillColor(245, 245, 245);
+            $pdf->SetFont('helvetica', $bold ? 'B' : '', 9); $pdf->SetTextColor(50, 50, 50);
+            $pdf->SetXY($sX, $pdf->GetY());
+            $pdf->Cell($lW, 6, $label,                        '', 0, 'R', $bold);
+            $pdf->Cell($vW, 6, $sym . $this->_fmtNum($val),  '', 1, 'R', $bold);
+        }
+
+        return $pdf->Output('facture.pdf', 'S');
+    }
+
+// ─────────────────────────────────────────────────────────────────────────
+    // POST /api/invoices/create
+    // Body: { client_id, number, date, duedate, currency_id, discount_type,
+    //         discount, adjustment, admin_note, staff_id, draft, items[] }
+    // ─────────────────────────────────────────────────────────────────────────
+     public function create()
+    {
+        $data     = $this->request->getJSON(true);
+        $clientId = (int)($data['client_id'] ?? 0);
+        $staffId  = (int)($data['staff_id']  ?? 0);
+ 
+        if (!$clientId) {
+            return $this->respond(
+                ['status' => false, 'message' => 'client_id requis'], 400);
+        }
+ 
+        $db = \Config\Database::connect();
+ 
+        // Numéro auto
+        $row    = $db->table('tblinvoices')->selectMax('number')
+            ->get()->getRowArray();
+        $num    = (int)($row['number'] ?? 0) + 1;
+        $fmtNum = 'INV-' . str_pad($num, 6, '0', STR_PAD_LEFT);
+ 
+        $items    = $data['items'] ?? [];
+        $subtotal = 0.0;
+        $totalTax = 0.0;
+        foreach ($items as $item) {
+            if (empty(trim($item['description'] ?? ''))) continue;
+            $qty  = (float)($item['qty']     ?? 1);
+            $rate = (float)($item['rate']    ?? 0);
+            $tax  = (float)($item['taxrate'] ?? 0);
+            $line = $qty * $rate;
+            $subtotal += $line;
+            if ($tax > 0) $totalTax += $line * $tax / 100;
+        }
+ 
+        $dtype  = $data['discount_type'] ?? '';
+        $disc   = (float)($data['discount'] ?? 0);
+        $dtotal = ($dtype === '%')
+            ? round($subtotal * $disc / 100, 2)
+            : round($disc, 2);
+        $total  = round($subtotal + $totalTax - $dtotal, 2);
+ 
+        $db->table('tblinvoices')->insert([
+            'clientid'          => $clientId,
+            'number'            => $num,
+            'formatted_number'  => $fmtNum,
+            'prefix'            => 'INV-',
+            'date'              => $data['date']    ?? date('Y-m-d'),
+            'duedate'           => $data['duedate'] ?? date('Y-m-d', strtotime('+30 days')),
+            'currency'          => (int)($data['currency_id'] ?? 1),
+            'subtotal'          => round($subtotal, 2),
+            'total_tax'         => round($totalTax, 2),
+            'total'             => $total,
+            'discount_percent'  => ($dtype === '%') ? $disc : 0,
+            'discount_total'    => $dtotal,
+            'discount_type'     => $dtype,
+            'adjustment'        => 0,
+            'addedfrom'         => $staffId,
+            'sale_agent'        => $staffId,
+            'status'            => ($data['draft'] ?? 0) == 1 ? 1 : 1,
+            'sent'              => 0,
+            'datecreated'       => date('Y-m-d H:i:s'),
+            'hash'              => md5(uniqid(rand(), true)),
+            'number_format'     => 1,
+            'cancel_overdue_reminders' => 0,
+            'recurring'         => 0,
+            'billing_street'    => $data['billing_street']   ?? '',
+            'billing_city'      => $data['billing_city']     ?? '',
+            'billing_state'     => $data['billing_state']    ?? '',
+            'billing_zip'       => $data['billing_zip']      ?? '',
+            'billing_country'   => $data['billing_country']  ?? '',
+            'shipping_street'   => $data['shipping_street']  ?? '',
+            'shipping_city'     => $data['shipping_city']    ?? '',
+            'shipping_state'    => $data['shipping_state']   ?? '',
+            'shipping_zip'      => $data['shipping_zip']     ?? '',
+            'shipping_country'  => $data['shipping_country'] ?? '',
+            'include_shipping'  => 0,
+        ]);
+        $invoiceId = $db->insertID();
+ 
+        // Insérer articles + taxes
+        $order = 0;
+        foreach ($items as $item) {
+            if (empty(trim($item['description'] ?? ''))) continue;
+            $order++;
+            $db->table('tblitemable')->insert([
+                'rel_id'           => $invoiceId,
+                'rel_type'         => 'invoice',
+                'description'      => $item['description']      ?? '',
+                'long_description' => $item['long_description'] ?? '',
+                'qty'              => (float)($item['qty']  ?? 1),
+                'rate'             => (float)($item['rate'] ?? 0),
+                'unit'             => $item['unit']          ?? '',
+                'item_order'       => $order,
+                'is_optional'      => 0,
+                'is_selected'      => 1,
+            ]);
+            $itemId = $db->insertID();
+ 
+            $taxId = (int)($item['tax_id'] ?? 0);
+            if ($taxId > 0) {
+                $db->table('tblitemstaxes')->insert([
+                    'itemid' => $itemId,
+                    'taxid'  => $taxId,
+                ]);
+            }
+        }
+ 
+        return $this->respond([
+            'status'           => true,
+            'message'          => 'Facture créée avec succès',
+            'invoice_id'       => $invoiceId,
+            'formatted_number' => $fmtNum,
+        ]);
+    }
+ 
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // PUT /api/invoices/update/:id
+    // Body: { date, duedate, currency_id, discount_type, discount,
+    //         adjustment, admin_note, items[] }
+    // ─────────────────────────────────────────────────────────────────────────
+    public function update($id = null)
+    {
+        if (!$id) {
+            return $this->respond(
+                ['status' => false, 'message' => 'ID manquant'], 400);
+        }
+ 
+        $db      = \Config\Database::connect();
+        $invoice = $db->table('tblinvoices')
+            ->where('id', (int)$id)->get()->getRowArray();
+        if (!$invoice) {
+            return $this->respond(
+                ['status' => false, 'message' => 'Facture introuvable'], 404);
+        }
+ 
+        $data  = $this->request->getJSON(true);
+        $items = $data['items'] ?? [];
+ 
+        // Calcul totaux
+        $subtotal = 0.0;
+        $totalTax = 0.0;
+        foreach ($items as $item) {
+            if (empty(trim($item['description'] ?? ''))) continue;
+            $qty  = (float)($item['qty']  ?? 1);
+            $rate = (float)($item['rate'] ?? 0);
+            $tax  = (float)($item['taxrate'] ?? 0);
+            $line = $qty * $rate;
+            $subtotal += $line;
+            if ($tax > 0) $totalTax += $line * $tax / 100;
+        }
+ 
+        $dtype  = $data['discount_type']
+            ?? $invoice['discount_type'] ?? '';
+        $disc   = (float)($data['discount']
+            ?? $invoice['discount_percent'] ?? 0);
+        $dtotal = ($dtype === '%')
+            ? round($subtotal * $disc / 100, 2)
+            : round($disc, 2);
+        $total  = round($subtotal + $totalTax - $dtotal, 2);
+ 
+        $db->table('tblinvoices')->where('id', (int)$id)->update([
+            'date'             => $data['date']    ?? $invoice['date'],
+            'duedate'          => $data['duedate'] ?? $invoice['duedate'],
+            'currency'         => (int)($data['currency_id'] ?? $invoice['currency']),
+            'subtotal'         => round($subtotal, 2),
+            'total_tax'        => round($totalTax, 2),
+            'total'            => $total,
+            'discount_percent' => ($dtype === '%') ? $disc : 0,
+            'discount_total'   => $dtotal,
+            'discount_type'    => $dtype,
+            'billing_street'   => $data['billing_street']   ?? $invoice['billing_street']   ?? '',
+            'billing_city'     => $data['billing_city']     ?? $invoice['billing_city']     ?? '',
+            'billing_state'    => $data['billing_state']    ?? $invoice['billing_state']    ?? '',
+            'billing_zip'      => $data['billing_zip']      ?? $invoice['billing_zip']      ?? '',
+            'billing_country'  => $data['billing_country']  ?? $invoice['billing_country']  ?? '',
+            'shipping_street'  => $data['shipping_street']  ?? $invoice['shipping_street']  ?? '',
+            'shipping_city'    => $data['shipping_city']    ?? $invoice['shipping_city']    ?? '',
+            'shipping_state'   => $data['shipping_state']   ?? $invoice['shipping_state']   ?? '',
+            'shipping_zip'     => $data['shipping_zip']     ?? $invoice['shipping_zip']     ?? '',
+            'shipping_country' => $data['shipping_country'] ?? $invoice['shipping_country'] ?? '',
+        ]);
+ 
+        // Supprimer anciens articles + leurs taxes (si table existe)
+        $oldItems = $db->table('tblitemable')
+            ->select('id')
+            ->where('rel_id',   (int)$id)
+            ->where('rel_type', 'invoice')
+            ->get()->getResultArray();
+ 
+        if ($db->tableExists('tblitemstaxes')) {  // Vérification ajoutée
+            foreach ($oldItems as $oi) {
+                $db->table('tblitemstaxes')
+                    ->where('itemid', $oi['id'])->delete();
+            }
+        }
+        $db->table('tblitemable')
+            ->where('rel_id',   (int)$id)
+            ->where('rel_type', 'invoice')
+            ->delete();
+ 
+        // Réinsérer articles + taxes (si table existe)
+        $order = 0;
+        foreach ($items as $item) {
+            if (empty(trim($item['description'] ?? ''))) continue;
+            $order++;
+            $db->table('tblitemable')->insert([
+                'rel_id'           => (int)$id,
+                'rel_type'         => 'invoice',
+                'description'      => $item['description']      ?? '',
+                'long_description' => $item['long_description'] ?? '',
+                'qty'              => (float)($item['qty']  ?? 1),
+                'rate'             => (float)($item['rate'] ?? 0),
+                'unit'             => $item['unit']          ?? '',
+                'item_order'       => $order,
+                'is_optional'      => 0,
+                'is_selected'      => 1,
+            ]);
+            $itemId = $db->insertID();
+ 
+            // Lier la taxe si présente et table existe
+            $taxId = (int)($item['tax_id'] ?? 0);
+            if ($taxId > 0 && $db->tableExists('tblitemstaxes')) {  // Vérification ajoutée
+                $db->table('tblitemstaxes')->insert([
+                    'itemid' => $itemId,
+                    'taxid'  => $taxId,
+                ]);
+            }
+        }
+ 
+        return $this->respond([
+            'status'  => true,
+            'message' => 'Facture mise à jour avec succès',
+        ]);
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+    // DELETE /api/invoices/delete/:id
+    // Supprime la facture + articles en cascade
+    // Bloque si statut = Payée (2)
+    // ─────────────────────────────────────────────────────────────────────────
+    public function delete($id = null)
+    {
+        if (!$id) {
+            return $this->respond(['status' => false, 'message' => 'ID manquant'], 400);
+        }
+
+        $db      = \Config\Database::connect();
+        $invoice = $db->table('tblinvoices')
+            ->select('id, status, formatted_number')
+            ->where('id', (int)$id)
+            ->get()->getRowArray();
+
+        if (!$invoice) {
+            return $this->respond(['status' => false, 'message' => 'Facture introuvable'], 404);
+        }
+
+        if ((int)$invoice['status'] === 2) {
+            return $this->respond([
+                'status'  => false,
+                'message' => 'Une facture payée ne peut pas être supprimée.',
+            ], 400);
+        }
+
+        try {
+            $db->table('tblitemable')
+                ->where('rel_id', (int)$id)
+                ->where('rel_type', 'invoice')
+                ->delete();
+
+            $db->table('tblinvoices')
+                ->where('id', (int)$id)
+                ->delete();
+
+            return $this->respond([
+                'status'  => true,
+                'message' => 'Facture supprimée avec succès.',
+            ]);
+        } catch (\Exception $e) {
+            return $this->respond([
+                'status'  => false,
+                'message' => 'Erreur suppression : ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // GET /api/invoices/next-number
+    // Retourne le prochain numéro de facture formaté
+    // ─────────────────────────────────────────────────────────────────────────
+    public function nextNumber()
+    {
+        $db  = \Config\Database::connect();
+        $row = $db->table('tblinvoices')->selectMax('number')->get()->getRowArray();
+        $num = (int)($row['number'] ?? 0) + 1;
+        return $this->respond([
+            'status'      => true,
+            'next_number' => str_pad($num, 6, '0', STR_PAD_LEFT),
+        ]);
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+    // 2) POST /api/invoices/send-email/:id   (AJOUTEZ cette méthode)
+    // Body: { staff_id }
+    // ─────────────────────────────────────────────────────────────────────────
+    public function sendEmail($id = null)
+    {
+        if (!$id) {
+            return $this->respond(
+                ['status' => false, 'message' => 'ID manquant'], 400);
+        }
+ 
+        $data = $this->request->getJSON(true);
+        $db   = \Config\Database::connect();
+ 
+        // Facture + email client
+        $invoice = $db->table('tblinvoices i')
+            ->select([
+                'i.*',
+                'c.company   AS client_company',
+                'c.email     AS client_email',
+                'c.vat       AS client_vat',
+                'c.address   AS billing_street',
+                'c.city      AS billing_city',
+                'c.state     AS billing_state',
+                'c.zip       AS billing_zip',
+                'cu.symbol   AS currency_symbol',
+                'cu.name     AS currency_name',
+            ])
+            ->join('tblclients c',     'c.userid = i.clientid', 'left')
+            ->join('tblcurrencies cu', 'cu.id = i.currency',    'left')
+            ->where('i.id', (int)$id)
+            ->get()->getRowArray();
+ 
+        if (!$invoice) {
+            return $this->respond(
+                ['status' => false, 'message' => 'Facture introuvable'], 404);
+        }
+ 
+        $toEmail    = $invoice['client_email'] ?? '';
+        $clientName = $invoice['client_company'] ?? '';
+ 
+        if (empty($toEmail)) {
+            return $this->respond([
+                'status'  => false,
+                'message' => 'Aucune adresse email pour ce client',
+            ], 400);
+        }
+ 
+        // Staff
+        $staffId   = (int)($data['staff_id'] ?? 0);
+        $staff     = $staffId
+            ? $db->table('tblstaff')
+                ->where('staffid', $staffId)
+                ->get()->getRowArray()
+            : null;
+        $staffName = $staff
+            ? trim(($staff['firstname'] ?? '') . ' ' . ($staff['lastname'] ?? ''))
+            : 'Votre commercial';
+ 
+        // Enrichir la facture pour le PDF
+        $invoice['items']    = $this->invoiceModel->getItems((int)$id);
+        $invoice['payments'] = $this->invoiceModel->getPayments((int)$id);
+        $totalPaid           = $this->invoiceModel->getTotalPaid((int)$id);
+        $invoice['total_paid'] = round($totalPaid, 2);
+        $invoice['total_due']  = round(
+            max(0, (float)($invoice['total'] ?? 0) - $totalPaid), 2);
+        $invoice['status_label'] = $this->statuses[(int)($invoice['status'] ?? 1)] ?? '';
+ 
+        $sent = $this->_sendInvoiceEmail(
+            $toEmail, $clientName, $staffName, (int)$id, $invoice);
+ 
+        if (!$sent) {
+            return $this->respond([
+                'status'  => false,
+                'message' => "Erreur lors de l'envoi de l'email",
+            ], 500);
+        }
+ 
+        return $this->respond([
+            'status'  => true,
+            'message' => "Facture envoyée à $toEmail",
+        ]);
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+    // 3) GET /api/invoices/pdf-download/:id  (AJOUTEZ si absente)
+    // ─────────────────────────────────────────────────────────────────────────
+    public function pdfDownload($id = null)
+    {
+        if (!$id) {
+            return $this->respond(
+                ['status' => false, 'message' => 'ID manquant'], 400);
+        }
+ 
+        $invoice = $this->invoiceModel->getFullDetail((int)$id);
+        if (!$invoice) {
+            return $this->respond(
+                ['status' => false, 'message' => 'Facture introuvable'], 404);
+        }
+ 
+        $filename = 'facture_' . ($invoice['formatted_number'] ?? $id) . '.pdf';
+ 
+        try {
+            $bytes = $this->_generatePdfBytes($invoice);
+            return $this->response
+                ->setHeader('Content-Type',        'application/pdf')
+                ->setHeader('Content-Disposition',
+                    'attachment; filename="' . $filename . '"')
+                ->setHeader('Content-Length', (string)strlen($bytes))
+                ->setHeader('Cache-Control',  'no-cache, no-store')
+                ->setBody($bytes);
+        } catch (\Throwable $e) {
+            return $this->respond([
+                'status'  => false,
+                'message' => 'Erreur PDF : ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+    // 6) Envoi email facture via Brevo  (AJOUTEZ cette méthode privée)
+    // ─────────────────────────────────────────────────────────────────────────
+    private function _sendInvoiceEmail(
+        string $to,
+        string $clientName,
+        string $staffName,
+        int    $invoiceId,
+        array  $invoice
+    ): bool {
+        $numStr     = $invoice['formatted_number']
+            ?? ('INV-' . str_pad($invoiceId, 6, '0', STR_PAD_LEFT));
+        $sym        = $invoice['currency_symbol'] ?? '';
+        $total      = number_format(
+            (float)($invoice['total']     ?? 0), 2, ',', '.');
+        $totalDue   = number_format(
+            (float)($invoice['total_due'] ?? 0), 2, ',', '.');
+        $dueDate    = $invoice['duedate']      ?? '';
+        $statusLabel= $invoice['status_label'] ?? '';
+ 
+        $htmlContent = "<!DOCTYPE html><html><head><meta charset='UTF-8'>
+<style>
+body{font-family:'Segoe UI',sans-serif;background:#f1f5f9;padding:20px;margin:0}
+.wrap{max-width:620px;margin:0 auto}
+.box{background:#fff;border-radius:16px;overflow:hidden;
+     box-shadow:0 4px 20px rgba(0,0,0,.08)}
+.hd{background:linear-gradient(135deg,#1e1b4b,#2563eb,#0ea5e9);
+    padding:32px 28px;text-align:center}
+.hd h2{color:#fff;margin:0 0 6px;font-size:22px;font-weight:800}
+.hd p{color:rgba(255,255,255,.7);margin:0;font-size:13px}
+.bd{padding:28px}
+.infobox{background:#f8fafc;border-radius:12px;padding:16px 20px;
+         margin:16px 0;border:1px solid #e2e8f0}
+.infobox table{width:100%;border-collapse:collapse}
+.infobox td{padding:6px 0;font-size:13px;color:#334155}
+.infobox td:first-child{color:#64748b;width:160px}
+.total-row{background:#eff6ff;border-radius:10px;padding:14px 20px;
+           margin:12px 0;display:flex;justify-content:space-between;
+           align-items:center}
+.total-label{font-size:13px;color:#3b82f6;font-weight:600}
+.total-value{font-size:22px;color:#1e40af;font-weight:900}
+.due-row{background:#fef2f2;border-radius:10px;padding:14px 20px;
+         margin:12px 0;display:flex;justify-content:space-between;
+         align-items:center}
+.due-label{font-size:13px;color:#ef4444;font-weight:600}
+.due-value{font-size:22px;color:#dc2626;font-weight:900}
+.note{background:#f0f9ff;border-left:4px solid #0ea5e9;
+      padding:12px 16px;border-radius:0 10px 10px 0;
+      color:#0369a1;font-size:13px;margin:16px 0;line-height:1.5}
+.ft{background:#f8fafc;padding:20px 28px;text-align:center;
+    color:#94a3b8;font-size:12px;border-top:1px solid #e2e8f0}
+</style></head><body>
+<div class='wrap'><div class='box'>
+  <div class='hd'>
+    <h2>Facture $numStr</h2>
+    <p>" . htmlspecialchars($clientName) . "</p>
+  </div>
+  <div class='bd'>
+    <p>Bonjour <strong>" . htmlspecialchars($clientName) . "</strong>,</p>
+    <p>Votre facture <strong>$numStr</strong> a été émise par
+       <strong>" . htmlspecialchars($staffName) . "</strong>.</p>
+    <div class='infobox'>
+      <table>
+        <tr><td>N° Facture</td><td><strong>$numStr</strong></td></tr>
+        <tr><td>Date d'échéance</td><td><strong>$dueDate</strong></td></tr>
+        <tr><td>Statut</td><td><strong>$statusLabel</strong></td></tr>
+      </table>
+    </div>
+    <div class='total-row'>
+      <span class='total-label'>Total TTC</span>
+      <span class='total-value'>{$sym}{$total}</span>
+    </div>
+    <div class='due-row'>
+      <span class='due-label'>Solde à payer</span>
+      <span class='due-value'>{$sym}{$totalDue}</span>
+    </div>
+    <div class='note'>Le PDF de votre facture est joint à cet email.
+      Pour toute question, contactez votre commercial.</div>
+    <p style='color:#64748b;font-size:13px;margin-top:20px'>
+      Cordialement,<br>
+      <strong>" . htmlspecialchars($staffName) . "</strong></p>
+  </div>
+  <div class='ft'>© " . date('Y') . " — CRM Mobile</div>
+</div></div></body></html>";
+ 
+        // PDF en pièce jointe
+        try {
+            $pdfBytes  = $this->_generatePdfBytes($invoice);
+            $pdfBase64 = base64_encode($pdfBytes);
+        } catch (\Throwable $e) {
+            log_message('error', 'Invoice PDF error: ' . $e->getMessage());
+            $pdfBase64 = null;
+        }
+ 
+        $payload = [
+            'sender'      => [
+                'name'  => 'CRM Mobile',
+                'email' => 'ghoufranbensassy@gmail.com',
+            ],
+            'to'          => [['email' => $to, 'name' => $clientName]],
+            'subject'     => "Facture $numStr",
+            'htmlContent' => $htmlContent,
+        ];
+ 
+        if ($pdfBase64 !== null) {
+            $payload['attachment'] = [[
+                'name'    => 'facture_' . $invoiceId . '.pdf',
+                'content' => $pdfBase64,
+            ]];
+        }
+ 
+        $ch = curl_init('https://api.brevo.com/v3/smtp/email');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode($payload),
+            CURLOPT_HTTPHEADER     => [
+                'accept: application/json',
+                'api-key: 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',
+                'content-type: application/json',
+            ],
+            CURLOPT_TIMEOUT        => 30,
+        ]);
+ 
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlErr  = curl_error($ch);
+        curl_close($ch);
+ 
+        log_message('debug',
+            "Brevo invoice email [$httpCode]: $response");
+ 
+        if ($curlErr) {
+            log_message('error', 'Brevo cURL: ' . $curlErr);
+            return false;
+        }
+ 
+        return $httpCode === 201;
+    }
+
+}
