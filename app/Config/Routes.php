@@ -150,6 +150,9 @@ $routes->group('api', function ($routes) {
     $routes->put(   'invoices/update/(:num)',        'InvoiceController::update/$1');
     $routes->delete('invoices/delete/(:num)',        'InvoiceController::delete/$1');
     $routes->post(  'invoices/change-status',       'InvoiceController::changeStatus');
+    $routes->get('invoices/countries',  'InvoiceController::countries');
+    $routes->get('invoices/currencies', 'InvoiceController::currencies');
+    $routes->get('invoices/staff-list', 'InvoiceController::staffList');
     // ========================================
     // PAYMENTS (RÈGLEMENTS)
     // ========================================

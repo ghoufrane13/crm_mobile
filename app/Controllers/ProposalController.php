@@ -892,8 +892,8 @@ class ProposalController extends ResourceController
             $pdf->Cell($colW[0], 8, $rowNum, 'B', 0, 'C', true);
             $pdf->SetFont('helvetica', 'B', 9); $pdf->SetTextColor(30, 30, 30);
             $xItem = $pdf->GetX();
-            $pdf->MultiCell($colW[1], 4, $item['description'] ?? '', 0, 'L', true, 0, $xItem, $yRow + 2);
-            $pdf->SetXY($xItem, $yRow); $pdf->Cell($colW[1], 8, '', 'B', 0, 'L', false);
+            $pdf->Cell($colW[1], 8, '', 'B', 0, 'L', true);
+            $pdf->MultiCell($colW[1], 4, $item['description'] ?? '', 0, 'L', false, 0, $xItem, $yRow + 2);
             $pdf->SetFont('helvetica', '', 9); $pdf->SetTextColor(50, 50, 50);
             $pdf->SetXY($mL + $colW[0] + $colW[1], $yRow);
             $pdf->Cell($colW[2], 8, $qtyStr,                'B', 0, 'C', true);

@@ -6,53 +6,41 @@ use CodeIgniter\Model;
 
 class PaymentModel extends Model
 {
-    protected $table      = 'tblpayments';
+    protected $table      = 'tblinvoicepaymentrecords';
     protected $primaryKey = 'id';
     protected $returnType = 'array';
 
-    protected $allowedFields = [
-        'reference', 'invoice_id', 'amount', 'fee',
-        'payment_gateway', 'note', 'created_at',
-    ];
-
     // ─────────────────────────────────────────────────────────────────────────
-    // Liste des paiements (tous ou filtrés par facture)
+    // ✅ Liste des paiements depuis tblinvoicepaymentrecords
     // ─────────────────────────────────────────────────────────────────────────
     public function getList(?int $invoiceId = null): array
     {
         $db = \Config\Database::connect();
 
-        $builder = $db->table('tblpayments p')
+        $builder = $db->table('tblinvoicepaymentrecords p')
             ->select([
                 'p.id',
-                'p.reference',
-                'p.invoice_id',
+                'p.invoiceid        AS invoice_id',
                 'p.amount',
-                'p.fee',
-                'p.payment_gateway',
+                'p.paymentmode      AS payment_method_name',
+                'p.paymentmethod',
+                'p.transactionid    AS reference',
                 'p.note',
-                'p.created_at',
-                // Mode de paiement
-                'pm.name         AS payment_method_name',
-                'pm.description  AS payment_method_desc',
+                'p.daterecorded     AS created_at',
+                'p.date',
                 // Facture
-                'i.formatted_number  AS invoice_number',
+                'i.formatted_number AS invoice_number',
                 // Client
-                'c.company           AS client_company',
+                'c.company          AS client_company',
                 // Devise
-                'cu.symbol           AS currency_symbol',
+                'cu.symbol          AS currency_symbol',
             ])
-            ->join('tblpayment_modes pm',
-                'pm.id = p.payment_gateway', 'left')
-            ->join('tblinvoices i',
-                'i.id = p.invoice_id', 'left')
-            ->join('tblclients c',
-                'c.userid = i.clientid', 'left')
-            ->join('tblcurrencies cu',
-                'cu.id = i.currency', 'left');
+            ->join('tblinvoices i',    'i.id = p.invoiceid',       'left')
+            ->join('tblclients c',     'c.userid = i.clientid',    'left')
+            ->join('tblcurrencies cu', 'cu.id = i.currency',       'left');
 
         if ($invoiceId !== null) {
-            $builder->where('p.invoice_id', $invoiceId);
+            $builder->where('p.invoiceid', $invoiceId);
         }
 
         return $builder->orderBy('p.id', 'DESC')
@@ -60,28 +48,25 @@ class PaymentModel extends Model
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Détail d'un paiement
+    // ✅ Détail d'un paiement depuis tblinvoicepaymentrecords
     // ─────────────────────────────────────────────────────────────────────────
     public function getDetail(int $id): ?array
     {
         $db  = \Config\Database::connect();
-        $row = $db->table('tblpayments p')
+        $row = $db->table('tblinvoicepaymentrecords p')
             ->select([
                 'p.*',
-                'pm.name        AS payment_method_name',
+                'p.paymentmode      AS payment_method_name',
+                'p.transactionid    AS reference',
+                'p.daterecorded     AS created_at',
                 'i.formatted_number AS invoice_number',
                 'i.clientid',
-                'c.company      AS client_company',
-                'cu.symbol      AS currency_symbol',
+                'c.company          AS client_company',
+                'cu.symbol          AS currency_symbol',
             ])
-            ->join('tblpayment_modes pm',
-                'pm.id = p.payment_gateway', 'left')
-            ->join('tblinvoices i',
-                'i.id = p.invoice_id', 'left')
-            ->join('tblclients c',
-                'c.userid = i.clientid', 'left')
-            ->join('tblcurrencies cu',
-                'cu.id = i.currency', 'left')
+            ->join('tblinvoices i',    'i.id = p.invoiceid',    'left')
+            ->join('tblclients c',     'c.userid = i.clientid', 'left')
+            ->join('tblcurrencies cu', 'cu.id = i.currency',    'left')
             ->where('p.id', $id)
             ->get()->getRowArray();
 
@@ -89,31 +74,30 @@ class PaymentModel extends Model
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Somme des paiements reçus pour une facture
+    // ✅ Total payé depuis tblinvoicepaymentrecords (colonne : invoiceid)
+    //    Utilisé par PaymentController::create() ET InvoiceModel
     // ─────────────────────────────────────────────────────────────────────────
     public function getTotalPaid(int $invoiceId): float
     {
         $db  = \Config\Database::connect();
-        $row = $db->table('tblpayments')
+        $row = $db->table('tblinvoicepaymentrecords')
             ->selectSum('amount')
-            ->where('invoice_id', $invoiceId)
+            ->where('invoiceid', $invoiceId)
             ->get()->getRowArray();
 
         return (float)($row['amount'] ?? 0);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Modes de paiement actifs (tblpayment_modes)
-    // Filtre : actifs, pour factures (invoices_only ou générique)
+    // Modes de paiement actifs (tblpayment_modes) — inchangé
     // ─────────────────────────────────────────────────────────────────────────
     public function getPaymentModes(): array
     {
         $db = \Config\Database::connect();
         return $db->table('tblpayment_modes')
-            ->select('id, name, description, show_on_pdf,
-                      selected_by_default')
+            ->select('id, name, description, show_on_pdf, selected_by_default')
             ->where('active', 1)
-            ->where('expenses_only', 0)   // exclure les modes dépenses
+            ->where('expenses_only', 0)
             ->orderBy('name', 'ASC')
             ->get()->getResultArray();
     }

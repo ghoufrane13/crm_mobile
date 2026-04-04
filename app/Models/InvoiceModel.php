@@ -44,7 +44,7 @@ class InvoiceModel extends Model
 
         if (!$row) return null;
 
-        // Agent commercial — requête séparée (évite erreur si colonne absente)
+        // Agent commercial — requête séparée
         $row['sale_agent_name'] = null;
         try {
             $agentId = (int)($row['sale_agent'] ?? $row['addedfrom'] ?? 0);
@@ -68,18 +68,11 @@ class InvoiceModel extends Model
 
     // ─────────────────────────────────────────────────────────────────────────
     // Articles d'une facture
-    // Dans Perfex CRM, tblitemable contient DIRECTEMENT :
-    //   taxname  → nom de la taxe (ex: "TVA")
-    //   taxrate  → taux (ex: 20.00)
-    //   tax_id   → id de la taxe (via tblitemable.taxid ou JOIN tbltaxes)
-    // On lit tout depuis tblitemable + JOIN tbltaxes pour récupérer l'id
     // ─────────────────────────────────────────────────────────────────────────
     public function getItems(int $invoiceId): array
     {
         $db = $this->db;
 
-        // Récupérer les colonnes disponibles dans tblitemable
-        // Perfex stocke taxname + taxrate directement dans tblitemable
         $items = $db->table('tblitemable it')
             ->select('it.*')
             ->where('it.rel_id',   $invoiceId)
@@ -90,17 +83,13 @@ class InvoiceModel extends Model
         if (empty($items)) return [];
 
         foreach ($items as &$item) {
-            // Total ligne
             $qty  = (float)($item['qty']  ?? 1);
             $rate = (float)($item['rate'] ?? 0);
             $item['line_total'] = round($qty * $rate, 2);
 
-            // taxname et taxrate sont déjà dans tblitemable (Perfex)
-            // On s'assure juste que les clés existent avec des valeurs par défaut
-            if (!isset($item['taxname'])  || $item['taxname']  === null) $item['taxname']  = '';
-            if (!isset($item['taxrate'])  || $item['taxrate']  === null) $item['taxrate']  = '0';
+            if (!isset($item['taxname']) || $item['taxname'] === null) $item['taxname'] = '';
+            if (!isset($item['taxrate']) || $item['taxrate'] === null) $item['taxrate'] = '0';
 
-            // Récupérer l'id de la taxe depuis tbltaxes si taxname est fourni
             $item['tax_id'] = '';
             if (!empty(trim($item['taxname'] ?? ''))) {
                 try {
@@ -121,31 +110,7 @@ class InvoiceModel extends Model
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Paiements reçus pour une facture (tblpayments)
-    // ─────────────────────────────────────────────────────────────────────────
-    public function getPayments(int $invoiceId): array
-    {
-        try {
-            return $this->db->table('tblinvoicepaymentrecords p')
-                ->select([
-                    'p.id',
-                    'p.amount',
-                    'p.note AS fee',
-                    'p.transactionid AS reference',
-                    'p.daterecorded AS date',
-                    'p.paymentmode AS payment_gateway',
-                    'p.paymentmethod AS payment_method',
-                ])
-                ->where('p.invoiceid', $invoiceId)
-                ->orderBy('p.daterecorded', 'DESC')
-                ->get()->getResultArray();
-        } catch (\Exception $e) {
-            return [];
-        }
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Total payé depuis tblpayments
+    // ✅ Total payé depuis tblinvoicepaymentrecords (colonne: invoiceid)
     // ─────────────────────────────────────────────────────────────────────────
     public function getTotalPaid(int $invoiceId): float
     {
@@ -157,6 +122,32 @@ class InvoiceModel extends Model
             return (float)($row['amount'] ?? 0);
         } catch (\Exception $e) {
             return 0.0;
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // ✅ Paiements depuis tblinvoicepaymentrecords
+    //    Colonnes : invoiceid, amount, note, transactionid,
+    //               daterecorded, paymentmode, paymentmethod
+    // ─────────────────────────────────────────────────────────────────────────
+    public function getPayments(int $invoiceId): array
+    {
+        try {
+            return $this->db->table('tblinvoicepaymentrecords')
+                ->select([
+                    'id',
+                    'amount',
+                    'note',
+                    'transactionid  AS reference',
+                    'daterecorded   AS date',
+                    'paymentmode    AS payment_gateway',
+                    'paymentmethod  AS payment_method',
+                ])
+                ->where('invoiceid', $invoiceId)
+                ->orderBy('daterecorded', 'DESC')
+                ->get()->getResultArray();
+        } catch (\Exception $e) {
+            return [];
         }
     }
 
@@ -213,7 +204,6 @@ class InvoiceModel extends Model
             if (empty(trim($item['description'] ?? ''))) continue;
             $order++;
 
-            // Résoudre taxname + taxrate depuis tax_id si fourni
             $taxname = $item['taxname'] ?? '';
             $taxrate = $item['taxrate'] ?? '0';
 

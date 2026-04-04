@@ -55,23 +55,31 @@ class PaymentController extends ResourceController
 
     // ─────────────────────────────────────────────────────────────────────────
     // POST /api/payments/create
+    // ✅ Écrit dans tblinvoicepaymentrecords (même table que Stripe)
+    //    + trace dans tblpayment_attempts (fee, gateway_id, reference)
     // ─────────────────────────────────────────────────────────────────────────
     public function create()
     {
         $data      = $this->request->getJSON(true);
         $invoiceId = (int)($data['invoice_id']      ?? 0);
         $amount    = (float)($data['amount']         ?? 0);
-        $gateway   = (int)($data['payment_gateway'] ?? 0);
+        $gatewayId = (int)($data['payment_gateway'] ?? 0);
+        $fee       = round((float)($data['fee']      ?? 0), 2);
+        $reference = $data['reference'] ?? null;
+        $note      = $data['note']      ?? null;
+        $createdAt = $data['created_at'] ?? date('Y-m-d H:i:s');
+        $dateOnly  = substr($createdAt, 0, 10);
 
         if (!$invoiceId) return $this->respond(
             ['status' => false, 'message' => 'invoice_id requis'], 400);
         if ($amount <= 0) return $this->respond(
             ['status' => false, 'message' => 'Montant invalide (doit être > 0)'], 400);
-        if (!$gateway) return $this->respond(
+        if (!$gatewayId) return $this->respond(
             ['status' => false, 'message' => 'Mode de règlement requis'], 400);
 
         $db = \Config\Database::connect();
 
+        // ── Vérifier la facture ───────────────────────────────────────────────
         $invoice = $db->table('tblinvoices')
             ->select('id, total, status')
             ->where('id', $invoiceId)
@@ -87,6 +95,7 @@ class PaymentController extends ResourceController
             ], 400);
         }
 
+        // ── Vérifier le solde restant ─────────────────────────────────────────
         $totalPaid = $this->paymentModel->getTotalPaid($invoiceId);
         $total     = (float)$invoice['total'];
         $totalDue  = round(max(0, $total - $totalPaid), 2);
@@ -98,35 +107,56 @@ class PaymentController extends ResourceController
             ], 400);
         }
 
+        // ── Récupérer le nom du mode de paiement ─────────────────────────────
         $mode = $db->table('tblpayment_modes')
             ->select('id, name')
-            ->where('id', $gateway)
+            ->where('id', $gatewayId)
             ->where('active', 1)
             ->get()->getRowArray();
 
         if (!$mode) return $this->respond(
             ['status' => false, 'message' => 'Mode de paiement invalide'], 400);
 
-        $db->table('tblpayments')->insert([
-            'invoice_id'      => $invoiceId,
-            'amount'          => round($amount, 2),
-            'fee'             => round((float)($data['fee'] ?? 0), 2),
-            'payment_gateway' => $gateway,
-            'reference'       => $data['reference'] ?? null,
-            'note'            => $data['note']       ?? null,
-            'created_at'      => date('Y-m-d H:i:s'),
+        $gatewayName = $mode['name'];
+
+        // ── ✅ Insérer dans tblinvoicepaymentrecords ──────────────────────────
+        $db->table('tblinvoicepaymentrecords')->insert([
+            'invoiceid'     => $invoiceId,
+            'amount'        => round($amount, 2),
+            'paymentmode'   => $gatewayName,
+            'paymentmethod' => $gatewayName,
+            'transactionid' => $reference,
+            'note'          => $note,
+            'date'          => $dateOnly,
+            'daterecorded'  => date('Y-m-d H:i:s'),
         ]);
         $paymentId = $db->insertID();
 
+        // ── ✅ Tracer dans tblpayment_attempts (fee + gateway_id) ─────────────
+        try {
+            $db->table('tblpayment_attempts')->insert([
+                'reference'       => $reference,
+                'invoice_id'      => $invoiceId,
+                'amount'          => round($amount, 2),
+                'fee'             => $fee,
+                'payment_gateway' => $gatewayId,
+                'created_at'      => date('Y-m-d H:i:s'),
+            ]);
+        } catch (\Exception $e) {
+            // Non bloquant — la tentative est optionnelle
+            log_message('warning', 'tblpayment_attempts insert failed: ' . $e->getMessage());
+        }
+
+        // ── Recalculer le statut de la facture ────────────────────────────────
         $newTotalPaid = $this->paymentModel->getTotalPaid($invoiceId);
         $newTotalDue  = round(max(0, $total - $newTotalPaid), 2);
 
         if ($newTotalDue <= 0) {
-            $newStatus = 2;
+            $newStatus = 2; // Payée
         } elseif ($newTotalPaid > 0) {
-            $newStatus = 4; // Partiel
+            $newStatus = 4; // Partiellement payée
         } else {
-            $newStatus = 1;
+            $newStatus = 1; // Impayée
         }
 
         $db->table('tblinvoices')
@@ -143,14 +173,17 @@ class PaymentController extends ResourceController
         ], 201);
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
     // PUT /api/payments/update/:id
+    // ✅ Opère sur tblinvoicepaymentrecords
+    // ─────────────────────────────────────────────────────────────────────────
     public function update($id = null)
     {
         if (!$id) return $this->respond(
             ['status' => false, 'message' => 'ID manquant'], 400);
 
         $db      = \Config\Database::connect();
-        $payment = $db->table('tblpayments')
+        $payment = $db->table('tblinvoicepaymentrecords')
             ->where('id', (int)$id)->get()->getRowArray();
 
         if (!$payment) return $this->respond(
@@ -159,44 +192,59 @@ class PaymentController extends ResourceController
         $data = $this->request->getJSON(true);
         $upd  = [];
 
-        if (isset($data['amount']))               $upd['amount']          = round((float)$data['amount'], 2);
-        if (isset($data['fee']))                  $upd['fee']             = round((float)$data['fee'], 2);
-        if (isset($data['payment_gateway']))      $upd['payment_gateway'] = (int)$data['payment_gateway'];
-        if (array_key_exists('reference', $data)) $upd['reference']       = $data['reference'];
-        if (array_key_exists('note', $data))      $upd['note']            = $data['note'];
+        if (isset($data['amount']))    $upd['amount']        = round((float)$data['amount'], 2);
+        if (isset($data['reference'])) $upd['transactionid'] = $data['reference'];
+        if (isset($data['note']))      $upd['note']          = $data['note'];
+
+        // Mise à jour du mode de paiement si gateway fourni
+        if (isset($data['payment_gateway'])) {
+            $mode = $db->table('tblpayment_modes')
+                ->select('name')
+                ->where('id', (int)$data['payment_gateway'])
+                ->where('active', 1)
+                ->get()->getRowArray();
+            if ($mode) {
+                $upd['paymentmode']   = $mode['name'];
+                $upd['paymentmethod'] = $mode['name'];
+            }
+        }
 
         if (!empty($upd)) {
-            $db->table('tblpayments')
+            $db->table('tblinvoicepaymentrecords')
                 ->where('id', (int)$id)->update($upd);
         }
 
-        $this->_recalcStatus($db, (int)$payment['invoice_id']);
+        $this->_recalcStatus($db, (int)$payment['invoiceid']);
 
         return $this->respond(['status' => true, 'message' => 'Règlement mis à jour']);
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
     // DELETE /api/payments/delete/:id
+    // ✅ Opère sur tblinvoicepaymentrecords
+    // ─────────────────────────────────────────────────────────────────────────
     public function delete($id = null)
     {
         if (!$id) return $this->respond(
             ['status' => false, 'message' => 'ID manquant'], 400);
 
         $db      = \Config\Database::connect();
-        $payment = $db->table('tblpayments')
-            ->select('id, invoice_id')
+        $payment = $db->table('tblinvoicepaymentrecords')
+            ->select('id, invoiceid')
             ->where('id', (int)$id)->get()->getRowArray();
 
         if (!$payment) return $this->respond(
             ['status' => false, 'message' => 'Règlement introuvable'], 404);
 
-        $invoiceId = (int)$payment['invoice_id'];
-        $db->table('tblpayments')->where('id', (int)$id)->delete();
+        $invoiceId = (int)$payment['invoiceid'];
+        $db->table('tblinvoicepaymentrecords')->where('id', (int)$id)->delete();
         $this->_recalcStatus($db, $invoiceId);
 
         return $this->respond(['status' => true, 'message' => 'Règlement supprimé']);
     }
 
     // ── Helper ────────────────────────────────────────────────────────────────
+    // ✅ Recalcul depuis tblinvoicepaymentrecords (cohérent avec InvoiceModel)
     private function _recalcStatus($db, int $invoiceId): void
     {
         $invoice = $db->table('tblinvoices')
@@ -234,7 +282,6 @@ class PaymentController extends ResourceController
 
         $db = \Config\Database::connect();
 
-        // ── Charger la facture ────────────────────────────────────────────────
         $invoice = $db->table('tblinvoices')
             ->select('id, total, status, currency')
             ->where('id', $invoiceId)
@@ -248,20 +295,14 @@ class PaymentController extends ResourceController
             'message' => 'Cette facture est déjà entièrement payée.',
         ], 400);
 
-        // ── Solde restant ─────────────────────────────────────────────────────
-        $totalPaid = (float)($db->table('tblinvoicepaymentrecords')
-            ->selectSum('amount', 'total_paid')
-            ->where('invoiceid', $invoiceId)
-            ->get()->getRowArray()['total_paid'] ?? 0);
-
-        $totalDue = round(max(0, (float)$invoice['total'] - $totalPaid), 2);
+        $totalPaid = $this->paymentModel->getTotalPaid($invoiceId);
+        $totalDue  = round(max(0, (float)$invoice['total'] - $totalPaid), 2);
 
         if ($totalDue <= 0) return $this->respond([
             'status'  => false,
             'message' => 'Aucun solde restant à payer.',
         ], 400);
 
-        // ── Valider le montant demandé ────────────────────────────────────────
         $amountToPay = $totalDue;
         if ($reqAmount > 0 && $reqAmount <= $totalDue + 0.001) {
             $amountToPay = round($reqAmount, 2);
@@ -272,21 +313,15 @@ class PaymentController extends ResourceController
             ], 400);
         }
 
-        // ── Stripe : carte bancaire uniquement, pas de redirect ───────────────
-        // TND n'est pas supporté par Stripe → on force USD
         $currency  = 'usd';
-        $amountInt = (int)round($amountToPay * 100); // Stripe veut des centimes
+        $amountInt = (int)round($amountToPay * 100);
 
-        // ── Clé secrète Stripe ────────────────────────────────────────────────
         $stripeKey = env('STRIPE_SECRET_KEY', '');
         if (!$stripeKey) return $this->respond([
             'status'  => false,
             'message' => 'Clé Stripe non configurée (STRIPE_SECRET_KEY manquante).',
         ], 500);
 
-        // ── Appel API Stripe ──────────────────────────────────────────────────
-        // ✅ payment_method_types[]=card → carte uniquement, pas de redirection
-        //    (Amazon Pay, Cash App, etc. sont exclus)
         $ch = curl_init('https://api.stripe.com/v1/payment_intents');
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -357,7 +392,6 @@ class PaymentController extends ResourceController
             'message' => 'Clé Stripe non configurée.',
         ], 500);
 
-        // ── 1. Vérifier le statut auprès de Stripe ────────────────────────────
         $ch = curl_init("https://api.stripe.com/v1/payment_intents/$paymentIntentId");
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -382,7 +416,7 @@ class PaymentController extends ResourceController
 
         $db = \Config\Database::connect();
 
-        // ── 2. Anti-doublon ───────────────────────────────────────────────────
+        // Anti-doublon
         $existing = $db->table('tblinvoicepaymentrecords')
             ->where('transactionid', $paymentIntentId)
             ->get()->getRowArray();
@@ -392,14 +426,12 @@ class PaymentController extends ResourceController
             'message' => 'Ce paiement a déjà été enregistré.',
         ], 409);
 
-        // ── 3. Convertir le montant (Stripe renvoie des centimes) ─────────────
         $zeroDecimal = ['bif','clp','gnf','jpy','kmf','krw','mga','pyg','rwf','ugx','vnd','xaf','xof'];
         $currency    = strtolower($pi['currency'] ?? 'usd');
         $amount      = in_array($currency, $zeroDecimal)
             ? (float)$pi['amount']
             : round((float)$pi['amount'] / 100, 2);
 
-        // ── 4. Insérer dans tblinvoicepaymentrecords ──────────────────────────
         $db->table('tblinvoicepaymentrecords')->insert([
             'invoiceid'     => $invoiceId,
             'amount'        => $amount,
@@ -412,19 +444,14 @@ class PaymentController extends ResourceController
         ]);
         $paymentId = $db->insertID();
 
-        // ── 5. Recalculer le statut de la facture ─────────────────────────────
         $invoice = $db->table('tblinvoices')
             ->select('total')
             ->where('id', $invoiceId)
             ->get()->getRowArray();
 
-        $totalPaid = (float)($db->table('tblinvoicepaymentrecords')
-            ->selectSum('amount', 'total_paid')
-            ->where('invoiceid', $invoiceId)
-            ->get()->getRowArray()['total_paid'] ?? 0);
-
-        $totalDue  = round(max(0, (float)$invoice['total'] - $totalPaid), 2);
-        $newStatus = $totalDue <= 0 ? 2 : ($totalPaid > 0 ? 4 : 1);
+        $newTotalPaid = $this->paymentModel->getTotalPaid($invoiceId);
+        $totalDue     = round(max(0, (float)$invoice['total'] - $newTotalPaid), 2);
+        $newStatus    = $totalDue <= 0 ? 2 : ($newTotalPaid > 0 ? 4 : 1);
 
         $db->table('tblinvoices')
             ->where('id', $invoiceId)
