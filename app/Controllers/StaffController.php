@@ -364,4 +364,21 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             'staff'   => $updatedStaff,
         ], 200);
     }
+    // GET /api/staff/list
+    public function list()
+    {
+        $db = \Config\Database::connect();
+    
+        $staff = $db->table('tblstaff')
+            ->select('staffid, firstname, lastname, email')
+            ->where('active', 1)
+            ->where('is_not_staff', 0)
+            ->orderBy('firstname', 'ASC')
+            ->get()->getResultArray();
+    
+        return $this->respond([
+            'status' => 200,
+            'data'   => $staff,
+        ]);
+    }
 }

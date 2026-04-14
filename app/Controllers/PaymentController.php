@@ -19,6 +19,17 @@ class PaymentController extends ResourceController
         $this->paymentModel = new PaymentModel();
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // Génère une référence de transaction unique : TXN-YYYYMMDD-XXXXXX
+    // Utilisé si le client n'en fournit pas (ou fournit une chaîne vide)
+    // ─────────────────────────────────────────────────────────────────────────
+    private function _generateTransactionRef(): string
+    {
+        $date   = date('Ymd');
+        $suffix = strtoupper(substr(bin2hex(random_bytes(4)), 0, 6));
+        return "TXN-{$date}-{$suffix}";
+    }
+
     // GET /api/payments/list[?invoice_id=X]
     public function list()
     {
@@ -54,9 +65,22 @@ class PaymentController extends ResourceController
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // GET /api/payments/generate-ref
+    // Endpoint optionnel : retourne une référence de transaction pré-générée
+    // pour affichage immédiat dans le formulaire Flutter avant soumission
+    // ─────────────────────────────────────────────────────────────────────────
+    public function generateRef()
+    {
+        return $this->respond([
+            'status'    => true,
+            'reference' => $this->_generateTransactionRef(),
+        ]);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // POST /api/payments/create
-    // ✅ Écrit dans tblinvoicepaymentrecords (même table que Stripe)
-    //    + trace dans tblpayment_attempts (fee, gateway_id, reference)
+    // ✅ Référence de transaction auto-générée si absente
+    // ✅ Écrit dans tblinvoicepaymentrecords + trace dans tblpayment_attempts
     // ─────────────────────────────────────────────────────────────────────────
     public function create()
     {
@@ -65,10 +89,15 @@ class PaymentController extends ResourceController
         $amount    = (float)($data['amount']         ?? 0);
         $gatewayId = (int)($data['payment_gateway'] ?? 0);
         $fee       = round((float)($data['fee']      ?? 0), 2);
-        $reference = $data['reference'] ?? null;
         $note      = $data['note']      ?? null;
         $createdAt = $data['created_at'] ?? date('Y-m-d H:i:s');
         $dateOnly  = substr($createdAt, 0, 10);
+
+        // ── Référence : utiliser celle fournie, ou en générer une ─────────────
+        $reference = trim($data['reference'] ?? '');
+        if (empty($reference)) {
+            $reference = $this->_generateTransactionRef();
+        }
 
         if (!$invoiceId) return $this->respond(
             ['status' => false, 'message' => 'invoice_id requis'], 400);
@@ -119,7 +148,16 @@ class PaymentController extends ResourceController
 
         $gatewayName = $mode['name'];
 
-        // ── ✅ Insérer dans tblinvoicepaymentrecords ──────────────────────────
+        // ── Anti-doublon sur la référence ─────────────────────────────────────
+        $existingRef = $db->table('tblinvoicepaymentrecords')
+            ->where('transactionid', $reference)
+            ->get()->getRowArray();
+        if ($existingRef) {
+            // Si doublon, regénérer silencieusement
+            $reference = $this->_generateTransactionRef();
+        }
+
+        // ── Insérer dans tblinvoicepaymentrecords ─────────────────────────────
         $db->table('tblinvoicepaymentrecords')->insert([
             'invoiceid'     => $invoiceId,
             'amount'        => round($amount, 2),
@@ -132,7 +170,7 @@ class PaymentController extends ResourceController
         ]);
         $paymentId = $db->insertID();
 
-        // ── ✅ Tracer dans tblpayment_attempts (fee + gateway_id) ─────────────
+        // ── Tracer dans tblpayment_attempts (fee + gateway_id) ────────────────
         try {
             $db->table('tblpayment_attempts')->insert([
                 'reference'       => $reference,
@@ -143,7 +181,6 @@ class PaymentController extends ResourceController
                 'created_at'      => date('Y-m-d H:i:s'),
             ]);
         } catch (\Exception $e) {
-            // Non bloquant — la tentative est optionnelle
             log_message('warning', 'tblpayment_attempts insert failed: ' . $e->getMessage());
         }
 
@@ -167,6 +204,7 @@ class PaymentController extends ResourceController
             'status'     => true,
             'message'    => 'Règlement enregistré avec succès',
             'payment_id' => $paymentId,
+            'reference'  => $reference,   // ← retourner la référence utilisée
             'total_paid' => round($newTotalPaid, 2),
             'total_due'  => $newTotalDue,
             'new_status' => $newStatus,
@@ -175,7 +213,6 @@ class PaymentController extends ResourceController
 
     // ─────────────────────────────────────────────────────────────────────────
     // PUT /api/payments/update/:id
-    // ✅ Opère sur tblinvoicepaymentrecords
     // ─────────────────────────────────────────────────────────────────────────
     public function update($id = null)
     {
@@ -196,7 +233,6 @@ class PaymentController extends ResourceController
         if (isset($data['reference'])) $upd['transactionid'] = $data['reference'];
         if (isset($data['note']))      $upd['note']          = $data['note'];
 
-        // Mise à jour du mode de paiement si gateway fourni
         if (isset($data['payment_gateway'])) {
             $mode = $db->table('tblpayment_modes')
                 ->select('name')
@@ -221,7 +257,6 @@ class PaymentController extends ResourceController
 
     // ─────────────────────────────────────────────────────────────────────────
     // DELETE /api/payments/delete/:id
-    // ✅ Opère sur tblinvoicepaymentrecords
     // ─────────────────────────────────────────────────────────────────────────
     public function delete($id = null)
     {
@@ -243,8 +278,7 @@ class PaymentController extends ResourceController
         return $this->respond(['status' => true, 'message' => 'Règlement supprimé']);
     }
 
-    // ── Helper ────────────────────────────────────────────────────────────────
-    // ✅ Recalcul depuis tblinvoicepaymentrecords (cohérent avec InvoiceModel)
+    // ── Helper recalcul statut ────────────────────────────────────────────────
     private function _recalcStatus($db, int $invoiceId): void
     {
         $invoice = $db->table('tblinvoices')
@@ -263,12 +297,11 @@ class PaymentController extends ResourceController
     }
 
     // =========================================================================
-    // STRIPE — Paiement en ligne (mode test / sandbox)
+    // STRIPE
     // =========================================================================
 
     /**
      * POST /api/payments/stripe/create-intent
-     * Body JSON : { "invoice_id": 12, "client_id": 5, "amount": 100.00 }
      */
     public function createStripeIntent()
     {
@@ -319,7 +352,7 @@ class PaymentController extends ResourceController
         $stripeKey = env('STRIPE_SECRET_KEY', '');
         if (!$stripeKey) return $this->respond([
             'status'  => false,
-            'message' => 'Clé Stripe non configurée (STRIPE_SECRET_KEY manquante).',
+            'message' => 'Clé Stripe non configurée.',
         ], 500);
 
         $ch = curl_init('https://api.stripe.com/v1/payment_intents');
@@ -373,7 +406,6 @@ class PaymentController extends ResourceController
 
     /**
      * POST /api/payments/stripe/confirm
-     * Body JSON : { "payment_intent_id": "pi_xxx", "invoice_id": 12 }
      */
     public function confirmStripePayment()
     {

@@ -162,8 +162,58 @@ $routes->group('api', function ($routes) {
     $routes->post(  'payments/create',        'PaymentController::create');
     $routes->put(   'payments/update/(:num)', 'PaymentController::update/$1');
     $routes->delete('payments/delete/(:num)', 'PaymentController::delete/$1');
+     // ========================================
+    // ITEMS
+    // ⚠️  RÈGLE CRITIQUE : routes statiques AVANT (:num)
+    //     Sans ça, /items/groups → CodeIgniter cherche show('groups') → 404
+    // ========================================
+    $routes->get(   'items/search',            'ItemController::search');
+    $routes->get(   'items/groups',            'ItemController::groups');
+    $routes->get(   'items/taxes',             'ItemController::taxes');
+    $routes->get(   'items/units',             'ItemController::units');
+    $routes->get(   'items',                   'ItemController::index');
+    // ── Paramétrées APRÈS
+    $routes->get(   'items/(:num)',            'ItemController::show/$1');
+    $routes->post(  'items',                   'ItemController::create');
+    $routes->put(   'items/(:num)',            'ItemController::update/$1');
+    $routes->delete('items/(:num)',            'ItemController::delete/$1');
+    $routes->post(  'items/(:num)/duplicate',  'ItemController::duplicate/$1');
+ 
+
+    // ========================================
+    // ─── À ajouter dans Routes.php, dans le groupe 'api', section TASKS ───────
+// ⚠️  DOIT être placé AVANT les routes paramétrées (:num)
+
+$routes->get('tasks/related-documents', 'TaskController::relatedDocuments');
+
+// La section tasks complète doit ressembler à :
+
+$routes->get(   'tasks',                       'TaskController::index');
+$routes->post(  'tasks',                       'TaskController::create');
+$routes->get(   'tasks/related-documents',     'TaskController::relatedDocuments'); // ← ICI
+$routes->post(  'tasks/(:num)/timer/start',    'TaskController::startTimer/$1');
+$routes->post(  'tasks/(:num)/timer/stop',     'TaskController::stopTimer/$1');
+$routes->post(  'tasks/(:num)/checklist',      'TaskController::addChecklist/$1');
+$routes->post(  'tasks/(:num)/comments',       'TaskController::addComment/$1');
+$routes->put(   'tasks/checklist/(:num)',       'TaskController::updateChecklist/$1');
+$routes->get(   'tasks/(:num)',                'TaskController::show/$1');
+$routes->put(   'tasks/(:num)',                'TaskController::update/$1');
+$routes->delete('tasks/(:num)',                'TaskController::delete/$1');
+    // ========================================
+    // SIGNATURE
+    // ========================================
+    $routes->post('signature/save',          'SignatureController::save');
+    $routes->get( 'signature/(:any)/(:num)', 'SignatureController::get/$1/$2');
+ 
 
     // ── Stripe (paiement en ligne)
     $routes->post('payments/stripe/create-intent', 'PaymentController::createStripeIntent');
     $routes->post('payments/stripe/confirm',        'PaymentController::confirmStripePayment');
+    $routes->get('invoices/generate-ref', 'InvoiceController::generateRef');
+    $routes->get('estimates/generate-ref', 'EstimateController::generateRef');
+    $routes->get('payments/generate-ref', 'PaymentController::generateRef');
+    $routes->get('staff/list', 'StaffController::list');
+    $routes->get('tasks/statuses',             'TaskController::statuses');
+    $routes->get('clients',        'ClientController::index');
+    $routes->get('clients/(:num)', 'ClientController::show/$1');
 });
