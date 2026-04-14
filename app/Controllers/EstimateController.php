@@ -108,11 +108,6 @@ class EstimateController extends ResourceController
         $existing=$this->estimateModel->find((int)$id);
         if(!$existing) return $this->respond(['status'=>false,'message'=>'Devis introuvable'],404);
 
-        // ── CHANGE: Accepted estimates (status=4) can now be edited freely.
-        //    The old 'force' gate is removed — no special flag needed.
-        //    Editing an accepted estimate no longer resets the invoiceid so that
-        //    a previously converted invoice remains linked.
-
         $u=[];
         foreach(['date','expirydate','reference_no','discount_type','terms','billing_street','billing_city',
                  'billing_state','billing_zip','shipping_street','shipping_city','shipping_state','shipping_zip',
@@ -217,11 +212,6 @@ class EstimateController extends ResourceController
         $estimate=$this->estimateModel->getDetail((int)$id);
         if(!$estimate) return $this->respond(['status'=>false,'message'=>'Devis introuvable'],404);
 
-        // ── CHANGE: Conversion is now MANUAL and ALWAYS allowed for Accepted
-        //    estimates (status=4), even if they were already converted before
-        //    (re-conversion after modification).
-        //    We no longer block on existing invoiceid so users can re-convert
-        //    after editing the accepted estimate.
         if((int)$estimate['status'] !== 4)
             return $this->respond(['status'=>false,'message'=>'Seul un devis Accepté peut être converti en facture.'],400);
 
@@ -229,7 +219,6 @@ class EstimateController extends ResourceController
         $invoiceId=$this->_createInvoice($estimate,$items,$data);
         if(!$invoiceId) return $this->respond(['status'=>false,'message'=>'Erreur création facture'],500);
 
-        // Update invoiceid and invoiced_date; keep status=4 (Accepted).
         $this->db->table('tblestimates')->where('id',(int)$id)->update([
             'invoiceid'    => $invoiceId,
             'invoiced_date'=> date('Y-m-d'),
@@ -279,9 +268,6 @@ class EstimateController extends ResourceController
         if(!$contact||!$estimate||(int)$estimate['clientid']!==(int)$contact['userid']) return $this->respond(['status'=>false,'message'=>'Non autorisé'],403);
         if((int)$estimate['status']!==2) return $this->respond(['status'=>false,'message'=>'Ce devis ne peut plus être modifié'],400);
 
-        // ── CHANGE: When client accepts, we only set status=4 (Accepted).
-        //    NO automatic conversion to invoice happens here.
-        //    The staff member must manually trigger conversion from the detail screen.
         $newStatus=$action==='accept'?4:3;
         $this->estimateModel->updateStatus((int)$id,$newStatus);
         if($action==='accept') $this->db->table('tblestimates')->where('id',(int)$id)->update([
@@ -611,8 +597,21 @@ class EstimateController extends ResourceController
         $payload=['sender'=>['name'=>'CRM Mobile','email'=>'ghoufranbensassy@gmail.com'],'to'=>[['email'=>$to,'name'=>$clientName]],'subject'=>"Devis $numStr",'htmlContent'=>$html];
         if($pdfBase64!==null) $payload['attachment']=[['name'=>'devis_'.$estimateId.'.pdf','content'=>$pdfBase64]];
         $ch=curl_init('https://api.brevo.com/v3/smtp/email');
-        curl_setopt_array($ch,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_POST=>true,CURLOPT_POSTFIELDS=>json_encode($payload),CURLOPT_HTTPHEADER=>['accept: application/json','api-key: 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','content-type: application/json'],CURLOPT_TIMEOUT=>30]);
-        $httpCode=curl_getinfo($ch,CURLINFO_HTTP_CODE); $err=curl_error($ch); curl_close($ch);
+        curl_setopt_array($ch,[
+            CURLOPT_RETURNTRANSFER=>true,
+            CURLOPT_POST=>true,
+            CURLOPT_POSTFIELDS=>json_encode($payload),
+            CURLOPT_HTTPHEADER=>[
+                'accept: application/json',
+                'api-key: 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',
+                'content-type: application/json',
+            ],
+            CURLOPT_TIMEOUT=>30,
+        ]);
+        $response=curl_exec($ch); // ← FIX: actually execute the request
+        $httpCode=curl_getinfo($ch,CURLINFO_HTTP_CODE);
+        $err=curl_error($ch);
+        curl_close($ch);
         if($err){ log_message('error','Brevo cURL: '.$err); return false; }
         return $httpCode===201;
     }
