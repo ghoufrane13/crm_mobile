@@ -54,6 +54,8 @@ class ProfileController extends ResourceController
                 'title'         => $contact['title'],
                 'direction'     => $contact['direction'],
                 'profile_image' => $contact['profile_image'],
+                'datecreated'   => $contact['datecreated']  ?? null,
+                'last_login'    => $contact['last_login']   ?? null,
             ],
             'company' => $client ? [
                 'company'              => $client['company'],

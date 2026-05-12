@@ -43,13 +43,30 @@ class ItemController extends ResourceController
 
     // ─────────────────────────────────────────────────────────────────────────
     // GET /api/items/search?q=
+    //
+    // CORRECTION CRITIQUE :
+    //   ❌ Avant : strlen($q) < 1 → retournait [] quand q est vide,
+    //              ce qui empêchait l'affichage de tous les articles au démarrage.
+    //   ✅ Après  : q vide → retourne TOUS les articles (via searchAll()).
+    //              q non vide → filtre dynamiquement via search($q).
+    //
+    // NOTE : searchAll() est maintenant défini dans ItemModel — l'absence de
+    //        cette méthode était la cause du "Erreur serveur 500" affiché dans
+    //        l'application Flutter.
     // ─────────────────────────────────────────────────────────────────────────
     public function search()
     {
         $q = trim($this->request->getGet('q') ?? '');
-        if (strlen($q) < 1) {
-            return $this->respond(['status' => 200, 'data' => []]);
+
+        // Lorsque la recherche est vide, on retourne la liste complète des articles
+        // afin que l'écran Flutter affiche tous les articles dès l'ouverture.
+        if ($q === '') {
+            return $this->respond([
+                'status' => 200,
+                'data'   => $this->itemModel->searchAll(),
+            ]);
         }
+
         return $this->respond([
             'status' => 200,
             'data'   => $this->itemModel->search($q),

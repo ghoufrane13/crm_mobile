@@ -21,7 +21,6 @@ class PaymentController extends ResourceController
 
     // ─────────────────────────────────────────────────────────────────────────
     // Génère une référence de transaction unique : TXN-YYYYMMDD-XXXXXX
-    // Utilisé si le client n'en fournit pas (ou fournit une chaîne vide)
     // ─────────────────────────────────────────────────────────────────────────
     private function _generateTransactionRef(): string
     {
@@ -64,11 +63,7 @@ class PaymentController extends ResourceController
         return $this->respond(['status' => true, 'modes' => $modes]);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
     // GET /api/payments/generate-ref
-    // Endpoint optionnel : retourne une référence de transaction pré-générée
-    // pour affichage immédiat dans le formulaire Flutter avant soumission
-    // ─────────────────────────────────────────────────────────────────────────
     public function generateRef()
     {
         return $this->respond([
@@ -79,8 +74,6 @@ class PaymentController extends ResourceController
 
     // ─────────────────────────────────────────────────────────────────────────
     // POST /api/payments/create
-    // ✅ Référence de transaction auto-générée si absente
-    // ✅ Écrit dans tblinvoicepaymentrecords + trace dans tblpayment_attempts
     // ─────────────────────────────────────────────────────────────────────────
     public function create()
     {
@@ -93,7 +86,6 @@ class PaymentController extends ResourceController
         $createdAt = $data['created_at'] ?? date('Y-m-d H:i:s');
         $dateOnly  = substr($createdAt, 0, 10);
 
-        // ── Référence : utiliser celle fournie, ou en générer une ─────────────
         $reference = trim($data['reference'] ?? '');
         if (empty($reference)) {
             $reference = $this->_generateTransactionRef();
@@ -108,7 +100,6 @@ class PaymentController extends ResourceController
 
         $db = \Config\Database::connect();
 
-        // ── Vérifier la facture ───────────────────────────────────────────────
         $invoice = $db->table('tblinvoices')
             ->select('id, total, status')
             ->where('id', $invoiceId)
@@ -124,7 +115,6 @@ class PaymentController extends ResourceController
             ], 400);
         }
 
-        // ── Vérifier le solde restant ─────────────────────────────────────────
         $totalPaid = $this->paymentModel->getTotalPaid($invoiceId);
         $total     = (float)$invoice['total'];
         $totalDue  = round(max(0, $total - $totalPaid), 2);
@@ -136,7 +126,6 @@ class PaymentController extends ResourceController
             ], 400);
         }
 
-        // ── Récupérer le nom du mode de paiement ─────────────────────────────
         $mode = $db->table('tblpayment_modes')
             ->select('id, name')
             ->where('id', $gatewayId)
@@ -148,16 +137,13 @@ class PaymentController extends ResourceController
 
         $gatewayName = $mode['name'];
 
-        // ── Anti-doublon sur la référence ─────────────────────────────────────
         $existingRef = $db->table('tblinvoicepaymentrecords')
             ->where('transactionid', $reference)
             ->get()->getRowArray();
         if ($existingRef) {
-            // Si doublon, regénérer silencieusement
             $reference = $this->_generateTransactionRef();
         }
 
-        // ── Insérer dans tblinvoicepaymentrecords ─────────────────────────────
         $db->table('tblinvoicepaymentrecords')->insert([
             'invoiceid'     => $invoiceId,
             'amount'        => round($amount, 2),
@@ -170,7 +156,6 @@ class PaymentController extends ResourceController
         ]);
         $paymentId = $db->insertID();
 
-        // ── Tracer dans tblpayment_attempts (fee + gateway_id) ────────────────
         try {
             $db->table('tblpayment_attempts')->insert([
                 'reference'       => $reference,
@@ -184,27 +169,28 @@ class PaymentController extends ResourceController
             log_message('warning', 'tblpayment_attempts insert failed: ' . $e->getMessage());
         }
 
-        // ── Recalculer le statut de la facture ────────────────────────────────
         $newTotalPaid = $this->paymentModel->getTotalPaid($invoiceId);
         $newTotalDue  = round(max(0, $total - $newTotalPaid), 2);
 
         if ($newTotalDue <= 0) {
-            $newStatus = 2; // Payée
+            $newStatus = 2;
         } elseif ($newTotalPaid > 0) {
-            $newStatus = 4; // Partiellement payée
+            $newStatus = 4;
         } else {
-            $newStatus = 1; // Impayée
+            $newStatus = 1;
         }
 
         $db->table('tblinvoices')
             ->where('id', $invoiceId)
             ->update(['status' => $newStatus]);
 
+        $this->_notifyPayment($invoiceId, $amount, $newStatus);
+
         return $this->respond([
             'status'     => true,
             'message'    => 'Règlement enregistré avec succès',
             'payment_id' => $paymentId,
-            'reference'  => $reference,   // ← retourner la référence utilisée
+            'reference'  => $reference,
             'total_paid' => round($newTotalPaid, 2),
             'total_due'  => $newTotalDue,
             'new_status' => $newStatus,
@@ -300,9 +286,6 @@ class PaymentController extends ResourceController
     // STRIPE
     // =========================================================================
 
-    /**
-     * POST /api/payments/stripe/create-intent
-     */
     public function createStripeIntent()
     {
         $data      = $this->request->getJSON(true);
@@ -404,9 +387,6 @@ class PaymentController extends ResourceController
         ]);
     }
 
-    /**
-     * POST /api/payments/stripe/confirm
-     */
     public function confirmStripePayment()
     {
         $data            = $this->request->getJSON(true);
@@ -448,7 +428,6 @@ class PaymentController extends ResourceController
 
         $db = \Config\Database::connect();
 
-        // Anti-doublon
         $existing = $db->table('tblinvoicepaymentrecords')
             ->where('transactionid', $paymentIntentId)
             ->get()->getRowArray();
@@ -489,6 +468,8 @@ class PaymentController extends ResourceController
             ->where('id', $invoiceId)
             ->update(['status' => $newStatus]);
 
+        $this->_notifyPayment($invoiceId, $amount, $newStatus);
+
         return $this->respond([
             'status'      => true,
             'message'     => 'Paiement Stripe enregistré avec succès.',
@@ -497,5 +478,131 @@ class PaymentController extends ResourceController
             'total_due'   => $totalDue,
             'new_status'  => $newStatus,
         ], 201);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // FIX : _notifyPayment
+    //
+    // CORRECTIONS apportées :
+    //   1. Suppression des INSERT directs dans tblnotifications — évite
+    //      les doublons car FcmService::createAndSend() fait déjà cet INSERT.
+    //   2. L'INSERT en base est désormais centralisé dans _insertNotification()
+    //      qui est appelé AVANT le push FCM — ainsi la notif est toujours
+    //      enregistrée même si FCM échoue.
+    //   3. Le push FCM reste dans un try/catch séparé pour ne pas bloquer.
+    // ─────────────────────────────────────────────────────────────────────────
+    private function _notifyPayment(int $invoiceId, float $amount, int $newStatus): void
+    {
+        try {
+            $db = \Config\Database::connect();
+
+            $invoice = $db->table('tblinvoices i')
+                ->select('i.formatted_number, i.clientid, i.sale_agent, i.addedfrom')
+                ->where('i.id', $invoiceId)
+                ->get()->getRowArray();
+            if (!$invoice) return;
+
+            $fmtNum      = $invoice['formatted_number'] ?? "INV-{$invoiceId}";
+            $clientId    = (int)$invoice['clientid'];
+            $amountFmt   = number_format($amount, 2, ',', ' ');
+            $statusLabel = $newStatus === 2 ? 'entièrement payée' : 'partiellement payée';
+            $now         = date('Y-m-d H:i:s');
+            $link        = 'invoices/detail/' . $invoiceId;
+
+            // ── 1. Notifier tous les contacts du client ───────────────────────
+            $contacts = $db->table('tblcontacts')
+                ->select('id')
+                ->where('userid', $clientId)
+                ->get()->getResultArray();
+
+            foreach ($contacts as $ct) {
+                $contactId = (int)$ct['id'];
+                $msg       = "💳 Paiement de {$amountFmt} € enregistré — Facture {$fmtNum} ({$statusLabel})";
+
+                // INSERT garanti en base (indépendant du FCM)
+                $this->_insertNotification($db, $contactId, $msg, $link, $now);
+
+                // Push FCM en bonus (silencieux si échec)
+                try {
+                    $fcm = new \App\Libraries\FcmService();
+                    $fcm->sendToClient($contactId, 'Paiement reçu', $msg, [
+                        'notif_type' => 'invoice_paid',
+                        'notif_id'   => (string)$invoiceId,
+                        'notif_link' => $link,
+                    ]);
+                } catch (\Throwable) {}
+            }
+
+            // ── 2. Identifier le(s) staff à notifier ─────────────────────────
+            //    Priorité : sale_agent → addedfrom → admins actifs
+            $staffIds  = [];
+            $saleAgent = (int)($invoice['sale_agent'] ?? 0);
+            $addedFrom = (int)($invoice['addedfrom']  ?? 0);
+
+            if ($saleAgent > 0) {
+                $staffIds[] = $saleAgent;
+            }
+            if ($addedFrom > 0 && $addedFrom !== $saleAgent) {
+                $staffIds[] = $addedFrom;
+            }
+
+            // Fallback : aucun staff trouvé → tous les admins actifs
+            if (empty($staffIds)) {
+                $admins = $db->table('tblstaff')
+                    ->select('staffid')
+                    ->where('admin', 1)
+                    ->where('active', 1)
+                    ->get()->getResultArray();
+                foreach ($admins as $a) {
+                    $staffIds[] = (int)$a['staffid'];
+                }
+            }
+
+            // ── 3. Notifier chaque staff ──────────────────────────────────────
+            foreach (array_unique($staffIds) as $staffId) {
+                $msg = "💳 Paiement de {$amountFmt} € reçu — Facture {$fmtNum} ({$statusLabel})";
+
+                // INSERT garanti en base (indépendant du FCM)
+                $this->_insertNotification($db, $staffId, $msg, $link, $now);
+
+                // Push FCM en bonus (silencieux si échec)
+                try {
+                    $fcm = new \App\Libraries\FcmService();
+                    $fcm->sendToStaff($staffId, 'Paiement reçu', $msg, [
+                        'notif_type' => 'invoice_paid',
+                        'notif_id'   => (string)$invoiceId,
+                        'notif_link' => $link,
+                    ]);
+                } catch (\Throwable) {}
+            }
+
+        } catch (\Throwable $e) {
+            log_message('error', '[PaymentController::_notifyPayment] ' . $e->getMessage());
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Helper : INSERT unique dans tblnotifications
+    // Centralisé ici pour éviter toute duplication entre INSERT direct
+    // et FcmService::createAndSend() qui faisait le même INSERT.
+    // ─────────────────────────────────────────────────────────────────────────
+    private function _insertNotification(
+        \CodeIgniter\Database\BaseConnection $db,
+        int    $toUserId,
+        string $description,
+        string $link,
+        string $now
+    ): void {
+        $db->table('tblnotifications')->insert([
+            'touserid'      => $toUserId,
+            'description'   => $description,
+            'date'          => $now,
+            'isread'        => 0,
+            'isread_inline' => 0,
+            'fromuserid'    => 0,
+            'fromclientid'  => 0,
+            'from_fullname' => 'CRM',
+            'link'          => $link,
+        ]);
     }
 }

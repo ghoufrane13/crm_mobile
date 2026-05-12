@@ -24,6 +24,7 @@ class Filters extends BaseConfig
         'honeypot'      => Honeypot::class,
         'invalidchars'  => InvalidChars::class,
         'secureheaders' => SecureHeaders::class,
+        'cors'          => \App\Filters\Cors::class,
     ];
 
     /**
@@ -69,5 +70,7 @@ class Filters extends BaseConfig
      *
      * @var array<string, array<string, list<string>>>
      */
-    public array $filters = [];
+    public array $filters = [
+        'cors' => ['before' => ['api/*']],
+    ];
 }

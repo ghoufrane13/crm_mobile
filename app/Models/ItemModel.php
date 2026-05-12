@@ -64,6 +64,33 @@ class ItemModel extends Model
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // Retourne TOUS les articles sans filtre — utilisé par ItemController::search()
+    // quand q est vide afin d'afficher la liste complète au démarrage de Flutter.
+    //
+    // CORRECTION CRITIQUE :
+    //   ❌ Avant : méthode inexistante → PHP Fatal Error 500
+    //   ✅ Après  : méthode définie, identique à search() mais sans clause LIKE
+    // ─────────────────────────────────────────────────────────────────────────
+    public function searchAll(int $limit = 200): array
+    {
+        return $this->db->table('tblitems i')
+            ->select([
+                'i.id', 'i.description', 'i.long_description',
+                'i.rate', 'i.rate_currency_2', 'i.unit',
+                'i.tax', 'i.tax2',
+                't1.name    AS tax1_name',
+                't1.taxrate AS tax1_rate',
+                't2.name    AS tax2_name',
+                't2.taxrate AS tax2_rate',
+            ])
+            ->join('tbltaxes t1', 't1.id = i.tax',  'left')
+            ->join('tbltaxes t2', 't2.id = i.tax2', 'left')
+            ->orderBy('i.description', 'ASC')
+            ->limit($limit)
+            ->get()->getResultArray();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // Autocomplétion pour formulaires facture/devis
     // ─────────────────────────────────────────────────────────────────────────
     public function search(string $q, int $limit = 20): array
@@ -170,12 +197,17 @@ class ItemModel extends Model
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Unités suggérées depuis tblcurrencies (règle §3)
+    // Unités — récupérées depuis la table tblcurrencies
+    //
+    // Retourne { id, symbol, name } pour chaque devise disponible.
+    // Le champ 'symbol' est utilisé par Flutter dans l'Autocomplete du
+    // formulaire article comme libellé d'unité monétaire.
     // ─────────────────────────────────────────────────────────────────────────
     public function getUnits(): array
     {
         return $this->db->table('tblcurrencies')
-            ->select('symbol, name')
+            ->select('id, symbol, name')
+            ->orderBy('name', 'ASC')
             ->get()->getResultArray();
     }
 

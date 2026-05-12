@@ -31,21 +31,6 @@ class InvoiceController extends ResourceController
         5 => 'En retard',
     ];
 
-    private function _generateInvoiceRef(): string
-    {
-        $date   = date('Ymd');
-        $suffix = strtoupper(substr(bin2hex(random_bytes(4)), 0, 6));
-        return "INV-REF-{$date}-{$suffix}";
-    }
-
-    public function generateRef()
-    {
-        return $this->respond([
-            'status'    => true,
-            'reference' => $this->_generateInvoiceRef(),
-        ]);
-    }
-
     public function countries()
     {
         $db = \Config\Database::connect();
@@ -77,27 +62,41 @@ class InvoiceController extends ResourceController
         return $this->respond(['status' => true, 'staff' => $staff]);
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // GET /api/invoices/list
+    // ─────────────────────────────────────────────────────────────────────────
     public function list()
     {
-        $staffId = (int)$this->request->getVar('staff_id');
-        $status  = $this->request->getVar('status');
+        $clientId = $this->request->getVar('client_id');
+        $status   = $this->request->getVar('status');
 
-        $db = \Config\Database::connect();
+        $db      = \Config\Database::connect();
         $builder = $db->table('tblinvoices i')
             ->select([
-                'i.id', 'i.formatted_number', 'i.date', 'i.duedate',
-                'i.status', 'i.subtotal', 'i.total', 'i.clientid',
-                'c.company AS client_company',
-                'cu.symbol AS currency_symbol',
+                'i.id',
+                'i.formatted_number',
+                'i.date',
+                'i.duedate',
+                'i.status',
+                'i.subtotal',
+                'i.total',
+                'i.clientid',
+                'c.company        AS client_company',
+                'cu.symbol        AS currency_symbol',
+                'cu.name          AS currency_name',
             ])
             ->join('tblclients c',     'c.userid = i.clientid', 'left')
             ->join('tblcurrencies cu', 'cu.id = i.currency',    'left');
+
+        if ($clientId !== null && $clientId !== '') {
+            $builder->where('i.clientid', (int)$clientId);
+        }
 
         if ($status !== null && $status !== '') {
             $builder->where('i.status', (int)$status);
         }
 
-        $builder->orderBy('i.date', 'DESC');
+        $builder->orderBy('i.date', 'DESC')->limit(500);
         $invoices = $builder->get()->getResultArray();
 
         foreach ($invoices as &$inv) {
@@ -107,7 +106,7 @@ class InvoiceController extends ResourceController
             $totalDue  = max(0, $total - $totalPaid);
 
             $inv['total_paid'] = round($totalPaid, 2);
-            $inv['total_due']  = round($totalDue, 2);
+            $inv['total_due']  = round($totalDue,  2);
 
             $autoStatus = $this->_computeStatus(
                 $inv['status'], $total, $totalPaid, $inv['duedate'] ?? null
@@ -121,8 +120,9 @@ class InvoiceController extends ResourceController
             $inv['status_label'] = $this->statuses[$s] ?? 'Inconnu';
             $inv['status_color'] = $this->_statusColor($s);
         }
+        unset($inv);
 
-        return $this->respond(['status' => true, 'data' => $invoices]);
+        return $this->respond(['status' => true, 'invoices' => $invoices]);
     }
 
     public function detail($id = null)
@@ -146,7 +146,7 @@ class InvoiceController extends ResourceController
         $totalDue  = max(0, $total - $totalPaid);
 
         $invoice['total_paid'] = round($totalPaid, 2);
-        $invoice['total_due']  = round($totalDue, 2);
+        $invoice['total_due']  = round($totalDue,  2);
         $invoice['payments']   = $this->invoiceModel->getPayments((int)$id);
         $invoice['items']      = $this->invoiceModel->getItems((int)$id);
 
@@ -204,7 +204,7 @@ class InvoiceController extends ResourceController
             $totalDue  = max(0, $total - $totalPaid);
 
             $inv['total_paid'] = round($totalPaid, 2);
-            $inv['total_due']  = round($totalDue, 2);
+            $inv['total_due']  = round($totalDue,  2);
 
             $autoStatus = $this->_computeStatus(
                 $inv['status'], $total, $totalPaid, $inv['duedate'] ?? null
@@ -218,6 +218,7 @@ class InvoiceController extends ResourceController
             $inv['status_label'] = $this->statuses[$s] ?? 'Inconnu';
             $inv['status_color'] = $this->_statusColor($s);
         }
+        unset($inv);
 
         $summary = ['total' => count($invoices), 'unpaid' => 0, 'paid' => 0,
                     'cancelled' => 0, 'partial' => 0, 'overdue' => 0];
@@ -384,6 +385,9 @@ class InvoiceController extends ResourceController
         }
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // POST /api/invoices/create
+    // ─────────────────────────────────────────────────────────────────────────
     public function create()
     {
         $data     = $this->request->getJSON(true);
@@ -394,14 +398,70 @@ class InvoiceController extends ResourceController
             return $this->respond(['status' => false, 'message' => 'client_id requis'], 400);
         }
 
-        $db  = \Config\Database::connect();
-        $row = $db->table('tblinvoices')->selectMax('number')->get()->getRowArray();
-        $num    = (int)($row['number'] ?? 0) + 1;
-        $fmtNum = 'INV-' . str_pad($num, 6, '0', STR_PAD_LEFT);
+        $db = \Config\Database::connect();
 
-        $referenceNo = trim($data['reference_no'] ?? '');
-        if (empty($referenceNo)) {
-            $referenceNo = $this->_generateInvoiceRef();
+        $billableTasks  = $data['billable_tasks'] ?? [];
+        $validatedTasks = [];
+
+        foreach ($billableTasks as $idx => $bt) {
+            $taskId = (int)($bt['task_id'] ?? 0);
+            if ($taskId <= 0) {
+                return $this->respond([
+                    'status'  => false,
+                    'message' => "billable_tasks[$idx] : task_id manquant ou invalide.",
+                ], 422);
+            }
+
+            $taskRow = $db->table('tbltasks')
+                ->select('id, name, rel_type, rel_id, billable, billed, hourly_rate, description')
+                ->where('id', $taskId)
+                ->get()->getRowArray();
+
+            if (!$taskRow) {
+                return $this->respond([
+                    'status'  => false,
+                    'message' => "Tâche #$taskId introuvable.",
+                ], 422);
+            }
+
+            if ((int)$taskRow['billable'] !== 1) {
+                return $this->respond([
+                    'status'  => false,
+                    'message' => "La tâche #$taskId n'est pas marquée comme facturable (billable=0).",
+                ], 422);
+            }
+
+            if ((int)$taskRow['billed'] === 1) {
+                return $this->respond([
+                    'status'  => false,
+                    'message' => "La tâche #$taskId a déjà été facturée.",
+                ], 422);
+            }
+
+            $taskClientId = $this->_resolveTaskClientId($db, $taskRow);
+
+            if ($taskClientId === null) {
+                return $this->respond([
+                    'status'  => false,
+                    'message' => "La tâche #$taskId n'est liée à aucun client (tâche interne).",
+                ], 422);
+            }
+
+            if ($taskClientId !== $clientId) {
+                return $this->respond([
+                    'status'  => false,
+                    'message' => "La tâche #$taskId appartient au client #$taskClientId, pas au client #$clientId.",
+                ], 422);
+            }
+
+            $validatedTasks[] = [
+                'task_id'     => $taskId,
+                'task_row'    => $taskRow,
+                'description' => $bt['description'] ?? '',
+                'qty'         => (float)($bt['qty']  ?? 1),
+                'rate'        => (float)($bt['rate'] ?? 0),
+                'unit'        => $bt['unit'] ?? '',
+            ];
         }
 
         $items    = $data['items'] ?? [];
@@ -417,10 +477,24 @@ class InvoiceController extends ResourceController
             if ($tax > 0) $totalTax += $line * $tax / 100;
         }
 
+        foreach ($validatedTasks as $vt) {
+            $subtotal += $vt['qty'] * $vt['rate'];
+        }
+
         $dtype  = $data['discount_type'] ?? '';
         $disc   = (float)($data['discount'] ?? 0);
         $dtotal = ($dtype === '%') ? round($subtotal * $disc / 100, 2) : round($disc, 2);
         $total  = round($subtotal + $totalTax - $dtotal, 2);
+
+        $row    = $db->table('tblinvoices')->selectMax('number')->get()->getRowArray();
+        $num    = (int)($row['number'] ?? 0) + 1;
+        $fmtNum = 'INV-' . str_pad($num, 6, '0', STR_PAD_LEFT);
+
+        $referenceNo = trim($data['reference_no'] ?? '');
+        if (empty($referenceNo)) {
+            $referenceNo = 'INV-REF-' . date('Ymd') . '-'
+                . strtoupper(substr(bin2hex(random_bytes(4)), 0, 6));
+        }
 
         $db->table('tblinvoices')->insert([
             'clientid'                 => $clientId,
@@ -483,13 +557,115 @@ class InvoiceController extends ResourceController
             }
         }
 
+        $billedTaskIds = [];
+        foreach ($validatedTasks as $vt) {
+            $taskId  = $vt['task_id'];
+            $taskRow = $vt['task_row'];
+
+            $lineDesc = !empty(trim($vt['description']))
+                ? $vt['description']
+                : ($taskRow['name'] ?? "Tâche #$taskId");
+
+            $longDesc = "Tâche #$taskId"
+                . (($taskRow['name'] ?? '') !== $lineDesc ? " — {$taskRow['name']}" : '');
+
+            $unit = $vt['unit'] !== ''
+                ? $vt['unit']
+                : (((float)($taskRow['hourly_rate'] ?? 0)) > 0 ? 'h' : '');
+
+            $order++;
+            $db->table('tblitemable')->insert([
+                'rel_id'           => $invoiceId,
+                'rel_type'         => 'invoice',
+                'description'      => $lineDesc,
+                'long_description' => $longDesc,
+                'qty'              => $vt['qty'],
+                'rate'             => $vt['rate'],
+                'unit'             => $unit,
+                'item_order'       => $order,
+                'is_optional'      => 0,
+                'is_selected'      => 1,
+            ]);
+
+            $billedTaskIds[] = $taskId;
+        }
+
+        if (!empty($billedTaskIds)) {
+            $this->_markTasksBilled($db, $billedTaskIds, $invoiceId);
+        }
+
+        $taskIds = $data['task_ids'] ?? [];
+        if (!empty($taskIds) && is_array($taskIds)) {
+            $billedSet = array_flip($billedTaskIds);
+            foreach ($taskIds as $taskId) {
+                $tid = (int)$taskId;
+                if ($tid <= 0 || isset($billedSet[$tid])) continue;
+                $task = $db->table('tbltasks')
+                    ->select('id, rel_id, rel_type')
+                    ->where('id', $tid)
+                    ->get()->getRowArray();
+                if (!$task) continue;
+                $db->table('tbltasks')
+                    ->where('id', $tid)
+                    ->update(['rel_id' => $invoiceId, 'rel_type' => 'invoice']);
+            }
+        }
+
         return $this->respond([
             'status'           => true,
             'message'          => 'Facture créée avec succès',
             'invoice_id'       => $invoiceId,
             'formatted_number' => $fmtNum,
             'reference_no'     => $referenceNo,
+            'billed_task_ids'  => $billedTaskIds,
         ]);
+    }
+
+    private function _resolveTaskClientId(
+        \CodeIgniter\Database\ConnectionInterface $db,
+        array $taskRow
+    ): ?int {
+        $relType = $taskRow['rel_type'] ?? '';
+        $relId   = (int)($taskRow['rel_id'] ?? 0);
+
+        if (empty($relType) || $relId <= 0) return null;
+
+        switch ($relType) {
+            case 'invoice':
+                $row = $db->table('tblinvoices')
+                    ->select('clientid')->where('id', $relId)->get()->getRowArray();
+                return $row ? (int)$row['clientid'] : null;
+
+            case 'estimate':
+                $row = $db->table('tblestimates')
+                    ->select('clientid')->where('id', $relId)->get()->getRowArray();
+                return $row ? (int)$row['clientid'] : null;
+
+            case 'customer':
+                return $relId;
+
+            case 'proposal':
+                $row = $db->table('tblproposals')
+                    ->select('rel_id, rel_type')->where('id', $relId)->get()->getRowArray();
+                if (!$row || $row['rel_type'] !== 'customer') return null;
+                return (int)$row['rel_id'];
+
+            default:
+                return null;
+        }
+    }
+
+    private function _markTasksBilled(
+        \CodeIgniter\Database\ConnectionInterface $db,
+        array $taskIds,
+        int $invoiceId
+    ): void {
+        if (empty($taskIds)) return;
+        foreach ($taskIds as $tid) {
+            $db->table('tbltasks')
+                ->where('id', (int)$tid)
+                ->update(['billed' => 1, 'invoice_id' => $invoiceId]);
+        }
     }
 
     public function update($id = null)
@@ -519,14 +695,14 @@ class InvoiceController extends ResourceController
             if ($tax > 0) $totalTax += $line * $tax / 100;
         }
 
-        $dtype  = $data['discount_type'] ?? $invoice['discount_type'] ?? '';
+        $dtype  = $data['discount_type']    ?? $invoice['discount_type']    ?? '';
         $disc   = (float)($data['discount_percent'] ?? $data['discount'] ?? $invoice['discount_percent'] ?? 0);
         $dtotal = ($dtype === '%') ? round($subtotal * $disc / 100, 2) : round((float)($data['discount_total'] ?? $disc), 2);
         $total  = round($subtotal + $totalTax - $dtotal, 2);
 
         $updateData = [
-            'date'             => $data['date']        ?? $invoice['date'],
-            'duedate'          => $data['duedate']     ?? $invoice['duedate'],
+            'date'             => $data['date']    ?? $invoice['date'],
+            'duedate'          => $data['duedate'] ?? $invoice['duedate'],
             'currency'         => (int)($data['currency'] ?? $data['currency_id'] ?? $invoice['currency']),
             'sale_agent'       => (int)($data['sale_agent'] ?? $invoice['sale_agent'] ?? 0),
             'subtotal'         => round($subtotal, 2),
@@ -550,9 +726,7 @@ class InvoiceController extends ResourceController
         $db->table('tblinvoices')->where('id', (int)$id)->update($updateData);
 
         $oldItems = $db->table('tblitemable')
-            ->select('id')
-            ->where('rel_id', (int)$id)
-            ->where('rel_type', 'invoice')
+            ->select('id')->where('rel_id', (int)$id)->where('rel_type', 'invoice')
             ->get()->getResultArray();
 
         if ($db->tableExists('tblitemstaxes')) {
@@ -561,9 +735,7 @@ class InvoiceController extends ResourceController
             }
         }
         $db->table('tblitemable')
-            ->where('rel_id', (int)$id)
-            ->where('rel_type', 'invoice')
-            ->delete();
+            ->where('rel_id', (int)$id)->where('rel_type', 'invoice')->delete();
 
         $order = 0;
         foreach ($items as $item) {
@@ -600,8 +772,7 @@ class InvoiceController extends ResourceController
         $db      = \Config\Database::connect();
         $invoice = $db->table('tblinvoices')
             ->select('id, status, formatted_number')
-            ->where('id', (int)$id)
-            ->get()->getRowArray();
+            ->where('id', (int)$id)->get()->getRowArray();
 
         if (!$invoice) {
             return $this->respond(['status' => false, 'message' => 'Facture introuvable'], 404);
@@ -616,9 +787,7 @@ class InvoiceController extends ResourceController
 
         try {
             $db->table('tblitemable')
-                ->where('rel_id', (int)$id)
-                ->where('rel_type', 'invoice')
-                ->delete();
+                ->where('rel_id', (int)$id)->where('rel_type', 'invoice')->delete();
             $db->table('tblinvoices')->where('id', (int)$id)->delete();
             return $this->respond(['status' => true, 'message' => 'Facture supprimée avec succès.']);
         } catch (\Exception $e) {
@@ -692,6 +861,90 @@ class InvoiceController extends ResourceController
         return $this->respond(['status' => true, 'message' => "Facture envoyée à $toEmail"]);
     }
 
+    public function tasks($id = null)
+    {
+        if (!$id) return $this->respond(['status' => false, 'message' => 'ID manquant'], 400);
+        $db = \Config\Database::connect();
+        $tasks = $db->table('tbltasks t')
+            ->select([
+                't.id', 't.name', 't.status', 't.priority', 't.duedate', 't.startdate', 't.dateadded',
+                't.billable', 't.billed', 't.invoice_id', 't.hourly_rate',
+                "GROUP_CONCAT(CONCAT(s.firstname,' ',s.lastname) SEPARATOR ', ') AS assignee_names",
+            ])
+            ->join('tbltask_assigned a', 'a.taskid = t.id', 'left')
+            ->join('tblstaff s', 's.staffid = a.staffid', 'left')
+            ->where('t.rel_type', 'invoice')
+            ->where('t.rel_id', (int)$id)
+            ->groupBy('t.id')
+            ->orderBy('t.id', 'DESC')
+            ->get()->getResultArray();
+
+        $sLabels = [1=>'Non commencée',2=>'En cours',3=>'En Test',4=>'En attente',5=>'Achevée'];
+        $pLabels = [1=>'Basse',2=>'Moyenne',3=>'Haute',4=>'Importante'];
+        $sColors = [1=>'#94A3B8',2=>'#3B82F6',3=>'#8B5CF6',4=>'#F59E0B',5=>'#10B981'];
+        foreach ($tasks as &$t) {
+            $t['status_label']   = $sLabels[(int)($t['status']   ?? 0)] ?? '—';
+            $t['priority_label'] = $pLabels[(int)($t['priority'] ?? 0)] ?? '—';
+            $t['status_color']   = $sColors[(int)($t['status']   ?? 0)] ?? '#94A3B8';
+        }
+        return $this->respond(['status' => true, 'data' => $tasks]);
+    }
+
+    public function reminders($id = null)
+    {
+        if (!$id) return $this->respond(['status' => false, 'message' => 'ID manquant'], 400);
+        $db = \Config\Database::connect();
+        $rows = $db->table('tblreminders r')
+            ->select("r.*, TRIM(CONCAT(COALESCE(s.firstname,''),' ',COALESCE(s.lastname,''))) AS staff_name")
+            ->join('tblstaff s', 's.staffid = r.staff', 'left')
+            ->where('r.rel_id', (int)$id)
+            ->where('r.rel_type', 'invoice')
+            ->orderBy('r.date', 'ASC')
+            ->get()->getResultArray();
+        return $this->respond(['status' => true, 'data' => $rows]);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // POST /api/invoices/:id/reminders
+    // FIX : staff_id requis et validé — plus de fallback à 1
+    // ─────────────────────────────────────────────────────────────────────────
+    public function addReminder($id = null)
+    {
+        if (!$id) return $this->respond(['status' => false, 'message' => 'ID manquant'], 400);
+
+        $data    = $this->request->getJSON(true);
+        $date    = $data['date']    ?? date('Y-m-d');
+        $time    = $data['time']    ?? '09:00';
+        $parts   = explode(':', $time);
+        $hh      = str_pad($parts[0] ?? '09', 2, '0', STR_PAD_LEFT);
+        $mm      = str_pad($parts[1] ?? '00', 2, '0', STR_PAD_LEFT);
+
+        // FIX : plus de fallback à 1 — staff_id est obligatoire
+        $staffId = (int)($data['staff_id'] ?? 0);
+        if ($staffId <= 0) {
+            return $this->respond(['status' => false, 'message' => 'staff_id requis et doit être > 0'], 400);
+        }
+
+        \Config\Database::connect()->table('tblreminders')->insert([
+            'description'     => $data['description']    ?? '',
+            'date'            => $date . ' ' . $hh . ':' . $mm . ':00',
+            'isnotified'      => 0,
+            'rel_id'          => (int)$id,
+            'staff'           => $staffId,
+            'rel_type'        => 'invoice',
+            'notify_by_email' => (int)($data['notify_by_email'] ?? 0),
+            'creator'         => $staffId,
+        ]);
+        return $this->respond(['status' => true, 'message' => 'Rappel ajouté']);
+    }
+
+    public function generateRef()
+    {
+        $ref = 'INV-REF-' . date('Ymd') . '-'
+            . strtoupper(substr(bin2hex(random_bytes(4)), 0, 6));
+        return $this->respond(['status' => true, 'reference' => $ref]);
+    }
+
     // ═════════════════════════════════════════════════════════════════════════
     // HELPERS PRIVÉS
     // ═════════════════════════════════════════════════════════════════════════
@@ -700,9 +953,9 @@ class InvoiceController extends ResourceController
     {
         $current = (int)$currentStatus;
         if ($current === 3) return 3;
-        if ($total <= 0) return $current;
+        if ($total <= 0)    return $current;
         if ($paid >= $total) return 2;
-        if ($paid > 0) return 4;
+        if ($paid > 0)       return 4;
         if ($duedate) {
             try {
                 $due = new \DateTime($duedate);
@@ -729,11 +982,6 @@ class InvoiceController extends ResourceController
         return number_format(abs($val), 2, '.', ' ');
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Resolves which signature to use for a given invoice:
-    //   1. Prefer invoice-type signature (invoice_{id}.png / .json)
-    //   2. Fall back to the estimate-type signature copied on convert
-    // ─────────────────────────────────────────────────────────────────────────
     private function _resolveSignatureSource(int $invoiceId): ?array
     {
         $sig = $this->signatureModel->getSignature('invoice', $invoiceId);
@@ -743,9 +991,7 @@ class InvoiceController extends ResourceController
 
         $db       = \Config\Database::connect();
         $estimate = $db->table('tblestimates')
-            ->select('id')
-            ->where('invoiceid', $invoiceId)
-            ->get()->getRowArray();
+            ->select('id')->where('invoiceid', $invoiceId)->get()->getRowArray();
 
         if ($estimate) {
             $estimateId = (int)$estimate['id'];
@@ -758,16 +1004,13 @@ class InvoiceController extends ResourceController
         return null;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Main PDF generator
-    // ─────────────────────────────────────────────────────────────────────────
     private function _generatePdfBytes(array $invoice): string
     {
         $items      = $invoice['items'] ?? [];
         $sym        = $invoice['currency_symbol'] ?? '';
         $numStr     = $invoice['formatted_number'] ?? ('INV-' . str_pad($invoice['id'], 6, '0', STR_PAD_LEFT));
         $clientName = $invoice['client_company'] ?? '';
-        $refNo      = $invoice['reference_no'] ?? '';
+        $refNo      = $invoice['reference_no']   ?? '';
 
         $addressParts = array_filter([
             $invoice['billing_street'] ?? $invoice['address'] ?? '',
@@ -788,7 +1031,6 @@ class InvoiceController extends ResourceController
 
         $pageW = 210; $mL = 15; $mR = 15; $contentW = $pageW - $mL - $mR;
 
-        // ── Client block (top-right) ──────────────────────────────────────────
         $pdf->SetFont('helvetica', 'B', 9); $pdf->SetTextColor(50, 50, 50);
         $pdf->SetXY($mL, 15);
         $pdf->Cell($contentW, 5, 'À l\'attention de', 0, 1, 'R');
@@ -800,7 +1042,6 @@ class InvoiceController extends ResourceController
             $pdf->Cell($contentW, 4, $addressLine, 0, 1, 'R');
         }
 
-        // ── Invoice title ─────────────────────────────────────────────────────
         $pdf->SetFont('helvetica', 'B', 18); $pdf->SetTextColor(30, 30, 30);
         $pdf->SetXY($mL, $pdf->GetY() + 4);
         $pdf->Cell(0, 10, 'FACTURE # ' . $numStr, 0, 1, 'L');
@@ -819,7 +1060,6 @@ class InvoiceController extends ResourceController
         $pdf->SetXY($mL, $pdf->GetY());
         $pdf->Cell(0, 5, 'Statut : ' . $statusLabel, 0, 1, 'L');
 
-        // ── Items table ───────────────────────────────────────────────────────
         $pdf->SetY($pdf->GetY() + 4);
         $colW    = [10, 82, 18, 22, 18, 30];
         $headers = ['#', 'Désignation', 'Qté', 'P.U.', 'Taxe', 'Total'];
@@ -833,13 +1073,13 @@ class InvoiceController extends ResourceController
         $rowNum = 0; $pdf->SetFont('helvetica', '', 9);
         foreach ($items as $item) {
             $rowNum++;
-            $qty      = (float)($item['qty']     ?? 1);
-            $rate     = (float)($item['rate']    ?? 0);
-            $taxrate  = (float)($item['taxrate'] ?? 0);
-            $total    = $qty * $rate;
-            $qtyStr   = ($qty == floor($qty)) ? (string)(int)$qty : number_format($qty, 2);
+            $qty     = (float)($item['qty']     ?? 1);
+            $rate    = (float)($item['rate']    ?? 0);
+            $taxrate = (float)($item['taxrate'] ?? 0);
+            $total   = $qty * $rate;
+            $qtyStr  = ($qty == floor($qty)) ? (string)(int)$qty : number_format($qty, 2);
             $taxLabel = $taxrate > 0 ? number_format($taxrate, 0) . '%' : '0%';
-            $fill     = ($rowNum % 2 === 0) ? [250, 250, 250] : [255, 255, 255];
+            $fill    = ($rowNum % 2 === 0) ? [250, 250, 250] : [255, 255, 255];
             $pdf->SetFillColor($fill[0], $fill[1], $fill[2]);
             $yRow = $pdf->GetY();
             $pdf->SetXY($mL, $yRow);
@@ -857,7 +1097,6 @@ class InvoiceController extends ResourceController
             $pdf->Ln();
         }
 
-        // ── Totals block ──────────────────────────────────────────────────────
         $pdf->SetY($pdf->GetY() + 2);
         $lW = 40; $vW = 30; $sX = $pageW - $mR - $lW - $vW;
         $totalsRows = [['Sous-total', (float)($invoice['subtotal'] ?? 0), false]];
@@ -872,27 +1111,17 @@ class InvoiceController extends ResourceController
             $pdf->Cell($vW, 6, $sym . $this->_fmtNum($val), '', 1, 'R', $bold);
         }
 
-        // ── Signature block — pass 'Invoice' as document title ────────────────
         $invoiceId = (int)($invoice['id'] ?? 0);
         $sigSource = $this->_resolveSignatureSource($invoiceId);
         if ($sigSource) {
             $this->_appendSignatureBlock(
-                $pdf,
-                $sigSource['relType'],
-                $sigSource['relId'],
-                $mL,
-                $contentW            );
+                $pdf, $sigSource['relType'], $sigSource['relId'], $mL, $contentW
+            );
         }
 
         return $pdf->Output('facture.pdf', 'S');
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Appends: document title + "Authorized Signature" label
-    //          + signature image + signed date.
-    //
-    // $docTitle : 'Invoice' for factures, 'Estimate' for devis.
-    // ─────────────────────────────────────────────────────────────────────────
     private function _appendSignatureBlock(
         TCPDF  $pdf,
         string $relType,
@@ -907,13 +1136,11 @@ class InvoiceController extends ResourceController
 
         $pngPath = ROOTPATH . 'public/uploads/signatures/' . $relType . '_' . $relId . '.png';
 
-        // ── Spacing + thin separator ──────────────────────────────────────────
         $pdf->SetY($pdf->GetY() + 10);
         $pdf->SetDrawColor(220, 220, 220);
         $pdf->Line($mL, $pdf->GetY(), $mL + $contentW, $pdf->GetY());
         $pdf->SetY($pdf->GetY() + 8);
 
-        // ── Document title (e.g. "Invoice") — centered, dark, bold ───────────
         if ($docTitle !== '') {
             $pdf->SetFont('helvetica', 'B', 11);
             $pdf->SetTextColor(30, 30, 30);
@@ -922,13 +1149,11 @@ class InvoiceController extends ResourceController
             $pdf->SetY($pdf->GetY() + 2);
         }
 
-        // ── "Authorized Signature" label — centered, medium grey ──────────────
         $pdf->SetFont('helvetica', 'B', 9);
         $pdf->SetTextColor(80, 80, 80);
         $pdf->SetX($mL);
         $pdf->Cell($contentW, 5, 'Authorized Signature', 0, 1, 'L');
 
-        // ── Signature image (pure-PHP RGBA→RGB, no GD/Imagick) ───────────────
         $tmpPath = file_exists($pngPath) ? $this->_rgbaPngToRgbPng($pngPath) : null;
 
         if ($tmpPath !== null) {
@@ -948,7 +1173,6 @@ class InvoiceController extends ResourceController
             }
         }
 
-        // ── Signed date — centered, light grey ───────────────────────────────
         $signedAt = $sig['signed_at'] ?? '';
         if ($signedAt) {
             try {
@@ -963,9 +1187,6 @@ class InvoiceController extends ResourceController
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Pure PHP: RGBA PNG (Flutter output) → RGB PNG (TCPDF-compatible).
-    // ─────────────────────────────────────────────────────────────────────────
     private function _rgbaPngToRgbPng(string $srcPath): ?string
     {
         $raw = @file_get_contents($srcPath);
@@ -1000,12 +1221,9 @@ class InvoiceController extends ResourceController
         $inflated = @gzuncompress($idatRaw);
         if ($inflated === false) return null;
 
-        $srcBpp    = 4;
-        $srcStride = $W * $srcBpp;
-        $prevLine  = str_repeat("\x00", $srcStride);
-        $rgbLines  = '';
-        $iPos      = 0;
-        $infLen    = strlen($inflated);
+        $srcBpp = 4; $srcStride = $W * $srcBpp;
+        $prevLine = str_repeat("\x00", $srcStride);
+        $rgbLines = ''; $iPos = 0; $infLen = strlen($inflated);
 
         for ($y = 0; $y < $H; $y++) {
             if ($iPos >= $infLen) break;

@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use CodeIgniter\RESTful\ResourceController;
 use App\Models\ProposalModel;
+use App\Libraries\FcmService;
 use TCPDF;
 
 class ProposalController extends ResourceController
@@ -27,7 +28,7 @@ class ProposalController extends ResourceController
     ];
 
     // ═══════════════════════════════════════════════════════════════════════
-    // GET /api/proposals/list?staff_id=X
+    // GET /api/proposals/list?staff_id=X[&status=Y]
     // ═══════════════════════════════════════════════════════════════════════
     public function list()
     {
@@ -44,7 +45,11 @@ class ProposalController extends ResourceController
             $p['status_label'] = $this->statuses[$s]     ?? 'Inconnu';
             $p['status_color'] = $this->statusColors[$s] ?? '#94A3B8';
         }
-        return $this->respond(['status' => true, 'proposals' => $proposals, 'statuses' => $this->_statusList()]);
+        return $this->respond([
+            'status'    => true,
+            'proposals' => $proposals,
+            'statuses'  => $this->_statusList(),
+        ]);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -52,14 +57,69 @@ class ProposalController extends ResourceController
     // ═══════════════════════════════════════════════════════════════════════
     public function detail($id)
     {
+        $db       = \Config\Database::connect();
         $model    = new ProposalModel();
         $proposal = $model->getDetail((int)$id);
         if (!$proposal) return $this->fail('Offre introuvable', 404);
 
+        $proposalId = (int)$id;
         $s = (int)$proposal['status'];
         $proposal['status_label'] = $this->statuses[$s]     ?? 'Inconnu';
         $proposal['status_color'] = $this->statusColors[$s] ?? '#94A3B8';
         $proposal['statuses']     = $this->_statusList();
+
+        $proposal['items'] = $this->_loadItems($db, $proposalId, 'proposal');
+
+        $currencyId  = (int)($proposal['currency'] ?? 0);
+        $currencyRow = null;
+        if ($currencyId > 0) {
+            $currencyRow = $db->table('tblcurrencies')
+                ->select('symbol, name')
+                ->where('id', $currencyId)
+                ->get()->getRowArray();
+        }
+        $proposal['currency_symbol'] = $currencyRow['symbol'] ?? '';
+        $proposal['currency_name']   = $currencyRow['name']   ?? '';
+
+        try {
+            $tasks = $db->table('tbltasks t')
+                ->select([
+                    't.id', 't.name', 't.description', 't.priority', 't.status',
+                    't.startdate', 't.duedate', 't.billable', 't.is_public',
+                    "COALESCE((SELECT SUM(
+                        COALESCE(CAST(ts.end_time AS UNSIGNED), UNIX_TIMESTAMP())
+                        - CAST(ts.start_time AS UNSIGNED)
+                    ) FROM tbltaskstimers ts WHERE ts.task_id = t.id), 0) AS total_seconds",
+                    "GROUP_CONCAT(CONCAT(s.firstname, ' ', s.lastname) SEPARATOR ', ') AS assignee_names",
+                ])
+                ->join('tbltask_assigned a', 'a.taskid = t.id', 'left')
+                ->join('tblstaff s', 's.staffid = a.staffid', 'left')
+                ->where('t.rel_id',   $proposalId)
+                ->where('t.rel_type', 'proposal')
+                ->groupBy('t.id')
+                ->orderBy('t.duedate', 'ASC')
+                ->get()->getResultArray();
+        } catch (\Exception $e) {
+            $tasks = [];
+        }
+        $proposal['tasks'] = $tasks;
+
+        try {
+            $reminders = $db->table('tblreminders r')
+                ->select([
+                    'r.id', 'r.description', 'r.date', 'r.isnotified', 'r.notify_by_email',
+                    "TRIM(CONCAT(COALESCE(s.firstname,''), ' ', COALESCE(s.lastname,''))) AS staff_name",
+                ])
+                ->join('tblstaff s', 's.staffid = r.staff', 'left')
+                ->where('r.rel_id',   $proposalId)
+                ->where('r.rel_type', 'proposal')
+                ->orderBy('r.date', 'ASC')
+                ->get()->getResultArray();
+        } catch (\Exception $e) {
+            $reminders = [];
+        }
+        $proposal['reminders'] = $reminders;
+
         return $this->respond(['status' => true, 'proposal' => $proposal]);
     }
 
@@ -75,9 +135,9 @@ class ProposalController extends ResourceController
         }
 
         $items  = $data['items'] ?? [];
-        $model2 = new ProposalModel();
+        $model  = new ProposalModel();
         [$subtotal, $totalTax, $discountTotal, $grandTotal] =
-            $model2->calcTotals($items, $data['discount_type'] ?? '', (float)($data['discount_percent'] ?? 0));
+            $model->calcTotals($items, $data['discount_type'] ?? '', (float)($data['discount_percent'] ?? 0));
 
         $proposalData = [
             'subject'           => trim($data['subject']),
@@ -118,22 +178,48 @@ class ProposalController extends ResourceController
         $proposalId = $db->insertID();
         if (!$proposalId) return $this->fail('Erreur lors de la création', 500);
 
-        if (!empty($items)) (new ProposalModel())->insertItems($proposalId, $items);
+        if (!empty($items)) $model->insertItems($proposalId, $items);
 
-        $sent = false;
+        $sent      = false;
+        $staffId   = (int)$data['staff_id'];
+        $staff     = $db->table('tblstaff')->where('staffid', $staffId)->get()->getRowArray();
+        $staffName = $staff
+            ? trim(($staff['firstname'] ?? '') . ' ' . ($staff['lastname'] ?? ''))
+            : 'Votre commercial';
+
         if (!empty($data['send'])) {
-            $staff     = $db->table('tblstaff')->where('staffid', (int)$data['staff_id'])->get()->getRowArray();
-            $staffName = $staff ? trim(($staff['firstname'] ?? '') . ' ' . ($staff['lastname'] ?? '')) : 'Votre commercial';
-            $proposal  = (new ProposalModel())->getDetail($proposalId);
+            $proposal = $model->getDetail($proposalId);
             if ($proposal) {
                 $s = (int)$proposal['status'];
                 $proposal['status_label'] = $this->statuses[$s]     ?? 'Brouillon';
                 $proposal['status_color'] = $this->statusColors[$s] ?? '#94A3B8';
+                $proposal['items'] = $this->_loadItems($db, $proposalId, 'proposal');
+                $currencyRow = $db->table('tblcurrencies')->select('symbol, name')
+                    ->where('id', (int)$data['currency'])->get()->getRowArray();
+                $proposal['currency_symbol'] = $currencyRow['symbol'] ?? '';
+                $proposal['currency_name']   = $currencyRow['name']   ?? '';
             }
-            $sent = $this->_sendProposalEmail(trim($data['email']), trim($data['proposal_to']),
-                trim($data['subject']), $staffName, $proposalId, $proposal ?? null);
-            if ($sent) $db->table('tblproposals')->where('id', $proposalId)->update(['status' => 2]);
+
+            $sent = $this->_sendProposalEmail(
+                trim($data['email']), trim($data['proposal_to']),
+                trim($data['subject']), $staffName, $proposalId, $proposal ?? null
+            );
+
+            if ($sent) {
+                $db->table('tblproposals')->where('id', $proposalId)->update(['status' => 2]);
+
+                $clientId = (int)$data['rel_id'];
+                $this->_notifyProposalSent(
+                    $db,
+                    $proposalId,
+                    trim($data['subject']),
+                    $clientId,
+                    $staffId,
+                    $staffName
+                );
+            }
         }
+
         return $this->respond([
             'status'      => true,
             'message'     => $sent ? 'Offre créée et envoyée !' : 'Offre créée avec succès',
@@ -153,9 +239,9 @@ class ProposalController extends ResourceController
         if (!$proposal) return $this->fail('Offre introuvable', 404);
 
         $items  = $data['items'] ?? [];
-        $model2 = new ProposalModel();
+        $model  = new ProposalModel();
         [$subtotal, $totalTax, $discountTotal, $grandTotal] =
-            $model2->calcTotals($items, $data['discount_type'] ?? '', (float)($data['discount_percent'] ?? 0));
+            $model->calcTotals($items, $data['discount_type'] ?? '', (float)($data['discount_percent'] ?? 0));
 
         $db->table('tblproposals')->where('id', (int)$id)->update([
             'subject'          => trim($data['subject']     ?? $proposal['subject']),
@@ -165,7 +251,7 @@ class ProposalController extends ResourceController
             'open_till'        => ($data['open_till'] ?? '') ?: null,
             'currency'         => (int)($data['currency']   ?? $proposal['currency']),
             'proposal_to'      => trim($data['proposal_to'] ?? $proposal['proposal_to']),
-            'email'            => trim($data['email']        ?? $proposal['email']),
+            'email'            => trim($data['email']        ?? $proposal['email'] ?? ''),
             'phone'            => trim($data['phone']        ?? ''),
             'address'          => trim($data['address']      ?? ''),
             'city'             => trim($data['city']         ?? ''),
@@ -182,9 +268,8 @@ class ProposalController extends ResourceController
         ]);
 
         if (!empty($items)) {
-            $model3 = new ProposalModel();
-            $model3->deleteItems((int)$id);
-            $model3->insertItems((int)$id, $items);
+            $model->deleteItems((int)$id);
+            $model->insertItems((int)$id, $items);
         }
         return $this->respond(['status' => true, 'message' => 'Offre mise à jour avec succès']);
     }
@@ -210,7 +295,7 @@ class ProposalController extends ResourceController
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // POST /api/proposals/send-email/:id  (STAFF)
+    // POST /api/proposals/send-email/:id
     // ═══════════════════════════════════════════════════════════════════════
     public function sendEmail($id)
     {
@@ -219,11 +304,24 @@ class ProposalController extends ResourceController
         $proposalRow = $db->table('tblproposals')->where('id', (int)$id)->get()->getRowArray();
         if (!$proposalRow) return $this->fail('Offre introuvable', 404);
 
-        $email = $proposalRow['email'] ?? '';
+        $email      = trim($data['email']       ?? $proposalRow['email']       ?? '');
+        $clientName = trim($data['proposal_to'] ?? $proposalRow['proposal_to'] ?? '');
+        $subject    = trim($data['subject']      ?? $proposalRow['subject']     ?? 'Offre commerciale');
+
         if (!$email) return $this->fail('Aucun email destinataire sur cette offre', 400);
 
-        $staff     = $db->table('tblstaff')->where('staffid', (int)($data['staff_id'] ?? 0))->get()->getRowArray();
-        $staffName = $staff ? trim(($staff['firstname'] ?? '') . ' ' . ($staff['lastname'] ?? '')) : 'Votre commercial';
+        $staffId   = (int)($data['staff_id'] ?? $proposalRow['addedfrom'] ?? 0);
+        $staff     = $db->table('tblstaff')->where('staffid', $staffId)->get()->getRowArray();
+        $staffName = $staff
+            ? trim(($staff['firstname'] ?? '') . ' ' . ($staff['lastname'] ?? ''))
+            : 'Votre commercial';
+
+        $updateFields = [];
+        if (!empty($data['email'])       && $data['email']       !== $proposalRow['email'])       $updateFields['email']       = $email;
+        if (!empty($data['proposal_to']) && $data['proposal_to'] !== $proposalRow['proposal_to']) $updateFields['proposal_to'] = $clientName;
+        if (!empty($updateFields)) {
+            $db->table('tblproposals')->where('id', (int)$id)->update($updateFields);
+        }
 
         $model    = new ProposalModel();
         $proposal = $model->getDetail((int)$id);
@@ -231,13 +329,23 @@ class ProposalController extends ResourceController
             $s = (int)$proposal['status'];
             $proposal['status_label'] = $this->statuses[$s]     ?? 'Inconnu';
             $proposal['status_color'] = $this->statusColors[$s] ?? '#94A3B8';
+            $proposal['items'] = $this->_loadItems($db, (int)$id, 'proposal');
+            $currencyRow = $db->table('tblcurrencies')->select('symbol, name')
+                ->where('id', (int)($proposalRow['currency'] ?? 0))->get()->getRowArray();
+            $proposal['currency_symbol'] = $currencyRow['symbol'] ?? '';
+            $proposal['currency_name']   = $currencyRow['name']   ?? '';
         }
 
-        $sent = $this->_sendProposalEmail($email, $proposalRow['proposal_to'] ?? '',
-            $proposalRow['subject'] ?? 'Offre commerciale', $staffName, (int)$id, $proposal ?? null);
-        if (!$sent) return $this->fail("Erreur lors de l'envoi", 500);
+        $sent = $this->_sendProposalEmail(
+            $email, $clientName, $subject, $staffName, (int)$id, $proposal ?? null
+        );
+        if (!$sent) return $this->fail("Erreur lors de l'envoi de l'email", 500);
 
         $db->table('tblproposals')->where('id', (int)$id)->update(['status' => 2]);
+
+        $clientId = (int)($proposalRow['rel_id'] ?? 0);
+        $this->_notifyProposalSent($db, (int)$id, $subject, $clientId, $staffId, $staffName);
+
         return $this->respond(['status' => true, 'message' => "Offre envoyée à $email"]);
     }
 
@@ -258,16 +366,7 @@ class ProposalController extends ResourceController
 
         $items = $data['items'] ?? [];
         if (empty($items)) {
-            $items = $db->table('tblitemable i')
-                ->select('i.description, i.long_description, i.qty, i.rate, i.unit,
-                          i.item_order, i.is_optional, i.is_selected,
-                          COALESCE(t.taxrate, 0)  AS taxrate,
-                          COALESCE(t.taxname, "") AS taxname')
-                ->join('tblitem_tax t', 't.itemid = i.id AND t.rel_type = "proposal"', 'left')
-                ->where('i.rel_id', (int)$id)
-                ->where('i.rel_type', 'proposal')
-                ->orderBy('i.item_order', 'ASC')
-                ->get()->getResultArray();
+            $items = $this->_loadItems($db, (int)$id, 'proposal');
         }
 
         if ($type === 'invoice') {
@@ -280,11 +379,15 @@ class ProposalController extends ResourceController
 
         if (!$newId) return $this->fail("Erreur lors de la conversion en $label", 500);
 
-        $updateData = ['status' => 3];
-        if ($type === 'invoice'  && $db->fieldExists('invoiceid',  'tblproposals'))
-            $updateData['invoiceid']  = $newId;
-        if ($type === 'estimate' && $db->fieldExists('estimateid', 'tblproposals'))
-            $updateData['estimateid'] = $newId;
+        $updateData = [
+            'status'         => 3,
+            'date_converted' => date('Y-m-d H:i:s'),
+        ];
+        if ($type === 'invoice') {
+            $updateData['invoice_id'] = $newId;
+        } else {
+            $updateData['estimate_id'] = $newId;
+        }
 
         $db->table('tblproposals')->where('id', (int)$id)->update($updateData);
 
@@ -309,8 +412,7 @@ class ProposalController extends ResourceController
             return $this->fail('action doit être "accept" ou "decline"', 400);
 
         $db      = \Config\Database::connect();
-        $contact = $db->table('tblcontacts')
-            ->where('id', $contactId)->where('active', 1)->get()->getRowArray();
+        $contact = $db->table('tblcontacts')->where('id', $contactId)->get()->getRowArray();
         if (!$contact) return $this->fail('Contact introuvable', 404);
 
         $proposal = $db->table('tblproposals')->where('id', (int)$id)->get()->getRowArray();
@@ -318,6 +420,11 @@ class ProposalController extends ResourceController
 
         if ((int)$proposal['rel_id'] !== (int)$contact['userid'])
             return $this->fail('Accès refusé', 403);
+
+        $currentStatus = (int)$proposal['status'];
+        if (in_array($currentStatus, [3, 4])) {
+            return $this->fail('Cette offre a déjà été traitée (acceptée ou refusée).', 409);
+        }
 
         if ($action === 'accept') {
             $db->table('tblproposals')->where('id', (int)$id)->update([
@@ -334,6 +441,44 @@ class ProposalController extends ResourceController
             $message = 'Offre déclinée';
         }
 
+        $now             = date('Y-m-d H:i:s');
+        $contactFullName = trim(($contact['firstname'] ?? '') . ' ' . ($contact['lastname'] ?? ''));
+        $staffId         = (int)($proposal['assigned'] ?? $proposal['addedfrom'] ?? 0);
+        $subject         = $proposal['subject'] ?? "Offre #{$id}";
+        $link            = 'proposals/detail/' . $id;
+
+        if ($action === 'accept') {
+            $msgStaff   = "✅ Offre \"{$subject}\" acceptée par {$contactFullName}";
+            $msgContact = "✅ Votre acceptation de l'offre \"{$subject}\" a bien été enregistrée.";
+            $notifType  = 'proposal_accepted';
+        } else {
+            $msgStaff   = "❌ Offre \"{$subject}\" déclinée par {$contactFullName}";
+            $msgContact = "❌ Votre déclinaison de l'offre \"{$subject}\" a bien été enregistrée.";
+            $notifType  = 'proposal_declined';
+        }
+
+        if ($staffId > 0) {
+            $this->_insertNotification($db, $staffId, $msgStaff, $link, $now);
+            try {
+                $fcm = new FcmService();
+                $fcm->sendToStaff($staffId, 'Réponse offre', $msgStaff, [
+                    'notif_type' => $notifType,
+                    'notif_id'   => (string)$id,
+                    'notif_link' => $link,
+                ]);
+            } catch (\Throwable) {}
+        }
+
+        $this->_insertNotification($db, $contactId, $msgContact, $link, $now);
+        try {
+            $fcm = new FcmService();
+            $fcm->sendToClient($contactId, 'Réponse offre', $msgContact, [
+                'notif_type' => $notifType,
+                'notif_id'   => (string)$id,
+                'notif_link' => $link,
+            ]);
+        } catch (\Throwable) {}
+
         return $this->respond([
             'status'       => true,
             'message'      => $message,
@@ -348,13 +493,17 @@ class ProposalController extends ResourceController
     // ═══════════════════════════════════════════════════════════════════════
     public function delete($id = null)
     {
-        $db       = \Config\Database::connect();
-        $proposal = $db->table('tblproposals')->where('id', (int)$id)->get()->getRowArray();
+        $proposalId = (int)$id;
+        $db         = \Config\Database::connect();
+        $proposal   = $db->table('tblproposals')->where('id', $proposalId)->get()->getRowArray();
         if (!$proposal) return $this->fail('Offre introuvable', 404);
 
-        $db->table('tblitem_tax')->where('rel_id', $id)->where('rel_type', 'proposal')->delete();
-        $db->table('tblitemable')->where('rel_id', $id)->where('rel_type',  'proposal')->delete();
-        $db->table('tblproposals')->where('id', $id)->delete();
+        $db->table('tbltasks')->where('rel_id', $proposalId)->where('rel_type', 'proposal')->delete();
+        $db->table('tblreminders')->where('rel_id', $proposalId)->where('rel_type', 'proposal')->delete();
+        $db->table('tblitem_tax')->where('rel_id', $proposalId)->where('rel_type', 'proposal')->delete();
+        $db->table('tblitemable')->where('rel_id', $proposalId)->where('rel_type', 'proposal')->delete();
+        $db->table('tblproposals')->where('id', $proposalId)->delete();
+
         return $this->respond(['status' => true, 'message' => 'Offre supprimée']);
     }
 
@@ -369,7 +518,6 @@ class ProposalController extends ResourceController
                       c.country, "customer" AS type, cont.email, cont.phonenumber AS phone')
             ->join('(SELECT userid, email, phonenumber FROM tblcontacts GROUP BY userid) cont',
                    'cont.userid = c.userid', 'left')
-            ->where('c.active', 1)
             ->orderBy('c.company', 'ASC')
             ->get()->getResultArray();
         return $this->respond(['status' => true, 'clients' => $clients]);
@@ -384,7 +532,6 @@ class ProposalController extends ResourceController
         if (!$clientId) return $this->fail('client_id requis', 400);
 
         $db = \Config\Database::connect();
-
         $contacts = $db->table('tblcontacts')
             ->select('id, userid, firstname, lastname, email, phonenumber, title,
                       COALESCE(is_primary, 0) AS is_primary')
@@ -420,7 +567,7 @@ class ProposalController extends ResourceController
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // Portail CLIENT — GET /api/proposals/client-list?contact_id=X
+    // GET /api/proposals/client-list?contact_id=X
     // ═══════════════════════════════════════════════════════════════════════
     public function clientList()
     {
@@ -428,8 +575,7 @@ class ProposalController extends ResourceController
         if (!$contactId) return $this->fail('contact_id requis', 400);
 
         $db      = \Config\Database::connect();
-        $contact = $db->table('tblcontacts')
-            ->where('id', $contactId)->where('active', 1)->get()->getRowArray();
+        $contact = $db->table('tblcontacts')->where('id', $contactId)->get()->getRowArray();
         if (!$contact) return $this->fail('Contact introuvable', 404);
 
         $clientId  = (int)$contact['userid'];
@@ -447,7 +593,7 @@ class ProposalController extends ResourceController
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // Portail CLIENT — GET /api/proposals/client-detail/:id?contact_id=X
+    // GET /api/proposals/client-detail/:id?contact_id=X
     // ═══════════════════════════════════════════════════════════════════════
     public function clientDetail($id)
     {
@@ -455,8 +601,7 @@ class ProposalController extends ResourceController
         if (!$contactId) return $this->fail('contact_id requis', 400);
 
         $db      = \Config\Database::connect();
-        $contact = $db->table('tblcontacts')
-            ->where('id', $contactId)->where('active', 1)->get()->getRowArray();
+        $contact = $db->table('tblcontacts')->where('id', $contactId)->get()->getRowArray();
         if (!$contact) return $this->fail('Contact introuvable', 404);
 
         $clientId = (int)$contact['userid'];
@@ -470,11 +615,18 @@ class ProposalController extends ResourceController
         $proposal['status_label'] = $this->statuses[$s]     ?? 'Inconnu';
         $proposal['status_color'] = $this->statusColors[$s] ?? '#94A3B8';
         $proposal['statuses']     = $this->_statusList();
+        $proposal['items']        = $this->_loadItems($db, (int)$id, 'proposal');
+
+        $currencyRow = $db->table('tblcurrencies')->select('symbol, name')
+            ->where('id', (int)($proposal['currency'] ?? 0))->get()->getRowArray();
+        $proposal['currency_symbol'] = $currencyRow['symbol'] ?? '';
+        $proposal['currency_name']   = $currencyRow['name']   ?? '';
+
         return $this->respond(['status' => true, 'proposal' => $proposal]);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // PDF Staff — GET /api/proposals/pdf/:id?staff_id=X
+    // GET /api/proposals/pdf/:id?staff_id=X
     // ═══════════════════════════════════════════════════════════════════════
     public function pdf($id)
     {
@@ -485,17 +637,25 @@ class ProposalController extends ResourceController
         $staff = $db->table('tblstaff')->where('staffid', $staffId)->get()->getRowArray();
         if (!$staff) return $this->fail('Staff introuvable', 404);
 
-        $proposal = (new ProposalModel())->getDetail((int)$id);
+        $model    = new ProposalModel();
+        $proposal = $model->getDetail((int)$id);
         if (!$proposal) return $this->fail('Offre introuvable', 404);
 
         $s = (int)$proposal['status'];
         $proposal['status_label'] = $this->statuses[$s]     ?? 'Inconnu';
         $proposal['status_color'] = $this->statusColors[$s] ?? '#94A3B8';
+        $proposal['items'] = $this->_loadItems($db, (int)$id, 'proposal');
+
+        $currencyRow = $db->table('tblcurrencies')->select('symbol, name')
+            ->where('id', (int)($proposal['currency'] ?? 0))->get()->getRowArray();
+        $proposal['currency_symbol'] = $currencyRow['symbol'] ?? '';
+        $proposal['currency_name']   = $currencyRow['name']   ?? '';
+
         return $this->respond(['status' => true, 'pdf' => $this->_generatePdfBase64($proposal)]);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // PDF Client — GET /api/proposals/client-pdf/:id?contact_id=X
+    // GET /api/proposals/client-pdf/:id?contact_id=X
     // ═══════════════════════════════════════════════════════════════════════
     public function clientPdf($id)
     {
@@ -503,8 +663,7 @@ class ProposalController extends ResourceController
         if (!$contactId) return $this->fail('contact_id requis', 400);
 
         $db      = \Config\Database::connect();
-        $contact = $db->table('tblcontacts')
-            ->where('id', $contactId)->where('active', 1)->get()->getRowArray();
+        $contact = $db->table('tblcontacts')->where('id', $contactId)->get()->getRowArray();
         if (!$contact) return $this->fail('Contact introuvable', 404);
 
         $clientId = (int)$contact['userid'];
@@ -516,6 +675,13 @@ class ProposalController extends ResourceController
         $s = (int)$proposal['status'];
         $proposal['status_label'] = $this->statuses[$s]     ?? 'Inconnu';
         $proposal['status_color'] = $this->statusColors[$s] ?? '#94A3B8';
+        $proposal['items'] = $this->_loadItems($db, (int)$id, 'proposal');
+
+        $currencyRow = $db->table('tblcurrencies')->select('symbol, name')
+            ->where('id', (int)($proposal['currency'] ?? 0))->get()->getRowArray();
+        $proposal['currency_symbol'] = $currencyRow['symbol'] ?? '';
+        $proposal['currency_name']   = $currencyRow['name']   ?? '';
+
         return $this->respond(['status' => true, 'pdf' => $this->_generatePdfBase64($proposal)]);
     }
 
@@ -524,8 +690,8 @@ class ProposalController extends ResourceController
     // ═══════════════════════════════════════════════════════════════════════
     public function taxes()
     {
-        $db     = \Config\Database::connect();
-        $taxes  = $db->table('tbltaxes')
+        $db    = \Config\Database::connect();
+        $taxes = $db->table('tbltaxes')
             ->select('id, name, taxrate')
             ->orderBy('name', 'ASC')
             ->get()->getResultArray();
@@ -540,7 +706,6 @@ class ProposalController extends ResourceController
         $db    = \Config\Database::connect();
         $staff = $db->table('tblstaff')
             ->select('staffid AS id, firstname, lastname, email')
-            ->where('active', 1)
             ->orderBy('firstname', 'ASC')
             ->get()->getResultArray();
         return $this->respond(['status' => true, 'staff' => $staff]);
@@ -568,115 +733,290 @@ class ProposalController extends ResourceController
         $db   = \Config\Database::connect();
 
         if ($type === 'invoice') {
-            $prefixRow = $db->table('tblsettings')->select('value')->where('setting_name', 'invoice_prefix')->get()->getRowArray();
-            $prefix = ($prefixRow['value'] ?? null) ?: 'INV-';
-            $last   = $db->table('tblinvoices')->selectMax('id')->get()->getRow();
-            $number = (int)($last->id ?? 0) + 1;
+            $prefix = 'INV-';
+            $last   = $db->table('tblinvoices')->selectMax('number')->get()->getRow();
+            $number = (int)($last->number ?? 0) + 1;
         } else {
-            $prefixRow = $db->table('tblsettings')->select('value')->where('setting_name', 'estimate_prefix')->get()->getRowArray();
-            $prefix = ($prefixRow['value'] ?? null) ?: 'EST-';
-            $last   = $db->table('tblestimates')->selectMax('id')->get()->getRow();
-            $number = (int)($last->id ?? 0) + 1;
+            $prefix = 'EST-';
+            $last   = $db->table('tblestimates')->selectMax('number')->get()->getRow();
+            $number = (int)($last->number ?? 0) + 1;
         }
 
         return $this->respond(['status' => true, 'prefix' => $prefix, 'number' => $number]);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // CRÉATION DEVIS
+    // GET /api/proposals/:id/tasks
     // ═══════════════════════════════════════════════════════════════════════
-    private function _createEstimate(\CodeIgniter\Database\BaseConnection $db, array $p, array $items, array $data): ?int
+    public function tasks($id = null)
     {
-        $row     = $db->table('tblestimates')->selectMax('number')->get()->getRowArray();
-        $number  = (int)($row['number'] ?? 0) + 1;
-        $hash    = md5(uniqid(rand(), true));
-        $staffId = (int)($data['staff_id'] ?? $p['addedfrom'] ?? 0);
+        if (!$id) return $this->respond(['status' => false, 'message' => 'ID manquant'], 400);
+        $db = \Config\Database::connect();
 
-        [$subtotal, $totalTax, $total] = $this->_calcTotals($items, $data);
+        $tasks = $db->table('tbltasks t')
+            ->select([
+                't.id', 't.name', 't.status', 't.priority', 't.duedate',
+                't.startdate', 't.dateadded', 't.billable', 't.is_public',
+                "COALESCE((SELECT SUM(
+                    COALESCE(CAST(ts.end_time AS UNSIGNED), UNIX_TIMESTAMP())
+                    - CAST(ts.start_time AS UNSIGNED)
+                ) FROM tbltaskstimers ts WHERE ts.task_id = t.id), 0) AS total_seconds",
+                "GROUP_CONCAT(CONCAT(s.firstname,' ',s.lastname) SEPARATOR ', ') AS assignee_names",
+            ])
+            ->join('tbltask_assigned a', 'a.taskid = t.id', 'left')
+            ->join('tblstaff s', 's.staffid = a.staffid', 'left')
+            ->where('t.rel_type', 'proposal')
+            ->where('t.rel_id', (int)$id)
+            ->groupBy('t.id')
+            ->orderBy('t.id', 'DESC')
+            ->get()->getResultArray();
 
-        $estimateData = [
-            'sent'                      => 0,
-            'datesend'                  => null,
-            'clientid'                  => (int)$p['rel_id'],
-            'deleted_customer_name'     => null,
-            'project_id'                => 0,
-            'number'                    => $number,
-            'prefix'                    => 'EST-',
-            'number_format'             => 1,
-            'formatted_number'          => 'EST-' . str_pad($number, 6, '0', STR_PAD_LEFT),
-            'hash'                      => $hash,
-            'datecreated'               => date('Y-m-d H:i:s'),
-            'date'                      => $data['date']        ?? date('Y-m-d'),
-            'expirydate'                => $data['expiry_date'] ?? date('Y-m-d', strtotime('+30 days')),
-            'currency'                  => (int)($data['currency_id'] ?? $p['currency'] ?? 0),
-            'subtotal'                  => round($subtotal, 2),
-            'total_tax'                 => round($totalTax, 2),
-            'total'                     => round($total,    2),
-            'adjustment'                => null,
-            'addedfrom'                 => $staffId,
-            'sale_agent'                => (int)($data['sale_agent'] ?? $staffId),
-            'status'                    => (int)($data['status'] ?? 1),
-            'clientnote'                => null,
-            'adminnote'                 => $data['admin_note'] ?? null,
-            'discount_percent'          => (float)($data['discount_percent'] ?? 0),
-            'discount_total'            => round($this->_calcDiscount($subtotal, $totalTax, $data), 2),
-            'discount_type'             => $data['discount_type'] ?? '',
-            'invoiceid'                 => null,
-            'invoiced_date'             => null,
-            'terms'                     => $p['content'] ?? null,
-            'reference_no'              => $data['reference_no'] ?? null,
-            'billing_street'            => $data['billing_street']  ?? $p['address'] ?? null,
-            'billing_city'              => $data['billing_city']    ?? $p['city']    ?? null,
-            'billing_state'             => $data['billing_state']   ?? $p['state']   ?? null,
-            'billing_zip'               => $data['billing_zip']     ?? $p['zip']     ?? null,
-            'billing_country'           => $data['billing_country'] ?? (((int)($p['country'] ?? 0)) ?: null),
-            'include_shipping'          => (int)($data['include_shipping'] ?? 0),
-            'show_shipping_on_estimate' => 1,
-            'shipping_street'           => $data['shipping_street']  ?? null,
-            'shipping_city'             => $data['shipping_city']    ?? null,
-            'shipping_state'            => $data['shipping_state']   ?? null,
-            'shipping_zip'              => $data['shipping_zip']     ?? null,
-            'shipping_country'          => $data['shipping_country'] ?? null,
-            'show_quantity_as'          => 1,
-            'pipeline_order'            => 1,
-            'is_expiry_notified'        => 0,
-            'acceptance_firstname'      => null,
-            'acceptance_lastname'       => null,
-            'acceptance_email'          => null,
-            'acceptance_date'           => null,
-            'acceptance_ip'             => null,
-            'signature'                 => null,
-            'short_link'                => null,
-        ];
+        $sLabels = [1 => 'Non commencée', 2 => 'En cours', 3 => 'En Test', 4 => 'En attente', 5 => 'Achevée'];
+        $pLabels = [1 => 'Basse', 2 => 'Moyenne', 3 => 'Haute', 4 => 'Importante'];
+        $sColors = [1 => '#94A3B8', 2 => '#3B82F6', 3 => '#8B5CF6', 4 => '#F59E0B', 5 => '#10B981'];
 
-        $db->table('tblestimates')->insert($estimateData);
-        $estimateId = (int)$db->insertID();
-        if (!$estimateId) return null;
-
-        $this->_insertItems($db, $estimateId, 'estimate', $items);
-        return $estimateId;
+        foreach ($tasks as &$t) {
+            $t['status_label']   = $sLabels[(int)($t['status']   ?? 0)] ?? '—';
+            $t['priority_label'] = $pLabels[(int)($t['priority'] ?? 0)] ?? '—';
+            $t['status_color']   = $sColors[(int)($t['status']   ?? 0)] ?? '#94A3B8';
+            $t['total_seconds']  = (int)$t['total_seconds'];
+        }
+        return $this->respond(['status' => true, 'data' => $tasks]);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // CRÉATION FACTURE
+    // GET /api/proposals/:id/reminders
+    // ═══════════════════════════════════════════════════════════════════════
+    public function reminders($id = null)
+    {
+        if (!$id) return $this->respond(['status' => false, 'message' => 'ID manquant'], 400);
+        $db = \Config\Database::connect();
+        $rows = $db->table('tblreminders r')
+            ->select("r.*, TRIM(CONCAT(COALESCE(s.firstname,''),' ',COALESCE(s.lastname,''))) AS staff_name")
+            ->join('tblstaff s', 's.staffid = r.staff', 'left')
+            ->where('r.rel_id', (int)$id)
+            ->where('r.rel_type', 'proposal')
+            ->orderBy('r.date', 'ASC')
+            ->get()->getResultArray();
+        return $this->respond(['status' => true, 'data' => $rows]);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // POST /api/proposals/:id/reminders
+    // FIX : staff_id requis et validé — plus de fallback à 1
+    // ═══════════════════════════════════════════════════════════════════════
+    public function addReminder($id = null)
+    {
+        if (!$id) return $this->respond(['status' => false, 'message' => 'ID manquant'], 400);
+
+        $data    = $this->request->getJSON(true);
+        $date    = $data['date']    ?? date('Y-m-d');
+        $time    = $data['time']    ?? '09:00';
+        $parts   = explode(':', $time);
+        $hh      = str_pad($parts[0] ?? '09', 2, '0', STR_PAD_LEFT);
+        $mm      = str_pad($parts[1] ?? '00', 2, '0', STR_PAD_LEFT);
+
+        // FIX : plus de fallback à 1 — staff_id est obligatoire
+        $staffId = (int)($data['staff_id'] ?? 0);
+        if ($staffId <= 0) {
+            return $this->respond(['status' => false, 'message' => 'staff_id requis et doit être > 0'], 400);
+        }
+
+        \Config\Database::connect()->table('tblreminders')->insert([
+            'description'     => $data['description']    ?? '',
+            'date'            => $date . ' ' . $hh . ':' . $mm . ':00',
+            'isnotified'      => 0,
+            'rel_id'          => (int)$id,
+            'staff'           => $staffId,
+            'rel_type'        => 'proposal',
+            'notify_by_email' => (int)($data['notify_by_email'] ?? 0),
+            'creator'         => $staffId,
+        ]);
+        return $this->respond(['status' => true, 'message' => 'Rappel ajouté']);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // PRIVÉ — Notifier client + staff quand une offre est envoyée
+    // ═══════════════════════════════════════════════════════════════════════
+    private function _notifyProposalSent(
+        \CodeIgniter\Database\BaseConnection $db,
+        int    $proposalId,
+        string $subject,
+        int    $clientId,
+        int    $staffId,
+        string $staffName
+    ): void {
+        try {
+            $link  = 'proposals/detail/' . $proposalId;
+            $now   = date('Y-m-d H:i:s');
+            $extra = [
+                'notif_type' => 'proposal_sent',
+                'notif_id'   => (string)$proposalId,
+                'notif_link' => $link,
+            ];
+
+            if ($clientId > 0) {
+                $contacts = $db->table('tblcontacts')
+                    ->select('id')
+                    ->where('userid', $clientId)
+                    ->get()->getResultArray();
+
+                $msgClient = "📄 Nouvelle offre de votre commercial : \"{$subject}\"";
+
+                foreach ($contacts as $ct) {
+                    $contactId = (int)$ct['id'];
+                    $this->_insertNotification($db, $contactId, $msgClient, $link, $now);
+                    try {
+                        $fcm = new FcmService();
+                        $fcm->sendToClient($contactId, 'Nouvelle offre', $msgClient, $extra);
+                    } catch (\Throwable) {}
+                }
+            }
+
+            if ($staffId > 0) {
+                $msgStaff = "✅ Offre \"{$subject}\" envoyée au client avec succès";
+                $this->_insertNotification($db, $staffId, $msgStaff, $link, $now);
+                try {
+                    $fcm = new FcmService();
+                    $fcm->sendToStaff($staffId, 'Offre envoyée', $msgStaff, $extra);
+                } catch (\Throwable) {}
+            }
+
+        } catch (\Throwable $e) {
+            log_message('error', '[ProposalController::_notifyProposalSent] ' . $e->getMessage());
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // PRIVÉ — INSERT centralisé dans tblnotifications
+    // ═══════════════════════════════════════════════════════════════════════
+    private function _insertNotification(
+        \CodeIgniter\Database\BaseConnection $db,
+        int    $toUserId,
+        string $description,
+        string $link,
+        string $now
+    ): void {
+        $db->table('tblnotifications')->insert([
+            'touserid'      => $toUserId,
+            'description'   => $description,
+            'date'          => $now,
+            'isread'        => 0,
+            'isread_inline' => 0,
+            'fromuserid'    => 0,
+            'fromclientid'  => 0,
+            'from_fullname' => 'CRM',
+            'link'          => $link,
+        ]);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // PRIVÉ — Charge les articles
+    // ═══════════════════════════════════════════════════════════════════════
+    private function _loadItems(\CodeIgniter\Database\BaseConnection $db, int $relId, string $relType): array
+    {
+        return $db->table('tblitemable i')
+            ->select([
+                'i.id', 'i.description', 'i.long_description', 'i.qty',
+                'i.rate', 'i.unit', 'i.item_order', 'i.is_optional', 'i.is_selected',
+                'COALESCE(t.taxrate, 0)  AS taxrate',
+                'COALESCE(t.taxname, "") AS taxname',
+            ])
+            ->join('tblitem_tax t',
+                   "t.itemid = i.id AND t.rel_type = '{$relType}'",
+                   'left')
+            ->where('i.rel_id',   $relId)
+            ->where('i.rel_type', $relType)
+            ->orderBy('i.item_order', 'ASC')
+            ->get()
+            ->getResultArray();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // PRIVÉ — Crée un devis depuis une offre
+    // ═══════════════════════════════════════════════════════════════════════
+    private function _createEstimate(\CodeIgniter\Database\BaseConnection $db, array $p, array $items, array $data): ?int
+    {
+        $db->transStart();
+        $row    = $db->table('tblestimates')->selectMax('number')->get()->getRowArray();
+        $number = (int)($row['number'] ?? 0) + 1;
+        $staffId = (int)($data['staff_id'] ?? $p['addedfrom'] ?? 0);
+        [$subtotal, $totalTax, $total] = $this->_calcTotals($items, $data);
+
+        $db->table('tblestimates')->insert([
+            'sent' => 0, 'datesend' => null,
+            'clientid'            => (int)$p['rel_id'],
+            'deleted_customer_name' => null,
+            'project_id'          => 0,
+            'number'              => $number,
+            'prefix'              => 'EST-',
+            'number_format'       => 1,
+            'formatted_number'    => 'EST-' . str_pad($number, 6, '0', STR_PAD_LEFT),
+            'hash'                => md5(uniqid(rand(), true)),
+            'datecreated'         => date('Y-m-d H:i:s'),
+            'date'                => $data['date']        ?? date('Y-m-d'),
+            'expirydate'          => $data['expiry_date'] ?? date('Y-m-d', strtotime('+30 days')),
+            'currency'            => (int)($data['currency'] ?? $p['currency'] ?? 0),
+            'subtotal'            => round($subtotal, 2),
+            'total_tax'           => round($totalTax, 2),
+            'total'               => round($total, 2),
+            'adjustment'          => null,
+            'addedfrom'           => $staffId,
+            'sale_agent'          => $staffId,
+            'status'              => (int)($data['status'] ?? 1),
+            'clientnote'          => null,
+            'adminnote'           => $data['admin_note'] ?? null,
+            'discount_percent'    => (float)($data['discount_percent'] ?? 0),
+            'discount_total'      => round($this->_calcDiscount($subtotal, $totalTax, $data), 2),
+            'discount_type'       => $data['discount_type'] ?? '',
+            'invoiceid'           => null, 'invoiced_date' => null,
+            'terms'               => $p['content'] ?? null,
+            'reference_no'        => $data['reference_no'] ?? null,
+            'billing_street'      => $data['billing_street']  ?? $p['address'] ?? null,
+            'billing_city'        => $data['billing_city']    ?? $p['city']    ?? null,
+            'billing_state'       => $data['billing_state']   ?? $p['state']   ?? null,
+            'billing_zip'         => $data['billing_zip']     ?? $p['zip']     ?? null,
+            'billing_country'     => $data['billing_country'] ?? (((int)($p['country'] ?? 0)) ?: null),
+            'include_shipping'    => (int)($data['include_shipping'] ?? 0),
+            'show_shipping_on_estimate' => 1,
+            'shipping_street'     => $data['shipping_street']  ?? null,
+            'shipping_city'       => $data['shipping_city']    ?? null,
+            'shipping_state'      => $data['shipping_state']   ?? null,
+            'shipping_zip'        => $data['shipping_zip']     ?? null,
+            'shipping_country'    => $data['shipping_country'] ?? null,
+            'show_quantity_as'    => 1,
+            'pipeline_order'      => 1,
+            'is_expiry_notified'  => 0,
+            'acceptance_firstname'=> null, 'acceptance_lastname' => null,
+            'acceptance_email'    => null, 'acceptance_date'     => null,
+            'acceptance_ip'       => null, 'signature'           => null,
+            'short_link'          => null,
+        ]);
+        $estimateId = (int)$db->insertID();
+        if (!$estimateId) { $db->transRollback(); return null; }
+        $this->_insertItems($db, $estimateId, 'estimate', $items);
+        $db->transComplete();
+        return $db->transStatus() ? $estimateId : null;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // PRIVÉ — Crée une facture depuis une offre
     // ═══════════════════════════════════════════════════════════════════════
     private function _createInvoice(\CodeIgniter\Database\BaseConnection $db, array $p, array $items, array $data): ?int
     {
-        $row     = $db->table('tblinvoices')->selectMax('number')->get()->getRowArray();
-        $number  = (int)($row['number'] ?? 0) + 1;
-        $hash    = md5(uniqid(rand(), true));
+        $db->transStart();
+        $row    = $db->table('tblinvoices')->selectMax('number')->get()->getRowArray();
+        $number = (int)($row['number'] ?? 0) + 1;
         $staffId = (int)($data['staff_id'] ?? $p['addedfrom'] ?? 0);
-
         [$subtotal, $totalTax, $total] = $this->_calcTotals($items, $data);
-
-        $paymentModes  = !empty($data['payment_modes']) && is_array($data['payment_modes']) ? json_encode($data['payment_modes']) : null;
+        $paymentModes  = !empty($data['payment_modes']) && is_array($data['payment_modes'])
+            ? json_encode($data['payment_modes']) : null;
         $recurringRaw  = $data['recurring'] ?? '0';
         $isRecurring   = ($recurringRaw !== '0' && $recurringRaw !== '') ? 1 : 0;
         $recurringType = $isRecurring ? $recurringRaw : null;
 
-        $invoiceData = [
-            'sent'                    => 0,
-            'datesend'                => null,
+        $db->table('tblinvoices')->insert([
+            'sent' => 0, 'datesend' => null,
             'clientid'                => (int)$p['rel_id'],
             'deleted_customer_name'   => null,
             'number'                  => $number,
@@ -686,14 +1026,14 @@ class ProposalController extends ResourceController
             'datecreated'             => date('Y-m-d H:i:s'),
             'date'                    => $data['date']        ?? date('Y-m-d'),
             'duedate'                 => $data['expiry_date'] ?? date('Y-m-d', strtotime('+30 days')),
-            'currency'                => (int)($data['currency_id'] ?? $p['currency'] ?? 0),
+            'currency'                => (int)($data['currency'] ?? $p['currency'] ?? 0),
             'subtotal'                => round($subtotal, 2),
             'total_tax'               => round($totalTax, 2),
-            'total'                   => round($total,    2),
+            'total'                   => round($total, 2),
             'adjustment'              => null,
             'addedfrom'               => $staffId,
-            'sale_agent'              => (int)($data['sale_agent'] ?? $staffId),
-            'hash'                    => $hash,
+            'sale_agent'              => $staffId,
+            'hash'                    => md5(uniqid(rand(), true)),
             'status'                  => (int)($data['status'] ?? 1),
             'clientnote'              => null,
             'adminnote'               => $data['admin_note'] ?? null,
@@ -729,59 +1069,44 @@ class ProposalController extends ResourceController
             'project_id'              => 0,
             'subscription_id'         => 0,
             'short_link'              => null,
-        ];
-
-        $db->table('tblinvoices')->insert($invoiceData);
+        ]);
         $invoiceId = (int)$db->insertID();
-        if (!$invoiceId) return null;
-
+        if (!$invoiceId) { $db->transRollback(); return null; }
         $this->_insertItems($db, $invoiceId, 'invoice', $items);
-        return $invoiceId;
+        $db->transComplete();
+        return $db->transStatus() ? $invoiceId : null;
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // Insère articles dans tblitemable + tblitem_tax
+    // PRIVÉ — Insère les articles + leurs taxes
     // ═══════════════════════════════════════════════════════════════════════
     private function _insertItems(\CodeIgniter\Database\BaseConnection $db, int $relId, string $relType, array $items): void
     {
         foreach ($items as $order => $item) {
             if (empty($item['description'])) continue;
-
             $db->table('tblitemable')->insert([
                 'rel_id'           => $relId,
                 'rel_type'         => $relType,
-                'description'      => $item['description']      ?? '',
-                'long_description' => $item['long_description']  ?? '',
+                'description'      => $item['description']     ?? '',
+                'long_description' => $item['long_description'] ?? '',
                 'qty'              => (float)($item['qty']  ?? 1),
                 'rate'             => (float)($item['rate'] ?? 0),
-                'unit'             => $item['unit']              ?? '',
+                'unit'             => $item['unit']             ?? '',
                 'item_order'       => $order + 1,
                 'is_optional'      => (int)($item['is_optional'] ?? 0),
                 'is_selected'      => 1,
             ]);
             $newItemId = (int)$db->insertID();
-
-            $taxId = (int)($item['taxid'] ?? 0);
-            if ($taxId > 0) {
-                $tax = $db->table('tbltaxes')->where('id', $taxId)->get()->getRowArray();
-                if ($tax) {
-                    $db->table('tblitem_tax')->insert([
-                        'itemid'   => $newItemId,
-                        'rel_id'   => $relId,
-                        'rel_type' => $relType,
-                        'taxid'    => $taxId,
-                        'taxname'  => $tax['name']    ?? ($item['taxname'] ?? ''),
-                        'taxrate'  => $tax['taxrate'] ?? ($item['taxrate'] ?? 0),
-                    ]);
-                }
-            } elseif ((float)($item['taxrate'] ?? 0) > 0) {
+            $taxName = trim($item['taxname'] ?? '');
+            $taxRate = (float)($item['taxrate'] ?? 0);
+            if ($taxName !== '' && $taxRate > 0) {
+                $tax = $db->table('tbltaxes')->where('name', $taxName)->get()->getRowArray();
                 $db->table('tblitem_tax')->insert([
                     'itemid'   => $newItemId,
                     'rel_id'   => $relId,
                     'rel_type' => $relType,
-                    'taxid'    => 0,
-                    'taxname'  => $item['taxname'] ?? '',
-                    'taxrate'  => (float)$item['taxrate'],
+                    'taxname'  => $tax['name']    ?? $taxName,
+                    'taxrate'  => $tax['taxrate']  ?? $taxRate,
                 ]);
             }
         }
@@ -792,8 +1117,8 @@ class ProposalController extends ResourceController
         $subtotal = 0.0; $totalTax = 0.0;
         foreach ($items as $item) {
             if (empty($item['description'])) continue;
-            $qty  = (float)($item['qty']  ?? 1);
-            $rate = (float)($item['rate'] ?? 0);
+            $qty  = (float)($item['qty']     ?? 1);
+            $rate = (float)($item['rate']    ?? 0);
             $tax  = (float)($item['taxrate'] ?? 0);
             $line = $qty * $rate;
             $subtotal += $line;
@@ -820,9 +1145,6 @@ class ProposalController extends ResourceController
         return $list;
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    // _generatePdfBase64 — INCHANGÉE (utilisée pour pdf + client-pdf)
-    // ═══════════════════════════════════════════════════════════════════════
     private function _generatePdfBase64(array $proposal): string
     {
         $items = $proposal['items'] ?? [];
@@ -836,12 +1158,9 @@ class ProposalController extends ResourceController
         $addressLine = implode(', ', $addressParts);
 
         $pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
-        $pdf->setPrintHeader(false);
-        $pdf->setPrintFooter(false);
-        $pdf->SetCreator('CRM Mobile');
-        $pdf->SetTitle($proNumber);
-        $pdf->SetMargins(15, 15, 15);
-        $pdf->SetAutoPageBreak(true, 20);
+        $pdf->setPrintHeader(false); $pdf->setPrintFooter(false);
+        $pdf->SetCreator('CRM Mobile'); $pdf->SetTitle($proNumber);
+        $pdf->SetMargins(15, 15, 15); $pdf->SetAutoPageBreak(true, 20);
         $pdf->AddPage();
 
         $pageW = 210; $mL = 15; $mR = 15; $contentW = $pageW - $mL - $mR;
@@ -868,10 +1187,10 @@ class ProposalController extends ResourceController
         }
 
         $pdf->SetY($pdf->GetY() + 4);
-        $colW    = [10, 90, 18, 22, 18, 22];
+        $colW = [10, 90, 18, 22, 18, 22];
         $headers = ['#', 'Item', 'Qty', 'Rate', 'Tax', 'Amount'];
         $aligns  = ['C', 'L', 'C', 'R', 'C', 'R'];
-        $pdf->SetFillColor(245, 245, 245); $pdf->SetDrawColor(200, 200, 200);
+        $pdf->SetFillColor(245, 245, 245);
         $pdf->SetFont('helvetica', 'B', 9); $pdf->SetTextColor(50, 50, 50);
         $pdf->SetXY($mL, $pdf->GetY());
         foreach ($headers as $hi => $h) $pdf->Cell($colW[$hi], 7, $h, 'B', 0, $aligns[$hi], true);
@@ -932,15 +1251,14 @@ class ProposalController extends ResourceController
         return number_format(abs($val), 2, ',', '.');
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
-    // ✅ FIX : Brevo HTTP API — remplace CI4 SMTP + attach
-    // Le PDF est envoyé en base64 dans le JSON → aucune corruption possible
-    // ═══════════════════════════════════════════════════════════════════════
     private function _sendProposalEmail(
         string $to, string $clientName, string $subject,
         string $staffName, int $proposalId, ?array $proposalData = null
     ): bool {
-        $link = base_url('proposals/view/' . $proposalId);
+        $apiKey    = getenv('BREVO_API_KEY') ?: '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';
+        $fromEmail = getenv('MAIL_FROM_ADDRESS') ?: 'noreply@example.com';
+        $fromName  = getenv('MAIL_FROM_NAME')    ?: 'CRM Mobile';
+
         $html = "<!DOCTYPE html><html><head><meta charset='UTF-8'>
 <style>
 body{font-family:'Segoe UI',sans-serif;background:#f1f5f9;padding:20px}
@@ -964,30 +1282,25 @@ body{font-family:'Segoe UI',sans-serif;background:#f1f5f9;padding:20px}
   <div class='ft'>© " . date('Y') . " — Envoyé automatiquement.</div>
 </div></body></html>";
 
-        // ── Payload Brevo ─────────────────────────────────────────────────
         $payload = [
-            'sender'      => ['name' => 'CRM Mobile', 'email' => 'ghoufranbensassy@gmail.com'],
+            'sender'      => ['name' => $fromName, 'email' => $fromEmail],
             'to'          => [['email' => $to, 'name' => $clientName]],
             'subject'     => "Offre commerciale : $subject",
             'htmlContent' => $html,
         ];
 
-        // PDF joint en base64 — Brevo décode lui-même → aucune corruption
         if ($proposalData !== null) {
             try {
                 $pdfBase64 = $this->_generatePdfBase64($proposalData);
-                // _generatePdfBase64 retourne déjà du base64 pur
                 $payload['attachment'] = [[
                     'name'    => 'offre_' . $proposalId . '.pdf',
                     'content' => $pdfBase64,
                 ]];
-                log_message('debug', 'PDF base64 len: ' . strlen($pdfBase64));
             } catch (\Throwable $e) {
                 log_message('error', 'PDF proposal error: ' . $e->getMessage());
             }
         }
 
-        // ── Appel cURL → api.brevo.com ────────────────────────────────────
         $ch = curl_init('https://api.brevo.com/v3/smtp/email');
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -995,10 +1308,10 @@ body{font-family:'Segoe UI',sans-serif;background:#f1f5f9;padding:20px}
             CURLOPT_POSTFIELDS     => json_encode($payload),
             CURLOPT_HTTPHEADER     => [
                 'accept: application/json',
-                'api-key: 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',
+                'api-key: ' . $apiKey,
                 'content-type: application/json',
             ],
-            CURLOPT_TIMEOUT        => 30,
+            CURLOPT_TIMEOUT => 30,
         ]);
 
         $response = curl_exec($ch);

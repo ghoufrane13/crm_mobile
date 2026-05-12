@@ -150,6 +150,11 @@ class EstimateController extends ResourceController
         return $this->respond(['status'=>true,'message'=>'Statut : '.($this->statuses[$status]??''),'status_label'=>$this->statuses[$status]??'']);
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // POST /api/estimates/send-email/:id
+    // FIX 6 — Ne pas repasser au statut "Envoyé" (2) si le devis est déjà
+    //          "Accepté" (4) ou "Décliné" (3).
+    // ─────────────────────────────────────────────────────────────────────────
     public function sendEmail($id=null)
     {
         if(!$id) return $this->respond(['status'=>false,'message'=>'ID manquant'],400);
@@ -164,7 +169,13 @@ class EstimateController extends ResourceController
         $estimate['status_label']=$this->statuses[(int)$estimate['status']]??'Inconnu';
         if(!$this->_sendEstimateEmail($toEmail,$clientName,$staffName,(int)$id,$estimate))
             return $this->respond(['status'=>false,'message'=>'Erreur envoi email'],500);
-        $this->estimateModel->updateStatus((int)$id,2);
+
+        // FIX 6 — Ne changer le statut que si ce n'est pas déjà Accepté (4) ou Décliné (3)
+        $currentStatus = (int)($estimate['status'] ?? 1);
+        if (!in_array($currentStatus, [3, 4])) {
+            $this->estimateModel->updateStatus((int)$id, 2);
+        }
+
         return $this->respond(['status'=>true,'message'=>"Devis envoyé à $toEmail"]);
     }
 
@@ -276,7 +287,55 @@ class EstimateController extends ResourceController
             'acceptance_email'    =>$contact['email']??'',
             'acceptance_date'     =>date('Y-m-d H:i:s'),
         ]);
+
+        // ── Notifications push FCM ──────────────────────────────────────────────
+        try {
+            $fcm             = new \App\Libraries\FcmService();
+            $contactFullName = trim(($contact['firstname'] ?? '') . ' ' . ($contact['lastname'] ?? ''));
+            $saleAgent       = (int)($estimate['sale_agent'] ?? 0);
+            $fmtNum          = $estimate['formatted_number'] ?? "EST-{$id}";
+
+            if ($action === 'accept') {
+                // → Staff assigné : acceptation
+                if ($saleAgent) {
+                    $fcm->createAndSend(
+                        $saleAgent, 'staff', 0, $contactFullName,
+                        "✅ Devis {$fmtNum} accepté par {$contactFullName}",
+                        'estimates/detail/' . $id,
+                        ['notif_type' => 'estimate_accepted', 'notif_id' => (string)$id]
+                    );
+                }
+                // → Client : confirmation
+                $fcm->createAndSend(
+                    $contactId, 'client', 0, 'CRM',
+                    "✅ Votre acceptation du devis {$fmtNum} a bien été enregistrée.",
+                    'estimates/detail/' . $id,
+                    ['notif_type' => 'estimate_accepted', 'notif_id' => (string)$id]
+                );
+            } else {
+                // → Staff assigné : déclinaison
+                if ($saleAgent) {
+                    $fcm->createAndSend(
+                        $saleAgent, 'staff', 0, $contactFullName,
+                        "❌ Devis {$fmtNum} décliné par {$contactFullName}",
+                        'estimates/detail/' . $id,
+                        ['notif_type' => 'estimate_declined', 'notif_id' => (string)$id]
+                    );
+                }
+                // → Client : confirmation
+                $fcm->createAndSend(
+                    $contactId, 'client', 0, 'CRM',
+                    "❌ Votre déclinaison du devis {$fmtNum} a bien été enregistrée.",
+                    'estimates/detail/' . $id,
+                    ['notif_type' => 'estimate_declined', 'notif_id' => (string)$id]
+                );
+            }
+        } catch (\Throwable $e) {
+            log_message('error', '[EstimateController::clientRespond] Notification : ' . $e->getMessage());
+        }
+
         return $this->respond(['status'=>true,'message'=>'Devis '.($action==='accept'?'accepté':'décliné'),'new_status'=>$newStatus,'status_label'=>$this->statuses[$newStatus]??'']);
+
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -424,49 +483,28 @@ class EstimateController extends ResourceController
         return $pdf->Output('doc.pdf','S');
     }
 
-    private function _appendSignatureBlock(
-        TCPDF  $pdf,
-        string $relType,
-        int    $relId,
-        float  $mL,
-        float  $contentW,
-        string $docTitle = ''
-    ): void {
+    private function _appendSignatureBlock(TCPDF $pdf, string $relType, int $relId, float $mL, float $contentW, string $docTitle = ''): void
+    {
         if ($relId <= 0) return;
         $sig = $this->signatureModel->getSignature($relType, $relId);
         if (!$sig) return;
-
         $pngPath = ROOTPATH . 'public/uploads/signatures/' . $relType . '_' . $relId . '.png';
-
         $pdf->SetY($pdf->GetY() + 10);
         $pdf->SetDrawColor(220, 220, 220);
         $pdf->Line($mL, $pdf->GetY(), $mL + $contentW, $pdf->GetY());
         $pdf->SetY($pdf->GetY() + 8);
-
         if ($docTitle !== '') {
-            $pdf->SetFont('helvetica', 'B', 11);
-            $pdf->SetTextColor(30, 30, 30);
-            $pdf->SetX($mL);
-            $pdf->Cell($contentW, 6, $docTitle, 0, 1, 'C');
+            $pdf->SetFont('helvetica', 'B', 11); $pdf->SetTextColor(30, 30, 30);
+            $pdf->SetX($mL); $pdf->Cell($contentW, 6, $docTitle, 0, 1, 'C');
             $pdf->SetY($pdf->GetY() + 2);
         }
-
-        $pdf->SetFont('helvetica', 'B', 9);
-        $pdf->SetTextColor(80, 80, 80);
-        $pdf->SetX($mL);
-        $pdf->Cell($contentW, 5, 'Authorized Signature', 0, 1, 'L');
-
+        $pdf->SetFont('helvetica', 'B', 9); $pdf->SetTextColor(80, 80, 80);
+        $pdf->SetX($mL); $pdf->Cell($contentW, 5, 'Authorized Signature', 0, 1, 'L');
         $tmpPath = file_exists($pngPath) ? $this->_rgbaPngToRgbPng($pngPath) : null;
-
         if ($tmpPath !== null) {
-            $imgW = 60; $imgH = 20;
-            $imgX = $mL + ($contentW - $imgW) / 2;
+            $imgW = 60; $imgH = 20; $imgX = $mL + ($contentW - $imgW) / 2;
             try {
-                $pdf->Image(
-                    $tmpPath, $imgX, $pdf->GetY(),
-                    $imgW, $imgH, 'PNG', '', 'N',
-                    false, 300, '', false, false, 0, false, false, false
-                );
+                $pdf->Image($tmpPath, $imgX, $pdf->GetY(), $imgW, $imgH, 'PNG', '', 'N', false, 300, '', false, false, 0, false, false, false);
                 $pdf->SetY($pdf->GetY() + $imgH + 3);
             } catch (\Throwable $e) {
                 log_message('error', 'PDF signature image: ' . $e->getMessage());
@@ -474,18 +512,12 @@ class EstimateController extends ResourceController
                 if ($tmpPath !== $pngPath) @unlink($tmpPath);
             }
         }
-
         $signedAt = $sig['signed_at'] ?? '';
         if ($signedAt) {
-            try {
-                $dateLabel = 'Signed on: ' . (new \DateTime($signedAt))->format('d/m/Y');
-            } catch (\Throwable $_) {
-                $dateLabel = 'Signed on: ' . $signedAt;
-            }
-            $pdf->SetFont('helvetica', '', 8);
-            $pdf->SetTextColor(120, 120, 120);
-            $pdf->SetX($mL);
-            $pdf->Cell($contentW, 5, $dateLabel, 0, 1, 'R');
+            try { $dateLabel = 'Signed on: ' . (new \DateTime($signedAt))->format('d/m/Y'); }
+            catch (\Throwable $_) { $dateLabel = 'Signed on: ' . $signedAt; }
+            $pdf->SetFont('helvetica', '', 8); $pdf->SetTextColor(120, 120, 120);
+            $pdf->SetX($mL); $pdf->Cell($contentW, 5, $dateLabel, 0, 1, 'R');
         }
     }
 
@@ -494,98 +526,49 @@ class EstimateController extends ResourceController
         $raw = @file_get_contents($srcPath);
         if (!$raw || strlen($raw) < 8) return null;
         if (substr($raw, 0, 8) !== "\x89PNG\r\n\x1a\n") return null;
-
-        $pos = 8; $dataLen = strlen($raw);
-        $W = $H = $bitDepth = $colorType = 0;
-        $idatRaw = '';
-
+        $pos = 8; $dataLen = strlen($raw); $W = $H = $bitDepth = $colorType = 0; $idatRaw = '';
         while ($pos + 12 <= $dataLen) {
             $cLen  = unpack('N', substr($raw, $pos, 4))[1];
             $cType = substr($raw, $pos + 4, 4);
             $cData = $cLen > 0 ? substr($raw, $pos + 8, $cLen) : '';
             $pos  += 4 + 4 + $cLen + 4;
-
-            if ($cType === 'IHDR') {
-                ['W' => $W, 'H' => $H, 'bit' => $bitDepth, 'color' => $colorType]
-                    = unpack('NW/NH/Cbit/Ccolor', $cData);
-                $W = (int)$W; $H = (int)$H; $bitDepth = (int)$bitDepth; $colorType = (int)$colorType;
-            } elseif ($cType === 'IDAT') {
-                $idatRaw .= $cData;
-            } elseif ($cType === 'IEND') {
-                break;
-            }
+            if ($cType === 'IHDR') { ['W'=>$W,'H'=>$H,'bit'=>$bitDepth,'color'=>$colorType] = unpack('NW/NH/Cbit/Ccolor',$cData); $W=(int)$W;$H=(int)$H;$bitDepth=(int)$bitDepth;$colorType=(int)$colorType; }
+            elseif ($cType === 'IDAT') { $idatRaw .= $cData; }
+            elseif ($cType === 'IEND') { break; }
         }
-
         if ($W <= 0 || $H <= 0) return null;
         if ($colorType === 2) return $srcPath;
         if ($colorType !== 6 || $bitDepth !== 8) return null;
-
         $inflated = @gzuncompress($idatRaw);
         if ($inflated === false) return null;
-
-        $srcBpp    = 4;
-        $srcStride = $W * $srcBpp;
-        $prevLine  = str_repeat("\x00", $srcStride);
-        $rgbLines  = '';
-        $iPos      = 0;
-        $infLen    = strlen($inflated);
-
-        for ($y = 0; $y < $H; $y++) {
-            if ($iPos >= $infLen) break;
-            $filter  = ord($inflated[$iPos++]);
-            $rawLine = ($iPos + $srcStride <= $infLen)
-                ? substr($inflated, $iPos, $srcStride)
-                : str_pad(substr($inflated, $iPos), $srcStride, "\x00");
-            $iPos += $srcStride;
-
-            $recon = '';
-            for ($x = 0; $x < $srcStride; $x++) {
-                $rb = ord($rawLine[$x]);
-                $a  = $x >= $srcBpp ? ord($recon[$x - $srcBpp]) : 0;
-                $b  = ord($prevLine[$x]);
-                $c  = $x >= $srcBpp ? ord($prevLine[$x - $srcBpp]) : 0;
+        $srcBpp=4; $srcStride=$W*$srcBpp; $prevLine=str_repeat("\x00",$srcStride); $rgbLines=''; $iPos=0; $infLen=strlen($inflated);
+        for ($y=0;$y<$H;$y++) {
+            if ($iPos>=$infLen) break;
+            $filter=ord($inflated[$iPos++]);
+            $rawLine=($iPos+$srcStride<=$infLen)?substr($inflated,$iPos,$srcStride):str_pad(substr($inflated,$iPos),$srcStride,"\x00");
+            $iPos+=$srcStride; $recon='';
+            for ($x=0;$x<$srcStride;$x++) {
+                $rb=ord($rawLine[$x]); $a=$x>=$srcBpp?ord($recon[$x-$srcBpp]):0; $b=ord($prevLine[$x]); $c=$x>=$srcBpp?ord($prevLine[$x-$srcBpp]):0;
                 switch ($filter) {
-                    case 0: $v = $rb; break;
-                    case 1: $v = ($rb + $a) & 0xFF; break;
-                    case 2: $v = ($rb + $b) & 0xFF; break;
-                    case 3: $v = ($rb + (int)(($a + $b) / 2)) & 0xFF; break;
-                    case 4:
-                        $p  = $a + $b - $c;
-                        $pa = abs($p - $a); $pb = abs($p - $b); $pc = abs($p - $c);
-                        $pr = ($pa <= $pb && $pa <= $pc) ? $a : ($pb <= $pc ? $b : $c);
-                        $v  = ($rb + $pr) & 0xFF; break;
-                    default: $v = $rb; break;
+                    case 0:$v=$rb;break; case 1:$v=($rb+$a)&0xFF;break; case 2:$v=($rb+$b)&0xFF;break;
+                    case 3:$v=($rb+(int)(($a+$b)/2))&0xFF;break;
+                    case 4:$p=$a+$b-$c;$pa=abs($p-$a);$pb=abs($p-$b);$pc=abs($p-$c);$pr=($pa<=$pb&&$pa<=$pc)?$a:($pb<=$pc?$b:$c);$v=($rb+$pr)&0xFF;break;
+                    default:$v=$rb;break;
                 }
-                $recon .= chr($v);
+                $recon.=chr($v);
             }
-
-            $rgbScanline = '';
-            for ($x = 0; $x < $W; $x++) {
-                $r = ord($recon[$x * 4]);
-                $g = ord($recon[$x * 4 + 1]);
-                $b = ord($recon[$x * 4 + 2]);
-                $a = ord($recon[$x * 4 + 3]);
-                $rgbScanline .= chr((int)(($r * $a + 255 * (255 - $a)) / 255))
-                             .  chr((int)(($g * $a + 255 * (255 - $a)) / 255))
-                             .  chr((int)(($b * $a + 255 * (255 - $a)) / 255));
+            $rgbScanline='';
+            for ($x=0;$x<$W;$x++) {
+                $r=ord($recon[$x*4]);$g=ord($recon[$x*4+1]);$b=ord($recon[$x*4+2]);$a=ord($recon[$x*4+3]);
+                $rgbScanline.=chr((int)(($r*$a+255*(255-$a))/255)).chr((int)(($g*$a+255*(255-$a))/255)).chr((int)(($b*$a+255*(255-$a))/255));
             }
-            $rgbLines .= "\x00" . $rgbScanline;
-            $prevLine  = $recon;
+            $rgbLines.="\x00".$rgbScanline; $prevLine=$recon;
         }
-
-        $compressed = @gzcompress($rgbLines, 6);
-        if ($compressed === false) return null;
-
-        $chunk = static fn(string $t, string $d): string =>
-            pack('N', strlen($d)) . $t . $d . pack('N', crc32($t . $d));
-
-        $png  = "\x89PNG\r\n\x1a\n";
-        $png .= $chunk('IHDR', pack('NNCCCCC', $W, $H, 8, 2, 0, 0, 0));
-        $png .= $chunk('IDAT', $compressed);
-        $png .= $chunk('IEND', '');
-
-        $tmpPath = sys_get_temp_dir() . '/sig_rgb_' . uniqid('', true) . '.png';
-        return @file_put_contents($tmpPath, $png) !== false ? $tmpPath : null;
+        $compressed=@gzcompress($rgbLines,6); if($compressed===false) return null;
+        $chunk=static fn(string $t,string $d):string=>pack('N',strlen($d)).$t.$d.pack('N',crc32($t.$d));
+        $png="\x89PNG\r\n\x1a\n".$chunk('IHDR',pack('NNCCCCC',$W,$H,8,2,0,0,0)).$chunk('IDAT',$compressed).$chunk('IEND','');
+        $tmpPath=sys_get_temp_dir().'/sig_rgb_'.uniqid('',true).'.png';
+        return @file_put_contents($tmpPath,$png)!==false?$tmpPath:null;
     }
 
     private function _sendEstimateEmail(string $to, string $clientName, string $staffName, int $estimateId, array $estimate): bool
@@ -598,26 +581,89 @@ class EstimateController extends ResourceController
         if($pdfBase64!==null) $payload['attachment']=[['name'=>'devis_'.$estimateId.'.pdf','content'=>$pdfBase64]];
         $ch=curl_init('https://api.brevo.com/v3/smtp/email');
         curl_setopt_array($ch,[
-            CURLOPT_RETURNTRANSFER=>true,
-            CURLOPT_POST=>true,
-            CURLOPT_POSTFIELDS=>json_encode($payload),
-            CURLOPT_HTTPHEADER=>[
-                'accept: application/json',
-                'api-key: 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',
-                'content-type: application/json',
-            ],
+            CURLOPT_RETURNTRANSFER=>true, CURLOPT_POST=>true, CURLOPT_POSTFIELDS=>json_encode($payload),
+            CURLOPT_HTTPHEADER=>['accept: application/json','api-key: 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','content-type: application/json'],
             CURLOPT_TIMEOUT=>30,
         ]);
-        $response=curl_exec($ch); // ← FIX: actually execute the request
-        $httpCode=curl_getinfo($ch,CURLINFO_HTTP_CODE);
-        $err=curl_error($ch);
-        curl_close($ch);
+        $response=curl_exec($ch); $httpCode=curl_getinfo($ch,CURLINFO_HTTP_CODE); $err=curl_error($ch); curl_close($ch);
         if($err){ log_message('error','Brevo cURL: '.$err); return false; }
         return $httpCode===201;
     }
 
-    private function _fmtNum(float $val): string
-    {
-        return number_format(abs($val), 2, ',', '.');
+    private function _fmtNum(float $val): string { return number_format(abs($val), 2, ',', '.'); }
+
+    public function tasks($id = null)
+{
+    if (!$id) return $this->respond(['status' => false, 'message' => 'ID manquant'], 400);
+
+    $tasks = $this->db->table('tbltasks t')
+        ->select([
+            't.id', 't.name', 't.status', 't.priority',
+            't.duedate', 't.startdate', 't.dateadded',
+            // ✅ Ajout de total_seconds pour le chronomètre Flutter
+            'COALESCE((SELECT SUM(TIMESTAMPDIFF(SECOND, ts.start_time, COALESCE(ts.end_time, NOW())))
+                        FROM tbltaskstimers ts
+                        WHERE ts.task_id = t.id), 0) AS total_seconds',
+            "GROUP_CONCAT(CONCAT(s.firstname,' ',s.lastname) SEPARATOR ', ') AS assignee_names",
+        ])
+        ->join('tbltask_assigned a', 'a.taskid = t.id', 'left')
+        ->join('tblstaff s', 's.staffid = a.staffid', 'left')
+        ->where('t.rel_type', 'estimate')
+        ->where('t.rel_id', (int)$id)
+        ->groupBy('t.id')
+        ->orderBy('t.id', 'DESC')
+        ->get()->getResultArray();
+
+    $sLabels = [1 => 'Non commencée', 2 => 'En cours', 3 => 'En Test', 4 => 'En attente', 5 => 'Achevée'];
+    $pLabels = [1 => 'Basse', 2 => 'Moyenne', 3 => 'Haute', 4 => 'Importante'];
+    $sColors = [1 => '#94A3B8', 2 => '#3B82F6', 3 => '#8B5CF6', 4 => '#F59E0B', 5 => '#10B981'];
+
+    foreach ($tasks as &$t) {
+        $t['status_label']   = $sLabels[(int)($t['status']   ?? 0)] ?? '—';
+        $t['priority_label'] = $pLabels[(int)($t['priority'] ?? 0)] ?? '—';
+        $t['status_color']   = $sColors[(int)($t['status']   ?? 0)] ?? '#94A3B8';
+        $t['total_seconds']  = (int)$t['total_seconds'];
     }
+    return $this->respond(['status' => true, 'data' => $tasks]);
 }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // GET /api/estimates/:id/reminders
+    // ─────────────────────────────────────────────────────────────────────────
+    public function reminders($id = null)
+    {
+        if (!$id) return $this->respond(['status'=>false,'message'=>'ID manquant'],400);
+        $rows = $this->db->table('tblreminders r')
+            ->select("r.*, TRIM(CONCAT(COALESCE(s.firstname,''),' ',COALESCE(s.lastname,''))) AS staff_name")
+            ->join('tblstaff s','s.staffid = r.staff','left')
+            ->where('r.rel_id',(int)$id)->where('r.rel_type','estimate')
+            ->orderBy('r.date','ASC')->get()->getResultArray();
+        return $this->respond(['status'=>true,'data'=>$rows]);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // POST /api/estimates/:id/reminders
+    // ─────────────────────────────────────────────────────────────────────────
+    public function addReminder($id = null)
+    {
+        if (!$id) return $this->respond(['status'=>false,'message'=>'ID manquant'],400);
+        $data    = $this->request->getJSON(true);
+        $date    = $data['date']??date('Y-m-d');
+        $time    = $data['time']??'09:00';
+        $parts   = explode(':',$time);
+        $hh      = str_pad($parts[0]??'09',2,'0',STR_PAD_LEFT);
+        $mm      = str_pad($parts[1]??'00',2,'0',STR_PAD_LEFT);
+        $staffId = (int)($data['staff_id']??1);
+        $this->db->table('tblreminders')->insert([
+            'description'     => $data['description']??'',
+            'date'            => $date.' '.$hh.':'.$mm.':00',
+            'isnotified'      => 0,
+            'rel_id'          => (int)$id,
+            'staff'           => $staffId,
+            'rel_type'        => 'estimate',
+            'notify_by_email' => (int)($data['notify_by_email']??0),
+            'creator'         => $staffId,
+        ]);
+        return $this->respond(['status'=>true,'message'=>'Rappel ajouté']);
+    }
+}   

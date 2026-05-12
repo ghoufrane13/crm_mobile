@@ -8,10 +8,20 @@ use App\Models\ClientModel;
 use App\Models\StaffModel;
 use App\Libraries\JwtService;
 
+/**
+ * LoginController
+ *
+ * Point d'entrée UNIQUE pour l'authentification (staff + client).
+ * Correction #1 : StaffController::login() supprimé — seul ce controller
+ * émet des JWT valides. Toute tentative sur /api/staff/login retournera 404.
+ */
 class LoginController extends ResourceController
 {
     protected $format = 'json';
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // POST /api/login
+    // ═══════════════════════════════════════════════════════════════════════
     public function login()
     {
         $data = $this->request->getJSON(true);
@@ -25,20 +35,19 @@ class LoginController extends ResourceController
 
         // ── 1. Essayer contact client (tblcontacts) ───────────────────────
         $contactModel = new ContactModel();
-        $contact = $contactModel->where('email', $email)->first();
+        $contact      = $contactModel->where('email', $email)->first();
 
         if ($contact && password_verify($password, $contact['password'])) {
 
-            if ((int)$contact['active'] === 0) {
-                return $this->fail('Compte non activé', 403);
+            $client = (new ClientModel())->find($contact['userid']);
+            if (!$client) {
+                return $this->fail('Société introuvable', 404);
             }
 
-            $clientModel = new ClientModel();
-            $client = $clientModel->find($contact['userid']);
-
-            if (!$client || (int)$client['active'] === 0) {
-                return $this->fail('Société non activée', 403);
-            }
+            $contactModel->update($contact['id'], [
+                'last_login' => date('Y-m-d H:i:s'),
+                'last_ip'    => $this->request->getIPAddress(),
+            ]);
 
             $token = JwtService::generate([
                 'user_type'  => 'client',
@@ -53,9 +62,9 @@ class LoginController extends ResourceController
                 'token'      => $token,
                 'contact_id' => $contact['id'],
                 'user'       => [
-                    'id'         => $contact['id'],      // contact_id pour Flutter
+                    'id'         => $contact['id'],
                     'contact_id' => $contact['id'],
-                    'userid'     => $contact['userid'],  // client_id (société)
+                    'userid'     => $contact['userid'],
                     'client_id'  => $contact['userid'],
                     'firstname'  => $contact['firstname'],
                     'lastname'   => $contact['lastname'],
@@ -68,15 +77,10 @@ class LoginController extends ResourceController
 
         // ── 2. Essayer staff (tblstaff) ───────────────────────────────────
         $staffModel = new StaffModel();
-        $staff = $staffModel
-            ->where('email', $email)
-            ->where('active', 1)
-            ->where('is_not_staff', 0)
-            ->first();
+        $staff      = $staffModel->where('email', $email)->first();
 
         if ($staff && password_verify($password, $staff['password'])) {
 
-            // Mettre à jour last_login / last_ip / last_activity
             $staffModel->update($staff['staffid'], [
                 'last_login'    => date('Y-m-d H:i:s'),
                 'last_ip'       => $this->request->getIPAddress(),
@@ -85,24 +89,21 @@ class LoginController extends ResourceController
 
             $token = JwtService::generate([
                 'user_type' => 'staff',
-                'staff_id' => $staff['staffid'],
-                'email'    => $staff['email'],
+                'staff_id'  => $staff['staffid'],
+                'email'     => $staff['email'],
             ]);
 
-            // Retirer les champs sensibles avant de renvoyer
-            unset(
-                $staff['password'],
-                $staff['new_pass_key'],
-                $staff['two_factor_auth_code'],
-                $staff['google_auth_secret']
-            );
-
             return $this->respond([
-                'status'   => true,
+                'status'    => true,
                 'user_type' => 'staff',
-                'token'    => $token,
-                'staff_id' => $staff['staffid'],
-                'user'     => $staff,
+                'token'     => $token,
+                'staff_id'  => $staff['staffid'],
+                'user'      => [
+                    'id'        => $staff['staffid'],
+                    'firstname' => $staff['firstname'],
+                    'lastname'  => $staff['lastname'],
+                    'email'     => $staff['email'],
+                ],
             ]);
         }
 
@@ -110,16 +111,17 @@ class LoginController extends ResourceController
         return $this->fail('Email ou mot de passe incorrect', 401);
     }
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // GET /api/user  — valide le JWT et retourne le payload
+    // ═══════════════════════════════════════════════════════════════════════
     public function getUser()
     {
         $auth = $this->request->getHeaderLine('Authorization');
-
         if (!$auth) {
             return $this->failUnauthorized('Token manquant');
         }
 
         $token = str_replace('Bearer ', '', $auth);
-
         try {
             $payload = JwtService::validate($token);
         } catch (\Exception $e) {

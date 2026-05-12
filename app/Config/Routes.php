@@ -67,6 +67,10 @@ $routes->group('api', function ($routes) {
     $routes->get(   'proposals/pdf/(:num)',        'ProposalController::pdf/$1');
     $routes->post(  'proposals/convert/(:num)',    'ProposalController::convert/$1');
     $routes->delete('proposals/delete/(:num)',     'ProposalController::delete/$1');
+    // ── Tâches & Rappels liés à une offre
+    $routes->get( 'proposals/(:num)/tasks',        'ProposalController::tasks/$1');
+    $routes->get( 'proposals/(:num)/reminders',    'ProposalController::reminders/$1');
+    $routes->post('proposals/(:num)/reminders',    'ProposalController::addReminder/$1');
 
     // ── Données formulaire
     $routes->get('proposals/clients',      'ProposalController::clients');
@@ -105,11 +109,11 @@ $routes->group('api', function ($routes) {
     // ========================================
     // Departements
     // ========================================
-
     $routes->get(   'tickets/departments/all',           'TicketController::getAllDepartments');
     $routes->post(  'tickets/departments/create',        'TicketController::createDepartment');
     $routes->post('tickets/departments/update/(:num)', 'TicketController::updateDepartment/$1');
     $routes->post('tickets/departments/delete/(:num)', 'TicketController::deleteDepartment/$1');
+
     // ========================================
     // ESTIMATES (DEVIS)
     // ========================================
@@ -125,27 +129,31 @@ $routes->group('api', function ($routes) {
     $routes->post(  'estimates/change-status',         'EstimateController::changeStatus');
     $routes->post(  'estimates/send-email/(:num)',     'EstimateController::sendEmail/$1');
     $routes->post(  'estimates/convert/(:num)',        'EstimateController::convert/$1');
+    // ── Tâches & Rappels liés à un devis
+    $routes->get( 'estimates/(:num)/tasks',            'EstimateController::tasks/$1');
+    $routes->get( 'estimates/(:num)/reminders',        'EstimateController::reminders/$1');
+    $routes->post('estimates/(:num)/reminders',        'EstimateController::addReminder/$1');
 
     // ── Client
     $routes->get( 'estimates/client-list',            'EstimateController::clientList');
     $routes->get( 'estimates/client-detail/(:num)',   'EstimateController::clientDetail/$1');
     $routes->post('estimates/client-respond/(:num)',  'EstimateController::clientRespond/$1');
 
-     // ========================================
+    // ========================================
     // INVOICES (FACTURES)
     // ========================================
- 
+
     // ── Client
     $routes->get( 'invoices/client-list',          'InvoiceController::clientList');
     $routes->get( 'invoices/client-detail/(:num)', 'InvoiceController::clientDetail/$1');
     $routes->get( 'invoices/pdf/(:num)',            'InvoiceController::pdf/$1');
- 
+
     // ── Staff
     $routes->get(   'invoices/list',                'InvoiceController::list');
     $routes->get(   'invoices/next-number',         'InvoiceController::nextNumber');
     $routes->get(   'invoices/detail/(:num)',        'InvoiceController::detail/$1');
     $routes->get(   'invoices/pdf-download/(:num)', 'InvoiceController::pdfDownload/$1');
-    $routes->post(  'invoices/send-email/(:num)',   'InvoiceController::sendEmail/$1');   // ← AJOUTÉ
+    $routes->post(  'invoices/send-email/(:num)',   'InvoiceController::sendEmail/$1');
     $routes->post(  'invoices/create',              'InvoiceController::create');
     $routes->put(   'invoices/update/(:num)',        'InvoiceController::update/$1');
     $routes->delete('invoices/delete/(:num)',        'InvoiceController::delete/$1');
@@ -153,6 +161,11 @@ $routes->group('api', function ($routes) {
     $routes->get('invoices/countries',  'InvoiceController::countries');
     $routes->get('invoices/currencies', 'InvoiceController::currencies');
     $routes->get('invoices/staff-list', 'InvoiceController::staffList');
+    // ── Tâches & Rappels liés à une facture
+    $routes->get( 'invoices/(:num)/tasks',         'InvoiceController::tasks/$1');
+    $routes->get( 'invoices/(:num)/reminders',     'InvoiceController::reminders/$1');
+    $routes->post('invoices/(:num)/reminders',     'InvoiceController::addReminder/$1');
+
     // ========================================
     // PAYMENTS (RÈGLEMENTS)
     // ========================================
@@ -162,58 +175,142 @@ $routes->group('api', function ($routes) {
     $routes->post(  'payments/create',        'PaymentController::create');
     $routes->put(   'payments/update/(:num)', 'PaymentController::update/$1');
     $routes->delete('payments/delete/(:num)', 'PaymentController::delete/$1');
-     // ========================================
+
+    // ========================================
     // ITEMS
     // ⚠️  RÈGLE CRITIQUE : routes statiques AVANT (:num)
-    //     Sans ça, /items/groups → CodeIgniter cherche show('groups') → 404
     // ========================================
     $routes->get(   'items/search',            'ItemController::search');
     $routes->get(   'items/groups',            'ItemController::groups');
     $routes->get(   'items/taxes',             'ItemController::taxes');
     $routes->get(   'items/units',             'ItemController::units');
     $routes->get(   'items',                   'ItemController::index');
-    // ── Paramétrées APRÈS
     $routes->get(   'items/(:num)',            'ItemController::show/$1');
     $routes->post(  'items',                   'ItemController::create');
     $routes->put(   'items/(:num)',            'ItemController::update/$1');
     $routes->delete('items/(:num)',            'ItemController::delete/$1');
     $routes->post(  'items/(:num)/duplicate',  'ItemController::duplicate/$1');
- 
 
     // ========================================
-    // ─── À ajouter dans Routes.php, dans le groupe 'api', section TASKS ───────
-// ⚠️  DOIT être placé AVANT les routes paramétrées (:num)
+    // TASKS
+    // ⚠️ RÈGLE CRITIQUE : routes statiques AVANT (:num)
+    //    ET sous-routes paramétrées AVANT show/update/delete (:num) seul
+    // ========================================
+    $routes->get(   'tasks/related-documents',      'TaskController::relatedDocuments');
+    $routes->get(   'tasks/statuses',               'TaskController::statuses');
 
-$routes->get('tasks/related-documents', 'TaskController::relatedDocuments');
+    // ── Tâches achevées par client (pour liaison à une facture) ──────────────
+    // ⚠️ Route statique : DOIT être définie AVANT tasks/(:num)
+    $routes->get(   'tasks/completed',              'TaskController::completed');
 
-// La section tasks complète doit ressembler à :
+    $routes->get(   'tasks',                        'TaskController::index');
+    $routes->post(  'tasks',                        'TaskController::create');
 
-$routes->get(   'tasks',                       'TaskController::index');
-$routes->post(  'tasks',                       'TaskController::create');
-$routes->get(   'tasks/related-documents',     'TaskController::relatedDocuments'); // ← ICI
-$routes->post(  'tasks/(:num)/timer/start',    'TaskController::startTimer/$1');
-$routes->post(  'tasks/(:num)/timer/stop',     'TaskController::stopTimer/$1');
-$routes->post(  'tasks/(:num)/checklist',      'TaskController::addChecklist/$1');
-$routes->post(  'tasks/(:num)/comments',       'TaskController::addComment/$1');
-$routes->put(   'tasks/checklist/(:num)',       'TaskController::updateChecklist/$1');
-$routes->get(   'tasks/(:num)',                'TaskController::show/$1');
-$routes->put(   'tasks/(:num)',                'TaskController::update/$1');
-$routes->delete('tasks/(:num)',                'TaskController::delete/$1');
+    // ── Timer
+    $routes->post(  'tasks/(:num)/timer/start',     'TaskController::startTimer/$1');
+    $routes->post(  'tasks/(:num)/timer/stop',      'TaskController::stopTimer/$1');
+
+    // ── Checklist
+    $routes->get(   'tasks/(:num)/checklist',       'TaskController::getChecklist/$1');
+    $routes->post(  'tasks/(:num)/checklist',       'TaskController::addChecklist/$1');
+    $routes->put(   'tasks/checklist/(:num)',        'TaskController::updateChecklist/$1');
+    $routes->delete('tasks/checklist/(:num)',        'TaskController::deleteChecklist/$1');
+
+    // ── Fichiers
+    $routes->get(   'tasks/files/(:num)/download',  'TaskController::downloadFile/$1');
+    $routes->get(   'tasks/(:num)/files',           'TaskController::getFiles/$1');
+    $routes->post(  'tasks/(:num)/files',           'TaskController::uploadFile/$1');
+
+    // ── Commentaires
+    $routes->get(   'tasks/(:num)/comments',        'TaskController::getComments/$1');
+    $routes->post(  'tasks/(:num)/comments',        'TaskController::addComment/$1');
+
+    // ── Rappels
+    $routes->get(   'tasks/(:num)/reminders',       'TaskController::getReminders/$1');
+    $routes->post(  'tasks/(:num)/reminders',       'TaskController::addReminder/$1');
+
+    // ── CRUD principal (en dernier car (:num) seul est le plus générique)
+    $routes->get(   'tasks/(:num)',                 'TaskController::show/$1');
+    $routes->put(   'tasks/(:num)',                 'TaskController::update/$1');
+    $routes->delete('tasks/(:num)',                 'TaskController::delete/$1');
+
     // ========================================
     // SIGNATURE
     // ========================================
     $routes->post('signature/save',          'SignatureController::save');
     $routes->get( 'signature/(:any)/(:num)', 'SignatureController::get/$1/$2');
- 
 
     // ── Stripe (paiement en ligne)
     $routes->post('payments/stripe/create-intent', 'PaymentController::createStripeIntent');
     $routes->post('payments/stripe/confirm',        'PaymentController::confirmStripePayment');
-    $routes->get('invoices/generate-ref', 'InvoiceController::generateRef');
+
+    $routes->get('invoices/generate-ref',  'InvoiceController::generateRef');
     $routes->get('estimates/generate-ref', 'EstimateController::generateRef');
-    $routes->get('payments/generate-ref', 'PaymentController::generateRef');
-    $routes->get('staff/list', 'StaffController::list');
-    $routes->get('tasks/statuses',             'TaskController::statuses');
+    $routes->get('payments/generate-ref',  'PaymentController::generateRef');
+    $routes->get('staff/list',             'StaffController::list');
     $routes->get('clients',        'ClientController::index');
     $routes->get('clients/(:num)', 'ClientController::show/$1');
+
+// ========================================    // CREDIT NOTES (NOTES DE CRÉDIT)
+    // ========================================
+    $routes->get('credit-notes/list',                'CreditNoteController::list');
+    $routes->get('credit-notes/detail',              'CreditNoteController::detail');
+    $routes->get('credit-notes/next-number',         'CreditNoteController::nextNumber');
+    $routes->get('credit-notes/creditable-invoices', 'CreditNoteController::creditableInvoices');
+    $routes->get('credit-notes/payment-modes',       'CreditNoteController::paymentModes');
+    $routes->get('credit-notes/pdf/(:num)',          'CreditNoteController::pdf/$1');
+    $routes->post('credit-notes/create',             'CreditNoteController::create');
+    $routes->put( 'credit-notes/update/(:num)',     'CreditNoteController::update/$1');
+    $routes->post('credit-notes/apply-credits',      'CreditNoteController::applyCredits');
+    $routes->post('credit-notes/create-refund',      'CreditNoteController::createRefund');
+    $routes->post('credit-notes/delete-refund',      'CreditNoteController::deleteRefund');
+    $routes->post('credit-notes/delete-applied-credit','CreditNoteController::deleteAppliedCredit');
+    $routes->post('credit-notes/mark-void',          'CreditNoteController::markVoid');
+    $routes->post('credit-notes/mark-open',          'CreditNoteController::markOpen');
+    $routes->post('credit-notes/send-email/(:num)',  'CreditNoteController::sendEmail/$1');
+    $routes->post('credit-notes/delete',             'CreditNoteController::delete');
+    // ========================================
+    // EXPENSES (DÉPENSES)
+    // ⚠️ RÈGLE CRITIQUE : toutes les routes statiques AVANT les routes paramétrées (:num)
+    // ========================================
+
+    // ── Routes statiques (doivent être définies EN PREMIER) ──────────────────
+    $routes->get( 'expenses/list',           'ExpenseController::list');
+    $routes->get( 'expenses/categories',     'ExpenseController::categories');
+    $routes->post('expenses/categories',     'ExpenseController::createCategory');
+    $routes->post('expenses/create',         'ExpenseController::create');
+    $routes->get( 'expenses/staff',          'ExpenseController::staffList');
+    $routes->get( 'expenses/generate-ref',   'ExpenseController::generateRef');
+    $routes->get( 'expenses/payment-modes',  'ExpenseController::paymentModes');
+    $routes->get( 'expenses/currencies',     'ExpenseController::currencies');
+    $routes->get( 'expenses/taxes',          'ExpenseController::taxes');
+    $routes->get( 'expenses/clients',        'ExpenseController::clients');
+
+    // ── Routes paramétrées APRÈS les routes statiques ────────────────────────
+    $routes->get   ('expenses/(:num)',                    'ExpenseController::detail/$1');
+    $routes->put   ('expenses/(:num)',                    'ExpenseController::update/$1');
+    $routes->delete('expenses/(:num)',                    'ExpenseController::delete/$1');
+    $routes->post  ('expenses/(:num)/receipt',            'ExpenseController::uploadReceipt/$1');
+    $routes->post  ('expenses/(:num)/convert-to-invoice', 'ExpenseController::convertToInvoice/$1');
+    $routes->get   ('expenses/(:num)/tasks',              'ExpenseController::tasks/$1');
+    $routes->post  ('expenses/(:num)/tasks',              'ExpenseController::createTask/$1');
+    $routes->get   ('expenses/(:num)/reminders',          'ExpenseController::reminders/$1');
+    $routes->post  ('expenses/(:num)/reminders',          'ExpenseController::createReminder/$1');
+
+    // ── Reminder CRUD (indépendant de la dépense) ────────────────────────────
+    $routes->get   ('reminders/check',  'ReminderController::check');   // ← AVANT (:num)
+    $routes->put   ('reminders/(:num)', 'ExpenseController::updateReminder/$1');
+    $routes->delete('reminders/(:num)', 'ExpenseController::deleteReminder/$1');
+        // ========================================
+    // NOTIFICATIONS (FCM Firebase)
+    // ⚠️ Routes statiques AVANT les routes paramétrées (:num)
+    // ========================================
+$routes->post('notifications/register-token', 'NotificationController::registerToken');
+    $routes->get( 'notifications/unread-count',   'NotificationController::unreadCount');
+    $routes->put( 'notifications/read-all',       'NotificationController::markAllRead');
+    $routes->get( 'notifications',                'NotificationController::index');
+    $routes->put( 'notifications/(:num)/read',    'NotificationController::markRead/$1');
+    $routes->delete('notifications/(:num)',       'NotificationController::delete/$1');
+    // ── Reminder CRUD (indépendant de la dépense) ────────────────────────────
+
 });
