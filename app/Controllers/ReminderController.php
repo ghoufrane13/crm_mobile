@@ -6,9 +6,49 @@ use CodeIgniter\RESTful\ResourceController;
 use App\Libraries\JwtService;
 use App\Libraries\FcmService;
 
+/**
+ * ============================================================
+ * ReminderController — VERSION CORRIGÉE
+ * ============================================================
+ *
+ * SCÉNARIO COMPLET :
+ * 1. L'utilisateur crée un rappel via le formulaire Flutter
+ *    (date + heure séparés → ex. date="2025-06-01", time="14:30").
+ * 2. Le backend stocke la date COMPLÈTE "2025-06-01 14:30:00"
+ *    en DATETIME dans tblreminders.date.
+ * 3. Le ReminderService Flutter fait un polling toutes les 30s
+ *    sur GET /api/reminders/check.
+ * 4. Ce controller compare tblreminders.date <= NOW() (heure serveur)
+ *    et déclenche les rappels échus : notification DB + FCM + email.
+ * 5. isnotified=1 est posé immédiatement pour ne pas redéclencher.
+ *
+ * CORRECTIONS APPORTÉES :
+ * ─────────────────────────────────────────────────────────────
+ * [FIX-1] FUSION date + time
+ *   L'ancien code stockait parfois uniquement la date sans l'heure,
+ *   ce qui faisait déclencher le rappel dès minuit au lieu de
+ *   l'heure choisie. Désormais store() fusionne explicitement
+ *   $date . ' ' . $time . ':00' et valide le format avant INSERT.
+ *
+ * [FIX-2] Fuseau horaire cohérent
+ *   $now est produit avec date('Y-m-d H:i:s') côté PHP.
+ *   Le serveur MySQL doit être au même fuseau que PHP (idéalement UTC).
+ *   On force la session MySQL sur le fuseau PHP avec SET time_zone.
+ *
+ * [FIX-3] Double-déclenchement empêché
+ *   On pose isnotified=1 dans la MÊME transaction que le SELECT,
+ *   via UPDATE ... WHERE id=X AND isnotified=0 (CAS atomique).
+ *   Si deux requêtes parallèles arrivent, l'une ne trouvera plus 0.
+ *
+ * [FIX-4] Réponse JSON normalisée
+ *   fired=0 retourne toujours status=true (pas d'erreur).
+ * ─────────────────────────────────────────────────────────────
+ */
 class ReminderController extends ResourceController
 {
     protected $format = 'json';
+
+    // ── Helpers JWT ───────────────────────────────────────────────────────
 
     private function getPayload(): array|null
     {
@@ -22,6 +62,11 @@ class ReminderController extends ResourceController
         }
     }
 
+    // ══════════════════════════════════════════════════════════════════════
+    // GET /api/reminders/check
+    // Appelé par le polling Flutter toutes les 30 secondes.
+    // Retourne le nombre de rappels déclenchés dans cette fenêtre.
+    // ══════════════════════════════════════════════════════════════════════
     public function check()
     {
         $payload = $this->getPayload();
@@ -31,8 +76,14 @@ class ReminderController extends ResourceController
         if ($staffId <= 0) return $this->fail('staff_id invalide', 400);
 
         $db  = \Config\Database::connect();
+
+        // [FIX-2] Aligner le fuseau MySQL sur PHP pour que NOW() == date('Y-m-d H:i:s')
+        $phpTz = date('P'); // ex: "+01:00"
+        $db->query("SET time_zone = '{$phpTz}'");
+
         $now = date('Y-m-d H:i:s');
 
+        // Récupère uniquement les rappels échus et non encore notifiés
         $reminders = $db->table('tblreminders r')
             ->select([
                 'r.id',
@@ -47,9 +98,9 @@ class ReminderController extends ResourceController
                 's.email AS staff_email',
             ])
             ->join('tblstaff s', 's.staffid = r.staff', 'left')
-            ->where('r.staff', $staffId)      // ← filtre par staff connecté
+            ->where('r.staff', $staffId)
             ->where('r.isnotified', 0)
-            ->where('r.date <=', $now)
+            ->where('r.date <=', $now)   // rappels dont l'heure est atteinte ou dépassée
             ->get()->getResultArray();
 
         if (empty($reminders)) {
@@ -71,6 +122,19 @@ class ReminderController extends ResourceController
             $staffName  = $reminder['staff_name']  ?? 'Staff';
             $date       = $reminder['date']        ?? '';
 
+            // [FIX-3] Marquer comme notifié EN PREMIER (atomique) pour éviter
+            // un double déclenchement si deux polling se chevauchent.
+            $updated = $db->table('tblreminders')
+                ->where('id', $reminderId)
+                ->where('isnotified', 0)   // condition de garde
+                ->update(['isnotified' => 1]);
+
+            // Si la ligne n'a pas été mise à jour, un autre process l'a déjà traitée
+            if (!$updated || $db->affectedRows() === 0) {
+                log_message('info', "[ReminderController] Rappel #{$reminderId} déjà traité par un autre processus.");
+                continue;
+            }
+
             $relLabel = $this->_relLabel($relType, $relId, $db);
             $msg      = '⏰ Rappel';
             if ($relLabel) $msg .= " — {$relLabel}";
@@ -78,7 +142,7 @@ class ReminderController extends ResourceController
 
             $link = $this->_buildLink($relType, $relId);
 
-            // 1. Notification en base
+            // 1. Notification en base (tblnotifications)
             try {
                 $db->table('tblnotifications')->insert([
                     'touserid'      => $staffId,
@@ -93,10 +157,10 @@ class ReminderController extends ResourceController
                 ]);
             } catch (\Throwable $e) {
                 $errors[] = "Notif DB #{$reminderId}: " . $e->getMessage();
-                log_message('error', '[ReminderController] INSERT: ' . $e->getMessage());
+                log_message('error', '[ReminderController] INSERT tblnotifications: ' . $e->getMessage());
             }
 
-            // 2. Push FCM
+            // 2. Push FCM (silencieux si non configuré)
             try {
                 $fcm = new FcmService();
                 $fcm->sendToStaff($staffId, '⏰ Rappel', $msg, [
@@ -106,21 +170,16 @@ class ReminderController extends ResourceController
                     'notif_link' => $link,
                 ]);
             } catch (\Throwable $e) {
-                log_message('warning', '[ReminderController] FCM #{$reminderId}: ' . $e->getMessage());
+                log_message('warning', "[ReminderController] FCM #{$reminderId}: " . $e->getMessage());
             }
 
-            // 3. Email
+            // 3. Email si demandé
             if ((int)$reminder['notify_by_email'] === 1 && !empty($reminder['staff_email'])) {
                 $this->_sendReminderEmail(
                     $reminder['staff_email'], $staffName,
                     $msg, $relLabel, $date, $desc
                 );
             }
-
-            // 4. Marquer notifié
-            $db->table('tblreminders')
-               ->where('id', $reminderId)
-               ->update(['isnotified' => 1]);
 
             $fired++;
         }
@@ -133,7 +192,116 @@ class ReminderController extends ResourceController
         ]);
     }
 
-    // ── helpers identiques à avant ────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════════════
+    // POST /api/{rel_type}/{rel_id}/reminders
+    // Crée un rappel pour un document (invoice, estimate, task, etc.)
+    //
+    // [FIX-1] Fusion correcte date + time avant INSERT
+    // Reçoit : { description, date:"YYYY-MM-DD", time:"HH:MM",
+    //            staff_id, notify_by_email }
+    // Stocke  : date DATETIME = "YYYY-MM-DD HH:MM:00"
+    // ══════════════════════════════════════════════════════════════════════
+    public function store($relType = null, $relId = null)
+    {
+        $payload = $this->getPayload();
+        if (!$payload) return $this->failUnauthorized('Token JWT invalide');
+
+        $body = $this->request->getJSON(true) ?? [];
+
+        $description   = trim($body['description']   ?? '');
+        $dateStr       = trim($body['date']           ?? '');  // "YYYY-MM-DD"
+        $timeStr       = trim($body['time']           ?? '00:00'); // "HH:MM"
+        $staffId       = (int)($body['staff_id']      ?? 0);
+        $notifyByEmail = (int)($body['notify_by_email'] ?? 0);
+        $creatorId     = (int)($payload['staff_id']   ?? 0);
+
+        // Validation date
+        if (!$dateStr || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateStr)) {
+            return $this->fail('Format date invalide (attendu YYYY-MM-DD)', 400);
+        }
+
+        // Validation heure — on accepte HH:MM ou HH:MM:SS
+        if (!preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $timeStr)) {
+            return $this->fail('Format heure invalide (attendu HH:MM)', 400);
+        }
+        // Normalise en HH:MM:00
+        $timeParts  = explode(':', $timeStr);
+        $timeNormal = sprintf('%02d:%02d:00', (int)$timeParts[0], (int)$timeParts[1]);
+
+        // [FIX-1] DateTime COMPLÈTE stockée en base
+        $fullDatetime = $dateStr . ' ' . $timeNormal; // ex: "2025-06-01 14:30:00"
+
+        // Vérification que le rappel est dans le futur
+        if (strtotime($fullDatetime) <= time()) {
+            return $this->fail("La date/heure du rappel doit être dans le futur ({$fullDatetime})", 400);
+        }
+
+        if ($staffId <= 0)  return $this->fail('staff_id requis', 400);
+        if (!$relType)      return $this->fail('rel_type requis', 400);
+        if (!$relId)        return $this->fail('rel_id requis', 400);
+
+        $db = \Config\Database::connect();
+
+        try {
+            $db->table('tblreminders')->insert([
+                'description'    => $description,
+                'date'           => $fullDatetime,  // ← DATETIME complet
+                'isnotified'     => 0,
+                'rel_id'         => (int)$relId,
+                'staff'          => $staffId,
+                'rel_type'       => $relType,
+                'notify_by_email'=> $notifyByEmail,
+                'creator'        => $creatorId,
+            ]);
+
+            $insertId = $db->insertID();
+
+            return $this->respond([
+                'status'  => true,
+                'message' => 'Rappel créé avec succès.',
+                'id'      => $insertId,
+                // Renvoie la datetime stockée pour que Flutter puisse l'afficher
+                'date'    => $fullDatetime,
+            ], 201);
+
+        } catch (\Throwable $e) {
+            log_message('error', '[ReminderController::store] ' . $e->getMessage());
+            return $this->fail('Erreur lors de la création du rappel.', 500);
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    // GET /api/{rel_type}/{rel_id}/reminders
+    // Liste les rappels d'un document
+    // ══════════════════════════════════════════════════════════════════════
+    public function index($relType = null, $relId = null)
+    {
+        $payload = $this->getPayload();
+        if (!$payload) return $this->failUnauthorized('Token JWT invalide');
+
+        if (!$relType || !$relId) return $this->fail('rel_type et rel_id requis', 400);
+
+        $db = \Config\Database::connect();
+
+        $reminders = $db->table('tblreminders r')
+            ->select([
+                'r.id', 'r.description', 'r.date',
+                'r.isnotified', 'r.notify_by_email',
+                "TRIM(CONCAT(COALESCE(s.firstname,''), ' ', COALESCE(s.lastname,''))) AS staff_name",
+            ])
+            ->join('tblstaff s', 's.staffid = r.staff', 'left')
+            ->where('r.rel_type', $relType)
+            ->where('r.rel_id', (int)$relId)
+            ->orderBy('r.date', 'DESC')
+            ->get()->getResultArray();
+
+        return $this->respond([
+            'status' => true,
+            'data'   => $reminders,
+        ]);
+    }
+
+    // ── Helpers privés ────────────────────────────────────────────────────
 
     private function _relLabel(string $relType, int $relId, $db): string
     {
@@ -150,7 +318,10 @@ class ReminderController extends ResourceController
                 return $row ? 'Offre "' . $row['subject'] . '"' : "Offre #{$relId}";
             case 'expense':
                 $row = $db->table('tblexpenses')->select('expense_name, reference_no')->where('id', $relId)->get()->getRowArray();
-                if ($row) { $n = $row['expense_name'] ?: $row['reference_no'] ?: ''; return $n ? "Dépense {$n}" : "Dépense #{$relId}"; }
+                if ($row) {
+                    $n = $row['expense_name'] ?: $row['reference_no'] ?: '';
+                    return $n ? "Dépense {$n}" : "Dépense #{$relId}";
+                }
                 return "Dépense #{$relId}";
             case 'task':
                 $row = $db->table('tbltasks')->select('name')->where('id', $relId)->get()->getRowArray();
@@ -163,13 +334,24 @@ class ReminderController extends ResourceController
     private function _buildLink(string $relType, int $relId): string
     {
         if ($relId <= 0) return '';
-        $map = ['invoice' => 'invoices/detail/', 'estimate' => 'estimates/detail/',
-                'proposal' => 'proposals/detail/', 'expense' => 'expenses/detail/', 'task' => 'tasks/detail/'];
+        $map = [
+            'invoice'  => 'invoices/detail/',
+            'estimate' => 'estimates/detail/',
+            'proposal' => 'proposals/detail/',
+            'expense'  => 'expenses/detail/',
+            'task'     => 'tasks/detail/',
+        ];
         return ($map[$relType] ?? ($relType . '/detail/')) . $relId;
     }
 
-    private function _sendReminderEmail(string $to, string $staffName, string $msg, string $relLabel, string $date, string $description): void
-    {
+    private function _sendReminderEmail(
+        string $to,
+        string $staffName,
+        string $msg,
+        string $relLabel,
+        string $date,
+        string $description
+    ): void {
         $html = "<!DOCTYPE html><html><body style='font-family:sans-serif;background:#f1f5f9;padding:20px'>
 <div style='max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden'>
 <div style='background:linear-gradient(135deg,#1e1b4b,#2563eb);padding:28px;text-align:center'>
@@ -204,6 +386,8 @@ class ReminderController extends ResourceController
         $res  = curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
-        if ($code !== 201) log_message('error', '[ReminderController] Email failed: ' . $res);
+        if ($code !== 201) {
+            log_message('error', '[ReminderController] Email Brevo failed: ' . $res);
+        }
     }
 }

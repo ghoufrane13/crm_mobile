@@ -2,9 +2,10 @@
 
 namespace App\Controllers;
 
-use CodeIgniter\RESTful\ResourceController;
 use App\Models\ProposalModel;
+use App\Models\SignatureModel;
 use App\Libraries\FcmService;
+use CodeIgniter\RESTful\ResourceController;
 use TCPDF;
 
 class ProposalController extends ResourceController
@@ -651,7 +652,21 @@ class ProposalController extends ResourceController
         $proposal['currency_symbol'] = $currencyRow['symbol'] ?? '';
         $proposal['currency_name']   = $currencyRow['name']   ?? '';
 
-        return $this->respond(['status' => true, 'pdf' => $this->_generatePdfBase64($proposal)]);
+        // ── Charger la signature ──────────────────────────────────────
+        $signatureB64 = null;
+        try {
+            $sig = (new SignatureModel())->getSignature('proposal', (int)$id);
+            if ($sig && !empty($sig['signature_b64'])) {
+                $signatureB64 = $sig['signature_b64'];
+            }
+        } catch (\Throwable $e) {
+            log_message('error', 'Signature load error (pdf): ' . $e->getMessage());
+        }
+
+        return $this->respond([
+            'status' => true,
+            'pdf'    => $this->_generatePdfBase64($proposal, $signatureB64),
+        ]);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -682,7 +697,21 @@ class ProposalController extends ResourceController
         $proposal['currency_symbol'] = $currencyRow['symbol'] ?? '';
         $proposal['currency_name']   = $currencyRow['name']   ?? '';
 
-        return $this->respond(['status' => true, 'pdf' => $this->_generatePdfBase64($proposal)]);
+        // ── Charger la signature ──────────────────────────────────────
+        $signatureB64 = null;
+        try {
+            $sig = (new SignatureModel())->getSignature('proposal', (int)$id);
+            if ($sig && !empty($sig['signature_b64'])) {
+                $signatureB64 = $sig['signature_b64'];
+            }
+        } catch (\Throwable $e) {
+            log_message('error', 'Signature load error (clientPdf): ' . $e->getMessage());
+        }
+
+        return $this->respond([
+            'status' => true,
+            'pdf'    => $this->_generatePdfBase64($proposal, $signatureB64),
+        ]);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -803,7 +832,6 @@ class ProposalController extends ResourceController
 
     // ═══════════════════════════════════════════════════════════════════════
     // POST /api/proposals/:id/reminders
-    // FIX : staff_id requis et validé — plus de fallback à 1
     // ═══════════════════════════════════════════════════════════════════════
     public function addReminder($id = null)
     {
@@ -816,7 +844,6 @@ class ProposalController extends ResourceController
         $hh      = str_pad($parts[0] ?? '09', 2, '0', STR_PAD_LEFT);
         $mm      = str_pad($parts[1] ?? '00', 2, '0', STR_PAD_LEFT);
 
-        // FIX : plus de fallback à 1 — staff_id est obligatoire
         $staffId = (int)($data['staff_id'] ?? 0);
         if ($staffId <= 0) {
             return $this->respond(['status' => false, 'message' => 'staff_id requis et doit être > 0'], 400);
@@ -1145,10 +1172,15 @@ class ProposalController extends ResourceController
         return $list;
     }
 
-    private function _generatePdfBase64(array $proposal): string
+    // ═══════════════════════════════════════════════════════════════════════
+    // PRIVÉ — Génère le PDF en base64
+    //         $signatureB64 : string base64 PNG (avec ou sans préfixe data:…)
+    //                         ou null si document non signé
+    // ═══════════════════════════════════════════════════════════════════════
+    private function _generatePdfBase64(array $proposal, ?string $signatureB64 = null): string
     {
-        $items = $proposal['items'] ?? [];
-        $sym   = $proposal['currency_symbol'] ?? '';
+        $items     = $proposal['items'] ?? [];
+        $sym       = $proposal['currency_symbol'] ?? '';
         $proNumber = 'PRO-' . str_pad($proposal['id'], 6, '0', STR_PAD_LEFT);
 
         $addressParts = array_filter([
@@ -1158,45 +1190,69 @@ class ProposalController extends ResourceController
         $addressLine = implode(', ', $addressParts);
 
         $pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
-        $pdf->setPrintHeader(false); $pdf->setPrintFooter(false);
-        $pdf->SetCreator('CRM Mobile'); $pdf->SetTitle($proNumber);
-        $pdf->SetMargins(15, 15, 15); $pdf->SetAutoPageBreak(true, 20);
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+        $pdf->SetCreator('CRM Mobile');
+        $pdf->SetTitle($proNumber);
+        $pdf->SetMargins(15, 15, 15);
+        $pdf->SetAutoPageBreak(true, 20);
         $pdf->AddPage();
 
-        $pageW = 210; $mL = 15; $mR = 15; $contentW = $pageW - $mL - $mR;
+        $pageW    = 210;
+        $mL       = 15;
+        $mR       = 15;
+        $contentW = $pageW - $mL - $mR;
 
-        $pdf->SetFont('helvetica', 'B', 9); $pdf->SetTextColor(50, 50, 50);
-        $pdf->SetXY($mL, 15); $pdf->Cell($contentW, 5, 'To', 0, 1, 'R');
-        $pdf->SetXY($mL, $pdf->GetY()); $pdf->Cell($contentW, 5, $proposal['proposal_to'] ?? '', 0, 1, 'R');
-        $pdf->SetFont('helvetica', '', 8); $pdf->SetTextColor(80, 80, 80);
+        // ── En-tête destinataire ────────────────────────────────────────
+        $pdf->SetFont('helvetica', 'B', 9);
+        $pdf->SetTextColor(50, 50, 50);
+        $pdf->SetXY($mL, 15);
+        $pdf->Cell($contentW, 5, 'To', 0, 1, 'R');
+        $pdf->SetXY($mL, $pdf->GetY());
+        $pdf->Cell($contentW, 5, $proposal['proposal_to'] ?? '', 0, 1, 'R');
+        $pdf->SetFont('helvetica', '', 8);
+        $pdf->SetTextColor(80, 80, 80);
         foreach (array_filter([$addressLine, $proposal['phone'] ?? '', $proposal['email'] ?? '']) as $line) {
-            $pdf->SetXY($mL, $pdf->GetY()); $pdf->Cell($contentW, 4, $line, 0, 1, 'R');
+            $pdf->SetXY($mL, $pdf->GetY());
+            $pdf->Cell($contentW, 4, $line, 0, 1, 'R');
         }
 
+        // ── Titre & sujet ───────────────────────────────────────────────
         $afterY = $pdf->GetY() + 4;
-        $pdf->SetFont('helvetica', 'B', 18); $pdf->SetTextColor(30, 30, 30);
-        $pdf->SetXY($mL, $afterY); $pdf->Cell(0, 10, '# ' . $proNumber, 0, 1, 'L');
-        $pdf->SetFont('helvetica', '', 10); $pdf->SetTextColor(60, 60, 60);
+        $pdf->SetFont('helvetica', 'B', 18);
+        $pdf->SetTextColor(30, 30, 30);
+        $pdf->SetXY($mL, $afterY);
+        $pdf->Cell(0, 10, '# ' . $proNumber, 0, 1, 'L');
+        $pdf->SetFont('helvetica', '', 10);
+        $pdf->SetTextColor(60, 60, 60);
         $pdf->SetXY($mL, $pdf->GetY());
         $pdf->MultiCell($contentW, 5, $proposal['subject'] ?? '', 0, 'L', false, 1);
 
+        // ── Date / validité ─────────────────────────────────────────────
         $pdf->SetY($pdf->GetY() + 4);
-        $pdf->SetFont('helvetica', '', 9); $pdf->SetTextColor(50, 50, 50);
+        $pdf->SetFont('helvetica', '', 9);
+        $pdf->SetTextColor(50, 50, 50);
         foreach ([['Date', $proposal['date'] ?? ''], ['Open Till', $proposal['open_till'] ?? '']] as [$l, $v]) {
-            $pdf->SetXY($mL, $pdf->GetY()); $pdf->Cell(0, 5, "$l: $v", 0, 1, 'L');
+            $pdf->SetXY($mL, $pdf->GetY());
+            $pdf->Cell(0, 5, "$l: $v", 0, 1, 'L');
         }
 
+        // ── Tableau articles ────────────────────────────────────────────
         $pdf->SetY($pdf->GetY() + 4);
-        $colW = [10, 90, 18, 22, 18, 22];
+        $colW    = [10, 90, 18, 22, 18, 22];
         $headers = ['#', 'Item', 'Qty', 'Rate', 'Tax', 'Amount'];
         $aligns  = ['C', 'L', 'C', 'R', 'C', 'R'];
         $pdf->SetFillColor(245, 245, 245);
-        $pdf->SetFont('helvetica', 'B', 9); $pdf->SetTextColor(50, 50, 50);
+        $pdf->SetFont('helvetica', 'B', 9);
+        $pdf->SetTextColor(50, 50, 50);
         $pdf->SetXY($mL, $pdf->GetY());
-        foreach ($headers as $hi => $h) $pdf->Cell($colW[$hi], 7, $h, 'B', 0, $aligns[$hi], true);
+        foreach ($headers as $hi => $h) {
+            $pdf->Cell($colW[$hi], 7, $h, 'B', 0, $aligns[$hi], true);
+        }
         $pdf->Ln();
 
-        $rowNum = 0; $pdf->SetFont('helvetica', '', 9);
+        $rowNum = 0;
+        $pdf->SetFont('helvetica', '', 9);
         foreach ($items as $item) {
             $rowNum++;
             $qty     = (float)($item['qty']     ?? 0);
@@ -1207,13 +1263,16 @@ class ProposalController extends ResourceController
             $taxLabel = $taxrate > 0 ? number_format($taxrate, 0) . '%' : '0%';
             $fill = ($rowNum % 2 === 0) ? [250, 250, 250] : [255, 255, 255];
             $pdf->SetFillColor($fill[0], $fill[1], $fill[2]);
-            $yRow = $pdf->GetY(); $pdf->SetXY($mL, $yRow);
+            $yRow = $pdf->GetY();
+            $pdf->SetXY($mL, $yRow);
             $pdf->Cell($colW[0], 8, $rowNum, 'B', 0, 'C', true);
-            $pdf->SetFont('helvetica', 'B', 9); $pdf->SetTextColor(30, 30, 30);
+            $pdf->SetFont('helvetica', 'B', 9);
+            $pdf->SetTextColor(30, 30, 30);
             $xItem = $pdf->GetX();
             $pdf->Cell($colW[1], 8, '', 'B', 0, 'L', true);
             $pdf->MultiCell($colW[1], 4, $item['description'] ?? '', 0, 'L', false, 0, $xItem, $yRow + 2);
-            $pdf->SetFont('helvetica', '', 9); $pdf->SetTextColor(50, 50, 50);
+            $pdf->SetFont('helvetica', '', 9);
+            $pdf->SetTextColor(50, 50, 50);
             $pdf->SetXY($mL + $colW[0] + $colW[1], $yRow);
             $pdf->Cell($colW[2], 8, $qtyStr,                'B', 0, 'C', true);
             $pdf->Cell($colW[3], 8, $this->_fmtNum($rate),  'B', 0, 'R', true);
@@ -1222,38 +1281,171 @@ class ProposalController extends ResourceController
             $pdf->Ln();
         }
 
+        // ── Totaux ──────────────────────────────────────────────────────
         $pdf->SetY($pdf->GetY() + 2);
-        $lW = 40; $vW = 30; $sX = $pageW - $mR - $lW - $vW;
+        $lW = 40; $vW = 30;
+        $sX = $pageW - $mR - $lW - $vW;
         $totalsRows = [['Sub Total', (float)($proposal['subtotal'] ?? 0), false]];
         if ((float)($proposal['total_tax']      ?? 0) > 0)
-            $totalsRows[] = ['Tax',      (float)$proposal['total_tax'],       false];
+            $totalsRows[] = ['Tax',      (float)$proposal['total_tax'],      false];
         if ((float)($proposal['discount_total'] ?? 0) > 0)
             $totalsRows[] = ['Discount', -(float)$proposal['discount_total'], false];
         $totalsRows[] = ['Total', (float)($proposal['total'] ?? 0), true];
         foreach ($totalsRows as [$label, $val, $bold]) {
             $pdf->SetFillColor(245, 245, 245);
-            $pdf->SetFont('helvetica', $bold ? 'B' : '', 9); $pdf->SetTextColor(50, 50, 50);
+            $pdf->SetFont('helvetica', $bold ? 'B' : '', 9);
+            $pdf->SetTextColor(50, 50, 50);
             $pdf->SetXY($sX, $pdf->GetY());
-            $pdf->Cell($lW, 6, $label,                       '', 0, 'R', $bold);
-            $pdf->Cell($vW, 6, $sym . $this->_fmtNum($val), '', 1, 'R', $bold);
+            $pdf->Cell($lW, 6, $label,                        '', 0, 'R', $bold);
+            $pdf->Cell($vW, 6, $sym . $this->_fmtNum($val),  '', 1, 'R', $bold);
         }
 
-        $pdf->SetY($pdf->GetY() + 12);
-        $pdf->SetFont('helvetica', '', 9); $pdf->SetTextColor(60, 60, 60);
-        $pdf->SetXY($mL, $pdf->GetY());
-        $pdf->Cell(0, 5, 'Authorized Signature  ________________________', 0, 1, 'L');
+        // ══════════════════════════════════════════════════════════════════
+        // SECTION SIGNATURE
+        // ══════════════════════════════════════════════════════════════════
+        $pdf->SetY($pdf->GetY() + 14);
+
+        if ($signatureB64 !== null) {
+            // ── Offre SIGNÉE : affichage de l'image + métadonnées ─────────
+
+            // Nettoyer le préfixe data:image/png;base64, si présent
+            $rawB64 = $signatureB64;
+            if (str_contains($rawB64, ',')) {
+                $rawB64 = explode(',', $rawB64, 2)[1];
+            }
+
+            try {
+                $imgBytes = base64_decode($rawB64);
+
+                // Dimensions du cadre signature (côté gauche)
+                $sigBoxX = $mL;
+                $sigBoxY = $pdf->GetY();
+                $sigBoxW = 85;
+                $sigBoxH = 28;
+
+                // Fond blanc + bordure arrondie bleue
+                $pdf->SetFillColor(240, 244, 255);
+                $pdf->SetDrawColor(37, 99, 235);   // _grad2
+                $pdf->RoundedRect($sigBoxX, $sigBoxY, $sigBoxW, $sigBoxH, 2.5, '1111', 'DF');
+
+                // Image de la signature dans le cadre (padding 3 mm)
+                $pdf->Image(
+                    '@' . $imgBytes,        // @ = données binaires directes TCPDF
+                    $sigBoxX + 3,           // X
+                    $sigBoxY + 3,           // Y
+                    $sigBoxW - 6,           // largeur max
+                    $sigBoxH - 6,           // hauteur max
+                    'PNG',
+                    '',
+                    '',
+                    true,                   // resize
+                    150,                    // DPI
+                    '',
+                    false,
+                    false,
+                    0,
+                    true                    // fitbox
+                );
+
+                // Étiquette sous le cadre
+                $pdf->SetXY($sigBoxX, $sigBoxY + $sigBoxH + 1);
+                $pdf->SetFont('helvetica', 'I', 7);
+                $pdf->SetTextColor(100, 100, 140);
+                $pdf->Cell($sigBoxW, 4, 'Signature électronique', 0, 0, 'C');
+
+                // ── Métadonnées d'acceptation (colonne droite) ─────────────
+                $infoX = $sigBoxX + $sigBoxW + 8;
+                $infoW = $contentW - $sigBoxW - 8;
+
+                $pdf->SetXY($infoX, $sigBoxY);
+                $pdf->SetFont('helvetica', 'B', 8);
+                $pdf->SetTextColor(30, 30, 30);
+                $pdf->MultiCell($infoW, 5, 'Document accepté et signé électroniquement', 0, 'L', false, 1);
+
+                $pdf->SetFont('helvetica', '', 8);
+                $pdf->SetTextColor(80, 80, 80);
+
+                // Nom du signataire
+                $signerName = trim(
+                    ($proposal['acceptance_firstname'] ?? '') . ' ' .
+                    ($proposal['acceptance_lastname']  ?? '')
+                );
+                if ($signerName !== '') {
+                    $pdf->SetXY($infoX, $pdf->GetY());
+                    $pdf->Cell($infoW, 4, 'Signé par : ' . $signerName, 0, 1, 'L');
+                }
+                // Date d'acceptation
+                $acceptanceDate = trim($proposal['acceptance_date'] ?? '');
+                if ($acceptanceDate !== '') {
+                    try {
+                        $dt            = new \DateTime($acceptanceDate);
+                        $formattedDate = $dt->format('d/m/Y à H:i');
+                    } catch (\Throwable) {
+                        $formattedDate = $acceptanceDate;
+                    }
+                    $pdf->SetXY($infoX, $pdf->GetY());
+                    $pdf->Cell($infoW, 4, 'Date : ' . $formattedDate, 0, 1, 'L');
+                }
+
+
+            } catch (\Throwable $e) {
+                // Fallback texte si l'image est corrompue
+                log_message('error', 'PDF signature image error: ' . $e->getMessage());
+                $pdf->SetFont('helvetica', '', 9);
+                $pdf->SetTextColor(60, 60, 60);
+                $pdf->SetXY($mL, $pdf->GetY());
+                $pdf->Cell(0, 5, 'Signature enregistrée le ' . ($proposal['acceptance_date'] ?? ''), 0, 1, 'L');
+            }
+
+        } else {
+            // ── Offre NON SIGNÉE : zone vide pour signature manuscrite ─────
+
+            $pdf->SetFont('helvetica', '', 9);
+            $pdf->SetTextColor(60, 60, 60);
+            $pdf->SetXY($mL, $pdf->GetY());
+            $pdf->Cell(85, 5, 'Signature autorisée :', 0, 0, 'L');
+            $pdf->SetXY($mL + 85, $pdf->GetY());
+            $pdf->Cell(0, 5, 'Date : ____________________', 0, 1, 'R');
+
+            $pdf->SetY($pdf->GetY() + 3);
+
+            // Cadre pointillé pour signer
+            $pdf->SetDrawColor(180, 180, 210);
+            $pdf->SetFillColor(248, 250, 255);
+            $pdf->RoundedRect($mL, $pdf->GetY(), 85, 22, 2, '1111', 'DF');
+            $pdf->SetFont('helvetica', 'I', 7);
+            $pdf->SetTextColor(180, 180, 200);
+            $pdf->SetXY($mL, $pdf->GetY() + 9);
+            $pdf->Cell(85, 4, 'Signer ici', 0, 1, 'C');
+
+            $pdf->SetY($pdf->GetY() + 1);
+            $pdf->SetFont('helvetica', '', 7);
+            $pdf->SetTextColor(120, 120, 140);
+            $pdf->SetXY($mL, $pdf->GetY());
+            $pdf->Cell(85, 3, $proposal['proposal_to'] ?? '', 0, 1, 'C');
+        }
 
         return base64_encode($pdf->Output('offre_' . $proposal['id'] . '.pdf', 'S'));
     }
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // PRIVÉ — Formate un nombre (2 décimales, séparateur FR)
+    // ═══════════════════════════════════════════════════════════════════════
     private function _fmtNum(float $val): string
     {
         return number_format(abs($val), 2, ',', '.');
     }
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // PRIVÉ — Envoi email offre via Brevo avec PDF joint
+    // ═══════════════════════════════════════════════════════════════════════
     private function _sendProposalEmail(
-        string $to, string $clientName, string $subject,
-        string $staffName, int $proposalId, ?array $proposalData = null
+        string $to,
+        string $clientName,
+        string $subject,
+        string $staffName,
+        int    $proposalId,
+        ?array $proposalData = null
     ): bool {
         $apiKey    = getenv('BREVO_API_KEY') ?: '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';
         $fromEmail = getenv('MAIL_FROM_ADDRESS') ?: 'noreply@example.com';

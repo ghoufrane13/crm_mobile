@@ -7,33 +7,30 @@ use CodeIgniter\Model;
 class ItemModel extends Model
 {
     protected $table         = 'tblitems';
-    protected $primaryKey    = 'id';
+    protected $primaryKey    = 'id';          // ← si Perfex utilise 'itemid', changez ici
     protected $returnType    = 'array';
+    protected $useSoftDeletes = false;         // ✅ CRITIQUE : pas de soft delete
     protected $allowedFields = [
         'description', 'long_description', 'rate', 'rate_currency_2',
-        'tax', 'tax2', 'unit', 'group_id',
+        'tax', 'tax2', 'unit',
     ];
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Liste paginée — jointures taxes + groupes
-    // CORRECTION : tbltaxes.name aliasé en tax1_name/tax2_name
-    //              tblitems_groups.name aliasé en group_name (attendu par Flutter)
+    // Liste paginée — jointures taxes
     // ─────────────────────────────────────────────────────────────────────────
-    public function getList(string $q = '', int $page = 1, int $limit = 25, ?int $groupId = null): array
+    public function getList(string $q = '', int $page = 1, int $limit = 25): array
     {
         $offset  = ($page - 1) * $limit;
         $builder = $this->db->table('tblitems i')
             ->select([
                 'i.id', 'i.description', 'i.long_description',
                 'i.rate', 'i.rate_currency_2', 'i.unit',
-                'i.tax', 'i.tax2', 'i.group_id',
-                'ig.name  AS group_name',   // ✅ Flutter attend 'group_name'
-                't1.name  AS tax1_name',    // ✅ tbltaxes.name (pas taxname)
+                'i.tax', 'i.tax2',
+                't1.name  AS tax1_name',
                 't1.taxrate AS tax1_rate',
                 't2.name  AS tax2_name',
                 't2.taxrate AS tax2_rate',
             ])
-            ->join('tblitems_groups ig', 'ig.id = i.group_id',  'left')
             ->join('tbltaxes t1',        't1.id = i.tax',        'left')
             ->join('tbltaxes t2',        't2.id = i.tax2',       'left');
 
@@ -42,9 +39,6 @@ class ItemModel extends Model
                 ->like('i.description',       $q)
                 ->orLike('i.long_description', $q)
                 ->groupEnd();
-        }
-        if ($groupId !== null) {
-            $builder->where('i.group_id', $groupId);
         }
 
         $total = $builder->countAllResults(false);
@@ -64,12 +58,7 @@ class ItemModel extends Model
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Retourne TOUS les articles sans filtre — utilisé par ItemController::search()
-    // quand q est vide afin d'afficher la liste complète au démarrage de Flutter.
-    //
-    // CORRECTION CRITIQUE :
-    //   ❌ Avant : méthode inexistante → PHP Fatal Error 500
-    //   ✅ Après  : méthode définie, identique à search() mais sans clause LIKE
+    // Retourne TOUS les articles sans filtre (recherche vide)
     // ─────────────────────────────────────────────────────────────────────────
     public function searchAll(int $limit = 200): array
     {
@@ -121,13 +110,11 @@ class ItemModel extends Model
         $row = $this->db->table('tblitems i')
             ->select([
                 'i.*',
-                'ig.name  AS group_name',
                 't1.name  AS tax1_name',
                 't1.taxrate AS tax1_rate',
                 't2.name  AS tax2_name',
                 't2.taxrate AS tax2_rate',
             ])
-            ->join('tblitems_groups ig', 'ig.id = i.group_id',  'left')
             ->join('tbltaxes t1',        't1.id = i.tax',        'left')
             ->join('tbltaxes t2',        't2.id = i.tax2',       'left')
             ->where('i.id', $id)
@@ -138,6 +125,12 @@ class ItemModel extends Model
 
     // ─────────────────────────────────────────────────────────────────────────
     // Vérifier si l'article est utilisé dans tblitemable
+    //
+    // SCHÉMA CONFIRMÉ (crm_mobile.sql) :
+    //   tblitemable n'a PAS de colonne item_id — le lien se fait uniquement
+    //   par la colonne `description` (texte libre copié lors de la création
+    //   de la facture/du devis).
+    //   → On compare par description exacte (WHERE, pas LIKE).
     // ─────────────────────────────────────────────────────────────────────────
     public function isUsed(int $id): array
     {
@@ -160,36 +153,37 @@ class ItemModel extends Model
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Groupes d'articles
-    // CORRECTION : on aliase 'name' en 'group_name' pour correspondre à Flutter
+    // Supprimer un article par son ID
+    //
+    // CORRECTION CRITIQUE :
+    //   On utilise db->table() directement plutôt que Model::delete()
+    //   pour éviter tout comportement inattendu du soft delete ou du
+    //   primaryKey hérité du ResourceController.
     // ─────────────────────────────────────────────────────────────────────────
-    public function getGroups(): array
+    public function deleteById(int $id): bool
     {
-        return $this->db->table('tblitems_groups')
-            ->select('id, name AS group_name')  // ✅ Flutter attend 'group_name'
-            ->orderBy('name', 'ASC')
-            ->get()->getResultArray();
+        $this->db->table($this->table)
+            ->where($this->primaryKey, $id)
+            ->delete();
+
+        return $this->db->affectedRows() > 0;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Taxes — règle §4 : "Exonéré" en tête, sans doublons
-    // CORRECTION : on aliase 'name' en 'taxname' pour correspondre à Flutter
-    // tbltaxes colonnes réelles : id, name, taxrate
+    // Taxes — "Exonéré" en tête
     // ─────────────────────────────────────────────────────────────────────────
     public function getTaxes(): array
     {
         $rows = $this->db->table('tbltaxes')
-            ->select('id, name AS taxname, taxrate')  // ✅ Flutter attend 'taxname'
+            ->select('id, name AS taxname, taxrate')
             ->orderBy('taxrate', 'ASC')
             ->get()->getResultArray();
 
-        // Supprimer les doublons "Exonéré" éventuels dans tbltaxes
         $filtered = array_filter($rows, function ($t) {
             $n = strtolower(trim($t['taxname']));
             return !in_array($n, ['exonéré', 'exonere', 'aucune taxe', 'sans taxe', 'none']);
         });
 
-        // "Exonéré" en tête avec id='' pour valeur vide (aucune taxe)
         return array_merge(
             [['id' => '', 'taxname' => 'Exonéré', 'taxrate' => '0.00']],
             array_values($filtered)
@@ -197,11 +191,7 @@ class ItemModel extends Model
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Unités — récupérées depuis la table tblcurrencies
-    //
-    // Retourne { id, symbol, name } pour chaque devise disponible.
-    // Le champ 'symbol' est utilisé par Flutter dans l'Autocomplete du
-    // formulaire article comme libellé d'unité monétaire.
+    // Unités (devises)
     // ─────────────────────────────────────────────────────────────────────────
     public function getUnits(): array
     {
@@ -222,7 +212,6 @@ class ItemModel extends Model
         unset($item['id']);
         $item['description'] = $item['description'] . ' (Copie)';
 
-        // ✅ CI4 Model::insert() retourne directement l'ID inséré
         return (int)$this->insert($item);
     }
 }

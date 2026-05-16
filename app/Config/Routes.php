@@ -54,7 +54,7 @@ $routes->group('api', function ($routes) {
     $routes->post('staff/verify-otp',     'StaffController::verifyOtp');
     $routes->post('staff/resend-otp',     'StaffController::resendOtp');
     $routes->post('staff/update-profile', 'StaffController::updateProfile');
-
+    $routes->get('staff/profile', 'StaffController::profile');
     // ========================================
     // PROPOSALS
     // ========================================
@@ -144,8 +144,9 @@ $routes->group('api', function ($routes) {
     // ========================================
 
     // ── Client
-    $routes->get( 'invoices/client-list',          'InvoiceController::clientList');
-    $routes->get( 'invoices/client-detail/(:num)', 'InvoiceController::clientDetail/$1');
+    $routes->get( 'invoices/client-list',               'InvoiceController::clientList');
+    $routes->get( 'invoices/client-dashboard-stats',    'InvoiceController::clientDashboardStats');
+    $routes->get( 'invoices/client-detail/(:num)',        'InvoiceController::clientDetail/$1');
     $routes->get( 'invoices/pdf/(:num)',            'InvoiceController::pdf/$1');
 
     // ── Staff
@@ -181,7 +182,6 @@ $routes->group('api', function ($routes) {
     // ⚠️  RÈGLE CRITIQUE : routes statiques AVANT (:num)
     // ========================================
     $routes->get(   'items/search',            'ItemController::search');
-    $routes->get(   'items/groups',            'ItemController::groups');
     $routes->get(   'items/taxes',             'ItemController::taxes');
     $routes->get(   'items/units',             'ItemController::units');
     $routes->get(   'items',                   'ItemController::index');
@@ -243,6 +243,12 @@ $routes->group('api', function ($routes) {
     // ── Stripe (paiement en ligne)
     $routes->post('payments/stripe/create-intent', 'PaymentController::createStripeIntent');
     $routes->post('payments/stripe/confirm',        'PaymentController::confirmStripePayment');
+    // Paymee
+    $routes->post('payments/paymee/create',  'PaymentController::createPaymeePayment');
+    $routes->post('payments/paymee/confirm', 'PaymentController::confirmPaymeePayment');
+    $routes->post('payments/paymee/webhook', 'PaymentController::paymeeWebhook');
+    $routes->get('paymee/success', 'PaymentController::paymeeSuccess');
+    $routes->get('paymee/fail',    'PaymentController::paymeeFail');
 
     $routes->get('invoices/generate-ref',  'InvoiceController::generateRef');
     $routes->get('estimates/generate-ref', 'EstimateController::generateRef');

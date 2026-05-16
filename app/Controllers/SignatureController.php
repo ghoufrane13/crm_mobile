@@ -12,6 +12,9 @@ class SignatureController extends ResourceController
 
     protected SignatureModel $signatureModel;
 
+    // Types autorisés (quote = estimate, invoice = facture, proposal = offre)
+    private array $allowedTypes = ['quote', 'invoice', 'proposal'];
+
     public function initController(
         \CodeIgniter\HTTP\RequestInterface  $request,
         \CodeIgniter\HTTP\ResponseInterface $response,
@@ -23,7 +26,7 @@ class SignatureController extends ResourceController
 
     // ─────────────────────────────────────────────────────────────────────────
     // POST /api/signature/save
-    // Body JSON : { rel_id, rel_type (quote|invoice), signature_data (base64 PNG) }
+    // Body JSON : { rel_id, rel_type (quote|invoice|proposal), signature_data (base64 PNG) }
     // ─────────────────────────────────────────────────────────────────────────
     public function save()
     {
@@ -39,17 +42,29 @@ class SignatureController extends ResourceController
             ], 400);
         }
 
-        if (!in_array($relType, ['quote', 'invoice'])) {
+        if (!in_array($relType, $this->allowedTypes)) {
             return $this->respond([
                 'status'  => false,
-                'message' => "rel_type doit être 'quote' ou 'invoice'",
+                'message' => "rel_type doit être : " . implode(', ', $this->allowedTypes),
             ], 400);
         }
 
         // Vérifier que le document existe en base
-        $table  = $relType === 'invoice' ? 'tblinvoices' : 'tblestimates';
+        $tableMap = [
+            'invoice'  => 'tblinvoices',
+            'quote'    => 'tblestimates',
+            'proposal' => 'tblproposals',
+        ];
+        $table  = $tableMap[$relType];
+        $pkMap  = [
+            'invoice'  => 'id',
+            'quote'    => 'id',
+            'proposal' => 'id',
+        ];
         $exists = \Config\Database::connect()
-            ->table($table)->where('id', $relId)->get()->getRowArray();
+            ->table($table)
+            ->where($pkMap[$relType], $relId)
+            ->get()->getRowArray();
 
         if (!$exists) {
             return $this->respond([
@@ -74,7 +89,7 @@ class SignatureController extends ResourceController
         }
 
         return $this->respond([
-            'status'    => true,   // ← booléen true, pas l'entier 200
+            'status'    => true,
             'message'   => 'Signature enregistrée avec succès',
             'file'      => $relativePath,
             'signed_at' => date('Y-m-d H:i:s'),
@@ -83,14 +98,14 @@ class SignatureController extends ResourceController
 
     // ─────────────────────────────────────────────────────────────────────────
     // GET /api/signature/{relType}/{relId}
-    // Retourne les infos de signature + URL de l'image
+    // Retourne les infos de signature + base64 de l'image
     // ─────────────────────────────────────────────────────────────────────────
     public function get($relType = null, $relId = null)
     {
-        if (!in_array($relType, ['quote', 'invoice'])) {
+        if (!in_array($relType, $this->allowedTypes)) {
             return $this->respond([
                 'status'  => false,
-                'message' => "relType doit être 'quote' ou 'invoice'",
+                'message' => "relType doit être : " . implode(', ', $this->allowedTypes),
             ], 400);
         }
 
@@ -98,7 +113,7 @@ class SignatureController extends ResourceController
 
         if (!$sig) {
             return $this->respond([
-                'status' => true,   // ← la requête a réussi
+                'status' => true,   // la requête a réussi
                 'signed' => false,
                 'data'   => null,
             ]);

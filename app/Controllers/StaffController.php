@@ -8,30 +8,15 @@ use App\Models\ClientModel;
 use App\Models\ContactModel;
 use App\Libraries\JwtService;
 
-/**
- * StaffController
- *
- * Gère l'inscription staff (OTP) et la mise à jour du profil.
- * Le login est centralisé dans LoginController.
- *
- * Corrections appliquées :
- *  #1  — StaffController::login() supprimé (LoginController est l'unique point d'entrée JWT)
- *  #2  — Clé OTP lue depuis .env (OTP_SECRET_KEY), identique à RegisterController
- *  #3  — updateProfile() vérifie old_password avant d'écraser le mot de passe
- *  #4  — updateProfile() extrait staff_id du JWT, jamais du body
- *  #7  — verifyOtp() : double vérification d'email supprimée
- */
 class StaffController extends ResourceController
 {
     protected $format = 'json';
 
-    // ── Clé OTP depuis .env ───────────────────────────────────────────────────
     private function otpSecretKey(): string
     {
         return env('OTP_SECRET_KEY', 'CRM_FALLBACK_KEY_CHANGE_IN_ENV');
     }
 
-    // ── Helpers OTP ───────────────────────────────────────────────────────────
     private function generateOtpCode(): string
     {
         return str_pad(random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
@@ -131,7 +116,6 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     public function register()
     {
         $data = $this->request->getJSON(true);
-
         $required = ['firstname', 'lastname', 'email', 'password'];
         foreach ($required as $field) {
             if (empty($data[$field])) {
@@ -142,24 +126,16 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         $email = strtolower(trim($data['email']));
 
         if ((new StaffModel())->where('email', $email)->first()) {
-            return $this->respond([
-                'success' => false,
-                'message' => 'Cet email est déjà utilisé par un compte commercial.',
-            ], 409);
+            return $this->respond(['success' => false,
+                'message' => 'Cet email est déjà utilisé par un compte commercial.'], 409);
         }
-
         if ((new ClientModel())->where('email', $email)->first()) {
-            return $this->respond([
-                'success' => false,
-                'message' => 'Cet email est déjà associé à un compte client. Utilisez un autre email.',
-            ], 409);
+            return $this->respond(['success' => false,
+                'message' => 'Cet email est déjà associé à un compte client.'], 409);
         }
-
         if ((new ContactModel())->where('email', $email)->first()) {
-            return $this->respond([
-                'success' => false,
-                'message' => 'Cet email est déjà associé à un contact client. Utilisez un autre email.',
-            ], 409);
+            return $this->respond(['success' => false,
+                'message' => 'Cet email est déjà associé à un contact client.'], 409);
         }
 
         $otpCode = $this->generateOtpCode();
@@ -194,29 +170,23 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         $code  = isset($data['code'])  ? trim($data['code'])  : null;
 
         if (!$token || !$code) {
-            return $this->respond(['success' => false,
-                'message' => 'Token et code requis.'], 200);
+            return $this->respond(['success' => false, 'message' => 'Token et code requis.'], 200);
         }
 
         $pending = $this->decodeToken($token);
-
         if (!$pending) {
-            return $this->respond(['success' => false,
-                'message' => 'Token invalide.'], 200);
+            return $this->respond(['success' => false, 'message' => 'Token invalide.'], 200);
         }
         if (time() > $pending['otp_expires']) {
             return $this->respond(['success' => false,
                 'message' => 'Code expiré. Veuillez recommencer l\'inscription.'], 200);
         }
         if ($pending['otp_code'] !== $code) {
-            return $this->respond(['success' => false,
-                'message' => 'Code incorrect.'], 200);
+            return $this->respond(['success' => false, 'message' => 'Code incorrect.'], 200);
         }
 
-        // #7 — unicité email déjà vérifiée dans register(), pas de double check ici
         $staffModel = new StaffModel();
-
-        $staffId = $staffModel->insert([
+        $staffId    = $staffModel->insert([
             'email'       => $pending['email'],
             'firstname'   => $pending['firstname'],
             'lastname'    => $pending['lastname'],
@@ -251,8 +221,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         $token = isset($data['token']) ? trim($data['token']) : null;
 
         if (!$token) {
-            return $this->respond(['success' => false,
-                'message' => 'Token requis.'], 200);
+            return $this->respond(['success' => false, 'message' => 'Token requis.'], 200);
         }
 
         $pending = $this->decodeToken($token);
@@ -279,14 +248,16 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // POST /api/staff/update-profile
+    // GET /api/staff/profile
     //
-    // #3 — vérifie old_password avant d'écraser le mot de passe
-    // #4 — staff_id extrait du JWT (header Authorization), jamais du body
+    // FIX #1 : SELECT * — récupère toutes les colonnes sans en rater.
+    // FIX #2 : Perfex CRM stocke la dernière connexion dans "last_activity"
+    //          (timestamp Unix), pas dans "last_login". On normalise ici.
+    // FIX #3 : datecreated peut aussi être un timestamp Unix dans certaines
+    //          versions — on le convertit en datetime lisible.
     // ═══════════════════════════════════════════════════════════════════════
-    public function updateProfile()
+    public function profile()
     {
-        // ── Authentification JWT ──────────────────────────────────────────
         $authHeader = $this->request->getHeaderLine('Authorization');
         if (empty($authHeader)) {
             return $this->respond(['success' => false,
@@ -301,7 +272,69 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                 'message' => 'Token invalide ou expiré.'], 401);
         }
 
-        // #4 — staffId depuis le JWT uniquement
+        $staffId = (int)($payload['staff_id'] ?? 0);
+        if (!$staffId) {
+            return $this->respond(['success' => false,
+                'message' => 'Token ne contient pas d\'identifiant staff.'], 401);
+        }
+
+        $db = \Config\Database::connect();
+
+        // SELECT * pour ne rater aucune colonne selon la version Perfex
+        $staff = $db->table('tblstaff')
+            ->where('staffid', $staffId)
+            ->get()
+            ->getRowArray();
+
+        if (!$staff) {
+            return $this->respond(['success' => false,
+                'message' => 'Membre du staff introuvable.'], 200);
+        }
+
+        // Supprimer les données sensibles
+        unset($staff['password'], $staff['new_pass_key']);
+
+        // ── FIX #2 : normalisation last_activity → last_login ─────────────
+        // Dans Perfex CRM, last_activity est un timestamp Unix (ex: 1748000000)
+        if (empty($staff['last_login'])) {
+            $lastActivity = $staff['last_activity'] ?? null;
+            if (!empty($lastActivity) && is_numeric($lastActivity) && (int)$lastActivity > 0) {
+                $staff['last_login'] = date('Y-m-d H:i:s', (int)$lastActivity);
+            } else {
+                $staff['last_login'] = null;
+            }
+        }
+
+        // ── FIX #3 : normalisation datecreated ────────────────────────────
+        if (!empty($staff['datecreated']) && is_numeric($staff['datecreated'])) {
+            $staff['datecreated'] = date('Y-m-d H:i:s', (int)$staff['datecreated']);
+        }
+
+        return $this->respond([
+            'success' => true,
+            'staff'   => $staff,
+        ], 200);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // POST /api/staff/update-profile
+    // ═══════════════════════════════════════════════════════════════════════
+    public function updateProfile()
+    {
+        $authHeader = $this->request->getHeaderLine('Authorization');
+        if (empty($authHeader)) {
+            return $this->respond(['success' => false,
+                'message' => 'Token d\'authentification requis.'], 401);
+        }
+
+        $rawToken = str_replace('Bearer ', '', $authHeader);
+        try {
+            $payload = (array) JwtService::validate($rawToken);
+        } catch (\Exception $e) {
+            return $this->respond(['success' => false,
+                'message' => 'Token invalide ou expiré.'], 401);
+        }
+
         $staffId = (int)($payload['staff_id'] ?? 0);
         if (!$staffId) {
             return $this->respond(['success' => false,
@@ -322,7 +355,6 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         if (!empty($data['lastname']))   $updateData['lastname']    = trim($data['lastname']);
         if (isset($data['phonenumber'])) $updateData['phonenumber'] = trim($data['phonenumber']);
 
-        // #3 — changement de mot de passe avec vérification old_password
         if (!empty($data['password'])) {
             if (empty($data['old_password'])) {
                 return $this->respond(['success' => false,
@@ -363,15 +395,11 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     public function list()
     {
         $db = \Config\Database::connect();
-
         $staff = $db->table('tblstaff')
             ->select('staffid, firstname, lastname, email')
             ->orderBy('firstname', 'ASC')
             ->get()->getResultArray();
 
-        return $this->respond([
-            'status' => 200,
-            'data'   => $staff,
-        ]);
+        return $this->respond(['status' => 200, 'data' => $staff]);
     }
 }

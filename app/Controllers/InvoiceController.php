@@ -1374,4 +1374,74 @@ body{font-family:'Segoe UI',sans-serif;background:#f1f5f9;padding:20px;margin:0}
         if ($curlErr) { log_message('error', 'Brevo cURL: ' . $curlErr); return false; }
         return $httpCode === 201;
     }
+    // GET /api/invoices/client-dashboard-stats?client_id=X
+public function clientDashboardStats()
+{
+    $clientId = (int)$this->request->getVar('client_id');
+    if (!$clientId) {
+        return $this->respond(['status' => false, 'message' => 'client_id requis'], 400);
+    }
+
+    $db = \Config\Database::connect();
+
+    // ── Factures ─────────────────────────────────────────────────────────
+    $invoices = $db->table('tblinvoices')
+        ->select('id, status, total, duedate')
+        ->where('clientid', $clientId)
+        ->get()->getResultArray();
+
+    $invStats = ['total' => 0, 'paid' => 0, 'unpaid' => 0,
+                 'partial' => 0, 'overdue' => 0, 'cancelled' => 0,
+                 'total_amount' => 0.0, 'total_due' => 0.0];
+
+    foreach ($invoices as $inv) {
+        $invId     = (int)$inv['id'];
+        $totalPaid = $this->invoiceModel->getTotalPaid($invId);
+        $total     = (float)$inv['total'];
+        $status    = $this->_computeStatus(
+            $inv['status'], $total, $totalPaid, $inv['duedate'] ?? null
+        );
+        $invStats['total']++;
+        $invStats['total_amount'] += $total;
+        $invStats['total_due']    += max(0, $total - $totalPaid);
+        switch ($status) {
+            case 2: $invStats['paid']++;      break;
+            case 3: $invStats['cancelled']++; break;
+            case 4: $invStats['partial']++;   break;
+            case 5: $invStats['overdue']++;   break;
+            default: $invStats['unpaid']++;   break;
+        }
+    }
+    $invStats['total_amount'] = round($invStats['total_amount'], 2);
+    $invStats['total_due']    = round($invStats['total_due'], 2);
+
+    // ── Devis ─────────────────────────────────────────────────────────────
+    $estRow = $db->table('tblestimates')
+        ->selectCount('id', 'total')
+        ->where('clientid', $clientId)
+        ->get()->getRowArray();
+
+    // ── Offres ────────────────────────────────────────────────────────────
+    $proRow = $db->table('tblproposals')
+        ->selectCount('id', 'total')
+        ->where('rel_id', $clientId)
+        ->where('rel_type', 'customer')
+        ->get()->getRowArray();
+
+    // ── Tickets ───────────────────────────────────────────────────────────
+    $tktRow = $db->table('tbltickets')
+    ->selectCount('ticketid', 'total')
+    ->where('userid', $clientId)
+    ->get()->getRowArray();
+
+    return $this->respond([
+        'status' => true,
+        'stats'  => [
+            'invoices'  => $invStats,
+            'estimates' => ['total' => (int)($estRow['total'] ?? 0)],
+            'proposals' => ['total' => (int)($proRow['total'] ?? 0)],
+            'tickets'   => ['total' => (int)($tktRow['total'] ?? 0)],
+        ],
+    ]);
+}
 }

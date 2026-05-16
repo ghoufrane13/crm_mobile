@@ -22,20 +22,18 @@ class ItemController extends ResourceController
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // GET /api/items?q=&page=1&limit=25&group_id=
+    // GET /api/items?q=&page=1&limit=25
     // ─────────────────────────────────────────────────────────────────────────
     public function index()
     {
         $q       = $this->request->getGet('q')        ?? '';
         $page    = max(1, (int)($this->request->getGet('page')  ?? 1));
         $limit   = max(1, (int)($this->request->getGet('limit') ?? 25));
-        $groupId = $this->request->getGet('group_id');
 
         $result = $this->itemModel->getList(
             $q,
             $page,
-            $limit,
-            $groupId !== null ? (int)$groupId : null
+            $limit
         );
 
         return $this->respond(['status' => 200] + $result);
@@ -115,7 +113,6 @@ class ItemController extends ResourceController
             'tax'              => !empty($body['tax'])  ? (int)$body['tax']  : null,
             'tax2'             => !empty($body['tax2']) ? (int)$body['tax2'] : null,
             'unit'             => $body['unit']     ?? null,
-            'group_id'         => (int)($body['group_id'] ?? 0),
         ];
 
         // ✅ insert() en CI4 retourne l'ID inséré (int) ou false
@@ -152,7 +149,6 @@ class ItemController extends ResourceController
         if (array_key_exists('tax', $body))   $data['tax']  = !empty($body['tax'])  ? (int)$body['tax']  : null;
         if (array_key_exists('tax2', $body))  $data['tax2'] = !empty($body['tax2']) ? (int)$body['tax2'] : null;
         if (isset($body['unit']))             $data['unit']     = $body['unit'];
-        if (isset($body['group_id']))         $data['group_id'] = (int)$body['group_id'];
 
         if (empty($data)) {
             return $this->fail('Aucune donnée à mettre à jour', 400);
@@ -201,15 +197,6 @@ class ItemController extends ResourceController
             'message' => 'Article dupliqué avec succès',
             'id'      => $newId,
         ]);
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // GET /api/items/groups
-    // Retourne { id, group_name } — alias correspondant à Flutter
-    // ─────────────────────────────────────────────────────────────────────────
-    public function groups()
-    {
-        return $this->respond(['status' => 200, 'data' => $this->itemModel->getGroups()]);
     }
 
     // ─────────────────────────────────────────────────────────────────────────

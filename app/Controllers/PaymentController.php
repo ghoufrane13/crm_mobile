@@ -264,7 +264,7 @@ class PaymentController extends ResourceController
         return $this->respond(['status' => true, 'message' => 'Règlement supprimé']);
     }
 
-    // ── Helper recalcul statut ────────────────────────────────────────────────
+    // ── Helper recalcul statut ─────────────────────────────────────────────────
     private function _recalcStatus($db, int $invoiceId): void
     {
         $invoice = $db->table('tblinvoices')
@@ -480,17 +480,336 @@ class PaymentController extends ResourceController
         ], 201);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // FIX : _notifyPayment
-    //
-    // CORRECTIONS apportées :
-    //   1. Suppression des INSERT directs dans tblnotifications — évite
-    //      les doublons car FcmService::createAndSend() fait déjà cet INSERT.
-    //   2. L'INSERT en base est désormais centralisé dans _insertNotification()
-    //      qui est appelé AVANT le push FCM — ainsi la notif est toujours
-    //      enregistrée même si FCM échoue.
-    //   3. Le push FCM reste dans un try/catch séparé pour ne pas bloquer.
-    // ─────────────────────────────────────────────────────────────────────────
+    // =========================================================================
+    // PAYMEE
+    // =========================================================================
+
+    /**
+     * POST /api/payments/paymee/create
+     *
+     * CORRECTIONS :
+     *   1. rtrim() + '/' → garantit exactement un slash final dans callbackBase
+     *   2. Suppression de la conversion http→https qui cassait l'IP locale
+     *   3. En mode test : URLs de callback factices HTTPS (Paymee sandbox
+     *      exige https mais le flux Flutter confirme via bouton, pas redirect)
+     *   4. Condition payment_status robuste (booléen / int / string)
+     */
+    public function createPaymeePayment()
+    {
+        $data      = $this->request->getJSON(true);
+        $invoiceId = (int)($data['invoice_id'] ?? 0);
+        $clientId  = (int)($data['client_id']  ?? 0);
+        $reqAmount = (float)($data['amount']   ?? 0);
+        $note      = $data['note'] ?? '';
+
+        if (!$invoiceId) return $this->respond(
+            ['status' => false, 'message' => 'invoice_id requis'], 400);
+
+        $db = \Config\Database::connect();
+
+        $invoice = $db->table('tblinvoices')
+            ->select('id, total, status')
+            ->where('id', $invoiceId)
+            ->get()->getRowArray();
+
+        if (!$invoice) return $this->respond(
+            ['status' => false, 'message' => 'Facture introuvable'], 404);
+
+        if ((int)$invoice['status'] === 2) return $this->respond(
+            ['status' => false, 'message' => 'Facture déjà payée.'], 400);
+
+        $totalPaid = $this->paymentModel->getTotalPaid($invoiceId);
+        $totalDue  = round(max(0, (float)$invoice['total'] - $totalPaid), 2);
+
+        if ($totalDue <= 0) return $this->respond(
+            ['status' => false, 'message' => 'Aucun solde restant.'], 400);
+
+        $amountToPay = ($reqAmount > 0 && $reqAmount <= $totalDue + 0.001)
+            ? round($reqAmount, 2) : $totalDue;
+
+        if ($reqAmount > $totalDue + 0.001) return $this->respond([
+            'status'  => false,
+            'message' => "Le montant dépasse le solde restant ($totalDue TND).",
+        ], 400);
+
+        // Récupérer infos client
+        $contact = $db->table('tblcontacts')
+            ->select('firstname, lastname, email, phonenumber')
+            ->where('userid', $clientId)
+            ->where('is_primary', 1)
+            ->get()->getRowArray();
+
+        if (!$contact) {
+            $contact = $db->table('tblclients')
+                ->select('company, email, phonenumber')
+                ->where('userid', $clientId)
+                ->get()->getRowArray();
+            $contact['firstname'] = $contact['company'] ?? 'Client';
+            $contact['lastname']  = '';
+        }
+
+        $firstName = $contact['firstname']   ?? 'Client';
+        $lastName  = $contact['lastname']    ?? '';
+        $email     = $contact['email']       ?? 'client@example.com';
+        $phone     = $contact['phonenumber'] ?? '00000000';
+
+        // ── Config Paymee ──────────────────────────────────────────────────────
+        $paymeeApiKey = env('PAYMEE_API_KEY', '');
+        $paymeeMode   = env('PAYMEE_MODE', 'test');
+
+        $paymeeBase = $paymeeMode === 'prod'
+            ? 'https://app.paymee.tn/api/v2'
+            : 'https://sandbox.paymee.tn/api/v2';
+
+        // ── CORRECTION 1 : slash final garanti, pas de conversion http→https ──
+        $defaultCallbackBase = base_url();
+        $callbackBase = rtrim(
+            env('PAYMEE_CALLBACK_BASE_URL', $defaultCallbackBase),
+            '/'
+        ) . '/';
+
+        // ── CORRECTION 2 : URLs de callback ────────────────────────────────────
+        // Paymee sandbox exige HTTPS pour return_url / cancel_url / webhook_url.
+        // En mode test avec IP locale (http://), on passe des URLs HTTPS
+        // factices de sandbox — le flux Flutter confirme via le bouton
+        // "J'ai payé", il n'attend pas le redirect du navigateur.
+        if ($paymeeMode !== 'prod') {
+            $successUrl = 'https://sandbox.paymee.tn/return/success?invoice_id=' . $invoiceId;
+            $failUrl    = 'https://sandbox.paymee.tn/return/fail?invoice_id='    . $invoiceId;
+            $webhookUrl = 'https://sandbox.paymee.tn/return/webhook';
+        } else {
+            $successUrl = $callbackBase . 'paymee/success?invoice_id=' . $invoiceId;
+            $failUrl    = $callbackBase . 'paymee/fail?invoice_id='    . $invoiceId;
+            $webhookUrl = $callbackBase . 'api/payments/paymee/webhook';
+        }
+
+        $payload = [
+            'vendor'      => (int)env('PAYMEE_VENDOR_ID', 0),
+            'amount'      => $amountToPay,
+            'note'        => $note ?: "Facture #$invoiceId",
+            'first_name'  => $firstName,
+            'last_name'   => $lastName,
+            'email'       => $email,
+            'phone'       => $phone,
+            'return_url'  => $successUrl,
+            'cancel_url'  => $failUrl,
+            'webhook_url' => $webhookUrl,
+            'order_id'    => "INV-$invoiceId-" . time(),
+        ];
+
+        log_message('debug', 'Paymee create payload: ' . json_encode($payload));
+
+        $ch = curl_init("$paymeeBase/payments/create");
+        $curlOptions = [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode($payload),
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'Authorization: Token ' . $paymeeApiKey,
+            ],
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false,
+        ];
+
+        curl_setopt_array($ch, $curlOptions);
+        $response   = curl_exec($ch);
+        $httpStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError  = curl_error($ch);
+        curl_close($ch);
+
+        log_message('debug', 'Paymee create HTTP: ' . $httpStatus);
+        log_message('debug', 'Paymee create response: ' . $response);
+
+        if ($curlError) return $this->respond(
+            ['status' => false, 'message' => 'Erreur réseau : ' . $curlError], 500);
+
+        $paymee = json_decode($response, true);
+
+        if ($httpStatus !== 200 || empty($paymee['data']['token'])) {
+            log_message('error', 'Paymee create error: ' . $response);
+            return $this->respond([
+                'status'  => false,
+                'message' => $paymee['message'] ?? 'Erreur Paymee',
+            ], 400);
+        }
+
+        $token      = $paymee['data']['token'];
+        $paymentUrl = $paymeeMode === 'prod'
+            ? "https://app.paymee.tn/gateway/$token"
+            : "https://sandbox.paymee.tn/gateway/$token";
+
+        return $this->respond([
+            'status'      => true,
+            'token'       => $token,
+            'payment_url' => $paymentUrl,
+            'amount'      => $amountToPay,
+        ]);
+    }
+
+    /**
+     * POST /api/payments/paymee/confirm
+     *
+     * CORRECTION : condition payment_status robuste
+     * (Paymee sandbox peut retourner true, 1, "true", "1"…)
+     */
+    public function confirmPaymeePayment()
+    {
+        $data      = $this->request->getJSON(true);
+        $token     = $data['token']      ?? '';
+        $invoiceId = (int)($data['invoice_id'] ?? 0);
+
+        if (!$token || !$invoiceId) return $this->respond([
+            'status'  => false,
+            'message' => 'token et invoice_id requis',
+        ], 400);
+
+        $paymeeApiKey = env('PAYMEE_API_KEY', '');
+        $paymeeMode   = env('PAYMEE_MODE', 'test');
+        $paymeeBase   = $paymeeMode === 'prod'
+            ? 'https://app.paymee.tn/api/v2'
+            : 'https://sandbox.paymee.tn/api/v2';
+
+        $ch = curl_init("$paymeeBase/payments/$token/check");
+        $curlOptions = [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'Authorization: Token ' . $paymeeApiKey,
+            ],
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false,
+        ];
+
+        curl_setopt_array($ch, $curlOptions);
+        $response   = curl_exec($ch);
+        $httpStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        log_message('debug', 'Paymee check HTTP: ' . $httpStatus);
+        log_message('debug', 'Paymee check response: ' . $response);
+
+        if ($httpStatus !== 200) return $this->respond([
+            'status'  => false,
+            'message' => 'Impossible de vérifier le paiement Paymee (HTTP ' . $httpStatus . ').',
+        ], 400);
+
+        $paymee = json_decode($response, true);
+
+        // ── CORRECTION 3 : vérification robuste de payment_status ─────────────
+        // Paymee sandbox peut renvoyer : true, 1, "true", "1"
+        $paymentStatus = $paymee['data']['payment_status'] ?? false;
+        $isPaid = ($paymentStatus === true
+            || $paymentStatus === 1
+            || $paymentStatus === '1'
+            || strtolower((string)$paymentStatus) === 'true');
+
+        if (!$isPaid) {
+            return $this->respond([
+                'status'  => false,
+                'message' => 'Paiement non encore complété (statut Paymee : '
+                    . json_encode($paymentStatus) . '). '
+                    . 'Assurez-vous d\'avoir finalisé le paiement sur la page Paymee.',
+            ], 400);
+        }
+
+        $db = \Config\Database::connect();
+
+        // Anti-doublon
+        $existing = $db->table('tblinvoicepaymentrecords')
+            ->where('transactionid', $token)->get()->getRowArray();
+
+        if ($existing) return $this->respond([
+            'status'  => false,
+            'message' => 'Ce paiement a déjà été enregistré.',
+        ], 409);
+
+        $amount = (float)($paymee['data']['amount'] ?? 0);
+
+        $db->table('tblinvoicepaymentrecords')->insert([
+            'invoiceid'     => $invoiceId,
+            'amount'        => $amount,
+            'paymentmode'   => 'Paymee',
+            'paymentmethod' => 'paymee',
+            'date'          => date('Y-m-d'),
+            'daterecorded'  => date('Y-m-d H:i:s'),
+            'note'          => 'Paiement en ligne via Paymee',
+            'transactionid' => $token,
+        ]);
+        $paymentId = $db->insertID();
+
+        $this->_recalcStatus($db, $invoiceId);
+
+        $invoice      = $db->table('tblinvoices')->select('total')
+            ->where('id', $invoiceId)->get()->getRowArray();
+        $newTotalPaid = $this->paymentModel->getTotalPaid($invoiceId);
+        $totalDue     = round(max(0, (float)$invoice['total'] - $newTotalPaid), 2);
+        $newStatus    = $totalDue <= 0 ? 2 : ($newTotalPaid > 0 ? 4 : 1);
+
+        $this->_notifyPayment($invoiceId, $amount, $newStatus);
+
+        return $this->respond([
+            'status'     => true,
+            'message'    => 'Paiement Paymee enregistré avec succès.',
+            'payment_id' => $paymentId,
+            'amount'     => $amount,
+            'total_due'  => $totalDue,
+        ], 201);
+    }
+
+    /**
+     * GET /paymee/success
+     * ⚠️ À déclarer HORS du groupe api dans Routes.php :
+     *    $routes->get('paymee/success', 'PaymentController::paymeeSuccess');
+     */
+    public function paymeeSuccess()
+    {
+        return $this->response->setBody(
+            '<!DOCTYPE html><html><head><meta charset="utf-8">'
+            . '<title>Paiement réussi</title></head>'
+            . '<body style="font-family:sans-serif;text-align:center;padding:40px">'
+            . '<h2 style="color:#10B981">✅ Paiement réussi</h2>'
+            . '<p>Vous pouvez fermer cette fenêtre et revenir dans l\'application.</p>'
+            . '</body></html>'
+        );
+    }
+
+    /**
+     * GET /paymee/fail
+     * ⚠️ À déclarer HORS du groupe api dans Routes.php :
+     *    $routes->get('paymee/fail', 'PaymentController::paymeeFail');
+     */
+    public function paymeeFail()
+    {
+        return $this->response->setBody(
+            '<!DOCTYPE html><html><head><meta charset="utf-8">'
+            . '<title>Paiement échoué</title></head>'
+            . '<body style="font-family:sans-serif;text-align:center;padding:40px">'
+            . '<h2 style="color:#EF4444">❌ Paiement annulé ou échoué</h2>'
+            . '<p>Vous pouvez fermer cette fenêtre et réessayer dans l\'application.</p>'
+            . '</body></html>'
+        );
+    }
+
+    /**
+     * POST /api/payments/paymee/webhook
+     */
+    public function paymeeWebhook()
+    {
+        $data  = $this->request->getJSON(true) ?? [];
+        $token = $data['token'] ?? $data['payment_token'] ?? '';
+
+        if ($token) {
+            log_message('info', 'Paymee webhook reçu pour token: ' . $token);
+        }
+
+        return $this->respond(['status' => true]);
+    }
+
+    // =========================================================================
+    // NOTIFICATIONS
+    // =========================================================================
+
     private function _notifyPayment(int $invoiceId, float $amount, int $newStatus): void
     {
         try {
@@ -509,7 +828,7 @@ class PaymentController extends ResourceController
             $now         = date('Y-m-d H:i:s');
             $link        = 'invoices/detail/' . $invoiceId;
 
-            // ── 1. Notifier tous les contacts du client ───────────────────────
+            // ── Contacts du client ────────────────────────────────────────────
             $contacts = $db->table('tblcontacts')
                 ->select('id')
                 ->where('userid', $clientId)
@@ -517,12 +836,8 @@ class PaymentController extends ResourceController
 
             foreach ($contacts as $ct) {
                 $contactId = (int)$ct['id'];
-                $msg       = "💳 Paiement de {$amountFmt} € enregistré — Facture {$fmtNum} ({$statusLabel})";
-
-                // INSERT garanti en base (indépendant du FCM)
+                $msg = "Paiement de {$amountFmt} TND enregistré — Facture {$fmtNum} ({$statusLabel})";
                 $this->_insertNotification($db, $contactId, $msg, $link, $now);
-
-                // Push FCM en bonus (silencieux si échec)
                 try {
                     $fcm = new \App\Libraries\FcmService();
                     $fcm->sendToClient($contactId, 'Paiement reçu', $msg, [
@@ -533,39 +848,26 @@ class PaymentController extends ResourceController
                 } catch (\Throwable) {}
             }
 
-            // ── 2. Identifier le(s) staff à notifier ─────────────────────────
-            //    Priorité : sale_agent → addedfrom → admins actifs
+            // ── Staff à notifier ──────────────────────────────────────────────
             $staffIds  = [];
             $saleAgent = (int)($invoice['sale_agent'] ?? 0);
             $addedFrom = (int)($invoice['addedfrom']  ?? 0);
 
-            if ($saleAgent > 0) {
-                $staffIds[] = $saleAgent;
-            }
-            if ($addedFrom > 0 && $addedFrom !== $saleAgent) {
-                $staffIds[] = $addedFrom;
-            }
+            if ($saleAgent > 0) $staffIds[] = $saleAgent;
+            if ($addedFrom > 0 && $addedFrom !== $saleAgent) $staffIds[] = $addedFrom;
 
-            // Fallback : aucun staff trouvé → tous les admins actifs
             if (empty($staffIds)) {
                 $admins = $db->table('tblstaff')
                     ->select('staffid')
                     ->where('admin', 1)
                     ->where('active', 1)
                     ->get()->getResultArray();
-                foreach ($admins as $a) {
-                    $staffIds[] = (int)$a['staffid'];
-                }
+                foreach ($admins as $a) $staffIds[] = (int)$a['staffid'];
             }
 
-            // ── 3. Notifier chaque staff ──────────────────────────────────────
             foreach (array_unique($staffIds) as $staffId) {
-                $msg = "💳 Paiement de {$amountFmt} € reçu — Facture {$fmtNum} ({$statusLabel})";
-
-                // INSERT garanti en base (indépendant du FCM)
+                $msg = "Paiement de {$amountFmt} TND reçu — Facture {$fmtNum} ({$statusLabel})";
                 $this->_insertNotification($db, $staffId, $msg, $link, $now);
-
-                // Push FCM en bonus (silencieux si échec)
                 try {
                     $fcm = new \App\Libraries\FcmService();
                     $fcm->sendToStaff($staffId, 'Paiement reçu', $msg, [
@@ -581,11 +883,6 @@ class PaymentController extends ResourceController
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Helper : INSERT unique dans tblnotifications
-    // Centralisé ici pour éviter toute duplication entre INSERT direct
-    // et FcmService::createAndSend() qui faisait le même INSERT.
-    // ─────────────────────────────────────────────────────────────────────────
     private function _insertNotification(
         \CodeIgniter\Database\BaseConnection $db,
         int    $toUserId,

@@ -6,6 +6,7 @@ use CodeIgniter\RESTful\ResourceController;
 use App\Models\TicketModel;
 use App\Models\TicketReplyModel;
 use App\Models\ContactModel;
+use App\Libraries\TicketNotificationService;
 
 class TicketController extends ResourceController
 {
@@ -137,6 +138,17 @@ class TicketController extends ResourceController
                     'admin'     => (int) $staffId,
                 ]);
             }
+        }
+
+        try {
+            $fullTicket = array_merge($data, [
+                'ticketid'        => $ticketId,
+                'name'            => trim(($contact['firstname'] ?? '') . ' ' . ($contact['lastname'] ?? '')),
+                'department_name' => $this->getDeptName((int) ($data['department'] ?? 0)),
+            ]);
+            (new TicketNotificationService())->notifyNewTicket($fullTicket);
+        } catch (\Throwable $e) {
+            log_message('error', '[TicketController] notifyNewTicket: ' . $e->getMessage());
         }
 
         return $this->respondCreated([
@@ -451,6 +463,17 @@ class TicketController extends ResourceController
         }
         $ticketModel->update($ticketId, $updateData);
 
+        try {
+            $notifSvc = new TicketNotificationService();
+            if ($isAdmin) {
+                $notifSvc->notifyReplyToClient($ticket, $message);
+            } else {
+                $notifSvc->notifyReplyToStaff($ticket, $message);
+            }
+        } catch (\Throwable $e) {
+            log_message('error', '[TicketController] notifyReply: ' . $e->getMessage());
+        }
+
         return $this->respond([
             'status'   => true,
             'message'  => 'Réponse ajoutée avec succès',
@@ -475,6 +498,21 @@ class TicketController extends ResourceController
         if (!$ticketModel->find($ticketId)) return $this->fail('Ticket introuvable', 404);
 
         $ticketModel->update($ticketId, ['status' => (int) $statusId]);
+
+        try {
+            $db          = \Config\Database::connect();
+            $freshTicket = $db->table('tbltickets t')
+                ->select('t.*, ts.name as status_name')
+                ->join('tbltickets_status ts', 'ts.ticketstatusid = t.status', 'left')
+                ->where('t.ticketid', $ticketId)
+                ->get()->getRowArray();
+
+            if ($freshTicket) {
+                (new TicketNotificationService())->notifyStatusChanged($freshTicket);
+            }
+        } catch (\Throwable $e) {
+            log_message('error', '[TicketController] notifyStatusChanged: ' . $e->getMessage());
+        }
 
         return $this->respond(['status' => true, 'message' => 'Statut mis à jour avec succès']);
     }
@@ -687,4 +725,18 @@ public function deleteDepartment($id = null) {
     $db->table('tbldepartments')->where('departmentid', $id)->delete();
     return $this->respond(['status' => true, 'message' => 'Département supprimé']);
 }
+
+    private function getDeptName(int $deptId): string
+    {
+        if ($deptId <= 0) {
+            return '';
+        }
+        $row = \Config\Database::connect()
+            ->table('tbldepartments')
+            ->select('name')
+            ->where('departmentid', $deptId)
+            ->get()->getRowArray();
+
+        return $row['name'] ?? '';
+    }
 }
