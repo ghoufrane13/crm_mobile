@@ -11,7 +11,7 @@ class ItemModel extends Model
     protected $returnType    = 'array';
     protected $useSoftDeletes = false;         // ✅ CRITIQUE : pas de soft delete
     protected $allowedFields = [
-        'description', 'long_description', 'rate', 'rate_currency_2',
+        'description', 'long_description', 'rate',
         'tax', 'tax2', 'unit',
     ];
 
@@ -24,7 +24,7 @@ class ItemModel extends Model
         $builder = $this->db->table('tblitems i')
             ->select([
                 'i.id', 'i.description', 'i.long_description',
-                'i.rate', 'i.rate_currency_2', 'i.unit',
+                'i.rate', 'i.unit',
                 'i.tax', 'i.tax2',
                 't1.name  AS tax1_name',
                 't1.taxrate AS tax1_rate',
@@ -65,7 +65,7 @@ class ItemModel extends Model
         return $this->db->table('tblitems i')
             ->select([
                 'i.id', 'i.description', 'i.long_description',
-                'i.rate', 'i.rate_currency_2', 'i.unit',
+                'i.rate', 'i.unit',
                 'i.tax', 'i.tax2',
                 't1.name    AS tax1_name',
                 't1.taxrate AS tax1_rate',
@@ -87,7 +87,7 @@ class ItemModel extends Model
         return $this->db->table('tblitems i')
             ->select([
                 'i.id', 'i.description', 'i.long_description',
-                'i.rate', 'i.rate_currency_2', 'i.unit',
+                'i.rate', 'i.unit',
                 'i.tax', 'i.tax2',
                 't1.name    AS tax1_name',
                 't1.taxrate AS tax1_rate',

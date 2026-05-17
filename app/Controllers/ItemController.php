@@ -104,15 +104,19 @@ class ItemController extends ResourceController
             return $this->fail('Le taux (rate) est obligatoire et doit être un nombre', 400);
         }
 
+        // Devise stockée dans tblitems.unit (TND / EUR / USD)
+        $unit = strtoupper(trim($body['unit'] ?? $body['currency_code'] ?? 'USD'));
+        if (!in_array($unit, ['TND', 'EUR', 'USD'], true)) {
+            $unit = 'USD';
+        }
+
         $data = [
             'description'      => $desc,
             'long_description' => $body['long_description'] ?? null,
             'rate'             => (float)$rate,
-            'rate_currency_2'  => (isset($body['rate_currency_2']) && $body['rate_currency_2'] !== '')
-                ? (float)$body['rate_currency_2'] : null,
+            'unit'             => $unit,
             'tax'              => !empty($body['tax'])  ? (int)$body['tax']  : null,
             'tax2'             => !empty($body['tax2']) ? (int)$body['tax2'] : null,
-            'unit'             => $body['unit']     ?? null,
         ];
 
         // ✅ insert() en CI4 retourne l'ID inséré (int) ou false
@@ -144,11 +148,12 @@ class ItemController extends ResourceController
         if (isset($body['description']))      $data['description']      = trim($body['description']);
         if (isset($body['long_description'])) $data['long_description'] = $body['long_description'];
         if (isset($body['rate']))             $data['rate']             = (float)$body['rate'];
-        if (array_key_exists('rate_currency_2', $body))
-            $data['rate_currency_2'] = ($body['rate_currency_2'] !== '') ? (float)$body['rate_currency_2'] : null;
+        if (isset($body['unit']) || isset($body['currency_code'])) {
+            $unit = strtoupper(trim($body['unit'] ?? $body['currency_code'] ?? 'USD'));
+            $data['unit'] = in_array($unit, ['TND', 'EUR', 'USD'], true) ? $unit : 'USD';
+        }
         if (array_key_exists('tax', $body))   $data['tax']  = !empty($body['tax'])  ? (int)$body['tax']  : null;
         if (array_key_exists('tax2', $body))  $data['tax2'] = !empty($body['tax2']) ? (int)$body['tax2'] : null;
-        if (isset($body['unit']))             $data['unit']     = $body['unit'];
 
         if (empty($data)) {
             return $this->fail('Aucune donnée à mettre à jour', 400);
