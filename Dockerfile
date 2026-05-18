@@ -9,8 +9,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /app
 COPY . .
 
-RUN composer config platform.php 8.2.0 && \
-    composer update laminas/laminas-escaper --no-dev && \
+RUN rm -f composer.lock && \
     composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 
 EXPOSE 8080
