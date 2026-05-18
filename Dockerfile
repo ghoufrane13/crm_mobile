@@ -11,6 +11,8 @@ COPY . .
 
 RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs --no-security-blocking
 
+RUN chmod -R 777 /app/writable
+
 EXPOSE 8080
 
 CMD php -S 0.0.0.0:8080 -t public
