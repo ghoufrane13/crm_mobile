@@ -5,6 +5,7 @@ namespace App\Controllers;
 use CodeIgniter\RESTful\ResourceController;
 use App\Libraries\JwtService;
 use App\Libraries\FcmService;
+use App\Helpers\EmailHelper;
 
 /**
  * ============================================================
@@ -366,28 +367,6 @@ class ReminderController extends ResourceController
 <div style='background:#eff6ff;border-left:4px solid #2563eb;padding:12px 16px;color:#1e40af;border-radius:0 10px 10px 0'>"
 . htmlspecialchars($msg) . "</div></div></div></body></html>";
 
-        $ch = curl_init('https://api.brevo.com/v3/smtp/email');
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => json_encode([
-                'sender'      => ['name' => 'CRM Mobile', 'email' => 'ghoufranbensassy@gmail.com'],
-                'to'          => [['email' => $to, 'name' => $staffName]],
-                'subject'     => '⏰ Rappel CRM : ' . ($relLabel ?: 'nouveau rappel'),
-                'htmlContent' => $html,
-            ]),
-            CURLOPT_HTTPHEADER => [
-                'accept: application/json',
-                'api-key: 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',
-                'content-type: application/json',
-            ],
-            CURLOPT_TIMEOUT => 15,
-        ]);
-        $res  = curl_exec($ch);
-        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        if ($code !== 201) {
-            log_message('error', '[ReminderController] Email Brevo failed: ' . $res);
-        }
+        EmailHelper::sendBrevoEmail($to, '⏰ Rappel CRM : ' . ($relLabel ?: 'nouveau rappel'), $html);
     }
 }

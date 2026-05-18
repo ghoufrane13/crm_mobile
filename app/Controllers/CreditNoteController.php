@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use CodeIgniter\RESTful\ResourceController;
 use App\Models\CreditNoteModel;
+use App\Helpers\EmailHelper;
 use TCPDF;
 
 class CreditNoteController extends ResourceController
@@ -637,41 +638,8 @@ class CreditNoteController extends ResourceController
             log_message('error', 'CN PDF gen: ' . $e->getMessage());
         }
 
-        $payload = [
-            'sender'      => ['name' => 'CRM Mobile', 'email' => 'ghoufranbensassy@gmail.com'],
-            'to'          => [['email' => $to, 'name' => $clientName]],
-            'subject'     => "Note de Crédit $numStr",
-            'htmlContent' => $html,
-        ];
-        if ($pdfBase64 !== null) {
-            $payload['attachment'] = [['name' => 'note_credit_' . $id . '.pdf', 'content' => $pdfBase64]];
-        }
-
-        $ch = curl_init('https://api.brevo.com/v3/smtp/email');
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => json_encode($payload),
-            CURLOPT_HTTPHEADER     => [
-                'accept: application/json',
-                'api-key: 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',
-                'content-type: application/json',
-            ],
-            CURLOPT_TIMEOUT        => 30,
-            CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_SSL_VERIFYHOST => 0,
-        ]);
-
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $err      = curl_error($ch);
-        curl_close($ch);
-
-        if ($err) {
-            log_message('error', 'Brevo cURL error: ' . $err);
-            return false;
-        }
-        return $httpCode === 201;
+        $pdfName = 'note_credit_' . $id . '.pdf';
+        return EmailHelper::sendBrevoEmailWithBinary($to, "Note de Crédit $numStr", $html, $pdfBase64, $pdfName);
     }
 
     // ─────────────────────────────────────────────────────────────────────────

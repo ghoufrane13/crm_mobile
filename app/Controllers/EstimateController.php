@@ -5,6 +5,7 @@ namespace App\Controllers;
 use CodeIgniter\RESTful\ResourceController;
 use App\Models\EstimateModel;
 use App\Models\SignatureModel;
+use App\Helpers\EmailHelper;
 use TCPDF;
 
 class EstimateController extends ResourceController
@@ -577,17 +578,8 @@ class EstimateController extends ResourceController
         $html="<!DOCTYPE html><html><head><meta charset='UTF-8'><style>body{font-family:'Segoe UI',sans-serif;background:#f1f5f9;padding:20px}.box{max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden}.hd{background:linear-gradient(135deg,#1e1b4b,#2563eb,#0ea5e9);padding:32px;text-align:center}.hd h2{color:#fff;margin:0;font-size:22px;font-weight:800}.bd{padding:32px}.note{background:#f0f9ff;border-left:4px solid #0ea5e9;padding:12px 16px;border-radius:0 8px 8px 0;color:#0369a1;font-size:13px;margin:16px 0}.ft{background:#f8fafc;padding:16px;text-align:center;color:#94a3b8;font-size:12px;border-top:1px solid #e2e8f0}</style></head><body><div class='box'><div class='hd'><h2>Devis $numStr</h2></div><div class='bd'><p>Bonjour <strong>".htmlspecialchars($clientName)."</strong>,</p><p><strong>".htmlspecialchars($staffName)."</strong> vous a transmis un devis :</p><p><strong style='font-size:16px'>$numStr</strong></p><div class='note'>Le PDF de votre devis est joint à cet email.</div><p style='color:#64748b;font-size:13px'>Pour toute question, contactez votre commercial.<br><strong>".htmlspecialchars($staffName)."</strong></p></div><div class='ft'>© ".date('Y')." — Envoyé automatiquement.</div></div></body></html>";
         try { $pdfBytes=$this->_generatePdfBytes($estimate); $pdfBase64=base64_encode($pdfBytes); }
         catch(\Throwable $e){ log_message('error','PDF gen: '.$e->getMessage()); $pdfBase64=null; }
-        $payload=['sender'=>['name'=>'CRM Mobile','email'=>'ghoufranbensassy@gmail.com'],'to'=>[['email'=>$to,'name'=>$clientName]],'subject'=>"Devis $numStr",'htmlContent'=>$html];
-        if($pdfBase64!==null) $payload['attachment']=[['name'=>'devis_'.$estimateId.'.pdf','content'=>$pdfBase64]];
-        $ch=curl_init('https://api.brevo.com/v3/smtp/email');
-        curl_setopt_array($ch,[
-            CURLOPT_RETURNTRANSFER=>true, CURLOPT_POST=>true, CURLOPT_POSTFIELDS=>json_encode($payload),
-            CURLOPT_HTTPHEADER=>['accept: application/json','api-key: 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','content-type: application/json'],
-            CURLOPT_TIMEOUT=>30,
-        ]);
-        $response=curl_exec($ch); $httpCode=curl_getinfo($ch,CURLINFO_HTTP_CODE); $err=curl_error($ch); curl_close($ch);
-        if($err){ log_message('error','Brevo cURL: '.$err); return false; }
-        return $httpCode===201;
+        $pdfName='devis_'.$estimateId.'.pdf';
+        return EmailHelper::sendBrevoEmailWithBinary($to,"Devis $numStr",$html,$pdfBase64,$pdfName);
     }
 
     private function _fmtNum(float $val): string { return number_format(abs($val), 2, ',', '.'); }

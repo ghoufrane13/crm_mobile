@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use CodeIgniter\RESTful\ResourceController;
 use App\Models\ExpenseModel;
+use App\Helpers\EmailHelper;
 
 class ExpenseController extends ResourceController
 {
@@ -1047,31 +1048,6 @@ class ExpenseController extends ResourceController
           <div class='ft'>© " . date('Y') . " — Envoyé automatiquement par CRM Mobile.</div>
         </div></body></html>";
 
-        $payload = [
-            'sender'      => ['name' => 'CRM Mobile', 'email' => 'ghoufranbensassy@gmail.com'],
-            'to'          => [['email' => $to, 'name' => $staffName]],
-            'subject'     => "⏰ Relance Dépense #$expenseId — $category",
-            'htmlContent' => $html,
-        ];
-
-        $ch = curl_init('https://api.brevo.com/v3/smtp/email');
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => json_encode($payload),
-            CURLOPT_HTTPHEADER     => [
-                'accept: application/json',
-                'api-key: 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',
-                'content-type: application/json',
-            ],
-            CURLOPT_TIMEOUT => 30,
-        ]);
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $err      = curl_error($ch);
-        curl_close($ch);
-
-        if ($err) { log_message('error', 'Brevo reminder cURL: ' . $err); return false; }
-        return $httpCode === 201;
+        return EmailHelper::sendBrevoEmail($to, "⏰ Relance Dépense #$expenseId — $category", $html);
     }
 }

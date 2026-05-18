@@ -5,6 +5,7 @@ namespace App\Controllers;
 use CodeIgniter\RESTful\ResourceController;
 use App\Models\InvoiceModel;
 use App\Models\SignatureModel;
+use App\Helpers\EmailHelper;
 use TCPDF;
 
 class InvoiceController extends ResourceController
@@ -1342,37 +1343,8 @@ body{font-family:'Segoe UI',sans-serif;background:#f1f5f9;padding:20px;margin:0}
             $pdfBase64 = null;
         }
 
-        $payload = [
-            'sender'      => ['name' => 'CRM Mobile', 'email' => 'ghoufranbensassy@gmail.com'],
-            'to'          => [['email' => $to, 'name' => $clientName]],
-            'subject'     => "Facture $numStr",
-            'htmlContent' => $htmlContent,
-        ];
-
-        if ($pdfBase64 !== null) {
-            $payload['attachment'] = [['name' => 'facture_' . $invoiceId . '.pdf', 'content' => $pdfBase64]];
-        }
-
-        $ch = curl_init('https://api.brevo.com/v3/smtp/email');
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => json_encode($payload),
-            CURLOPT_HTTPHEADER     => [
-                'accept: application/json',
-                'api-key: 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',
-                'content-type: application/json',
-            ],
-            CURLOPT_TIMEOUT => 30,
-        ]);
-
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlErr  = curl_error($ch);
-        curl_close($ch);
-
-        if ($curlErr) { log_message('error', 'Brevo cURL: ' . $curlErr); return false; }
-        return $httpCode === 201;
+        $pdfName = 'facture_' . $invoiceId . '.pdf';
+        return EmailHelper::sendBrevoEmailWithBinary($to, "Facture $numStr", $htmlContent, $pdfBase64, $pdfName);
     }
     // GET /api/invoices/client-dashboard-stats?client_id=X
 public function clientDashboardStats()
