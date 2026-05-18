@@ -9,7 +9,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /app
 COPY . .
 
-RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs --no-audit
+RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs --no-security-blocking
 
 EXPOSE 8080
 
