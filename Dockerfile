@@ -11,7 +11,8 @@ COPY . .
 
 RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs --no-security-blocking
 
-RUN chmod -R 777 /app/writable
+RUN mkdir -p /app/writable/cache /app/writable/logs /app/writable/session /app/writable/uploads \
+    && chmod -R 777 /app/writable
 
 EXPOSE 8080
 
