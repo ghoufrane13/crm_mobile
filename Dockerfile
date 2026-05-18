@@ -16,4 +16,5 @@ RUN mkdir -p /app/writable/cache /app/writable/logs /app/writable/session /app/w
 
 EXPOSE 8080
 
-CMD php -S 0.0.0.0:8080 -t public
+# Routeur PHP pour supporter les URLs propres CI4
+CMD php -S 0.0.0.0:8080 -t public public/index.php
