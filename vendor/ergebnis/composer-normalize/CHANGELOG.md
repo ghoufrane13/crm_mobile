@@ -6,7 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## Unreleased
 
-For a full diff see [`2.50.0...main`][2.50.0...main].
+For a full diff see [`2.52.0...main`][2.52.0...main].
+
+## [`2.52.0`][2.52.0]
+
+For a full diff see [`2.51.0...2.52.0`][2.51.0...2.52.0].
+
+### Changed
+
+- Updated `schema.json` ([#1614]), by [@ergebnis-bot]
+
+### Fixed
+
+- Updated `composer/composer` ([#1616]), by [@localheinz]
+
+## [`2.51.0`][2.51.0]
+
+For a full diff see [`2.50.0...2.51.0`][2.50.0...2.51.0].
+
+### Changed
+
+- Updated `schema.json` ([#1592]), by [@ergebnis-bot]
 
 ## [`2.50.0`][2.50.0]
 
@@ -1087,6 +1107,8 @@ For a full diff see [`81bc3a8...0.1.0`][81bc3a8...0.1.0].
 [2.48.2]: https://github.com/ergebnis/composer-normalize/releases/tag/2.48.2
 [2.49.0]: https://github.com/ergebnis/composer-normalize/releases/tag/2.49.0
 [2.50.0]: https://github.com/ergebnis/composer-normalize/releases/tag/2.50.0
+[2.51.0]: https://github.com/ergebnis/composer-normalize/releases/tag/2.51.0
+[2.52.0]: https://github.com/ergebnis/composer-normalize/releases/tag/2.52.0
 
 [81bc3a8...0.1.0]: https://github.com/ergebnis/composer-normalize/compare/81bc3a8...0.1.0
 [0.1.0...0.2.0]: https://github.com/ergebnis/composer-normalize/compare/0.1.0...0.2.0
@@ -1191,7 +1213,9 @@ For a full diff see [`81bc3a8...0.1.0`][81bc3a8...0.1.0].
 [2.48.1...2.48.2]: https://github.com/ergebnis/composer-normalize/compare/2.48.1...2.48.2
 [2.48.2...2.49.0]: https://github.com/ergebnis/composer-normalize/compare/2.48.2...2.49.0
 [2.49.0...2.50.0]: https://github.com/ergebnis/composer-normalize/compare/2.49.0...2.50.0
-[2.50.0...main]: https://github.com/ergebnis/composer-normalize/compare/2.50.0...main
+[2.50.0...2.51.0]: https://github.com/ergebnis/composer-normalize/compare/2.50.0...2.51.0
+[2.51.0...2.52.0]: https://github.com/ergebnis/composer-normalize/compare/2.51.0...2.52.0
+[2.52.0...main]: https://github.com/ergebnis/composer-normalize/compare/2.52.0...main
 
 [#1]: https://github.com/ergebnis/composer-normalize/pull/1
 [#2]: https://github.com/ergebnis/composer-normalize/pull/2
@@ -1357,6 +1381,9 @@ For a full diff see [`81bc3a8...0.1.0`][81bc3a8...0.1.0].
 [#1502]: https://github.com/ergebnis/composer-normalize/pull/1502
 [#1507]: https://github.com/ergebnis/composer-normalize/pull/1507
 [#1563]: https://github.com/ergebnis/composer-normalize/pull/1563
+[#1592]: https://github.com/ergebnis/composer-normalize/pull/1592
+[#1614]: https://github.com/ergebnis/composer-normalize/pull/1614
+[#1616]: https://github.com/ergebnis/composer-normalize/pull/1616
 
 [@AlexSkrypnyk]: https://github.com/AlexSkrypnyk
 [@andrey-helldar]: https://github.com/andrey-helldar

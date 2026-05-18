@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace PhpCsFixer\Console;
 
+use Ergebnis\AgentDetector;
 use PhpCsFixer\Cache\CacheManagerInterface;
 use PhpCsFixer\Cache\Directory;
 use PhpCsFixer\Cache\DirectoryInterface;
@@ -669,6 +670,15 @@ final class ConfigurationResolver
     private function resolveFormat(): string
     {
         if (null === $this->format) {
+            $agentDetector = new AgentDetector\Detector();
+
+            // When an AI agent is running, we ignore the format configuration entirely and use JSON format.
+            if ($agentDetector->isAgentPresent(getenv())) {
+                $this->format = 'json';
+
+                return $this->format;
+            }
+
             $formatCandidate = $this->options['format'] ?? $this->getConfig()->getFormat();
             $parts = explode(',', $formatCandidate);
 
@@ -709,18 +719,6 @@ final class ConfigurationResolver
         }
 
         return $this->isStdIn;
-    }
-
-    /**
-     * @template T
-     *
-     * @param iterable<T> $iterable
-     *
-     * @return \Traversable<T>
-     */
-    private function iterableToTraversable(iterable $iterable): \Traversable
-    {
-        return \is_array($iterable) ? new \ArrayIterator($iterable) : $iterable;
     }
 
     /**
@@ -942,7 +940,7 @@ final class ConfigurationResolver
                 return new \ArrayIterator([]);
             }
 
-            return $this->iterableToTraversable($this->getConfig()->getFinder());
+            return $this->getConfig()->getFinder();
         }
 
         $pathsByType = [
@@ -959,10 +957,16 @@ final class ConfigurationResolver
         }
 
         $nestedFinder = null;
-        $currentFinder = $this->iterableToTraversable($this->getConfig()->getFinder());
+        $currentFinder = $this->getConfig()->getFinder();
 
         try {
-            $nestedFinder = $currentFinder instanceof \IteratorAggregate ? $currentFinder->getIterator() : $currentFinder;
+            $nestedFinder = $currentFinder instanceof \IteratorAggregate
+                ? $currentFinder->getIterator()
+                : (
+                    $currentFinder instanceof \Traversable
+                        ? $currentFinder
+                        : new \ArrayIterator($currentFinder)
+                );
         } catch (\Exception $e) {
         }
 
