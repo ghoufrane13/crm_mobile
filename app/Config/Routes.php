@@ -82,6 +82,40 @@ $routes->get('api/debug-mail', function() {
         'MAIL_FROM_ADDRESS' => env('MAIL_FROM_ADDRESS') ?: 'NON DÉFINI',
     ]);
 });
+$routes->get('api/debug-brevo', function() {
+    $payload = [
+        'sender'      => [
+            'name'  => env('MAIL_FROM_NAME', 'CRM Mobile'),
+            'email' => env('MAIL_FROM_ADDRESS', ''),
+        ],
+        'to'          => [['email' => 'ghoufranbensassy@gmail.com']],
+        'subject'     => 'Test Brevo API',
+        'htmlContent' => '<h1>Test OK</h1>',
+    ];
+
+    $ch = curl_init('https://api.brevo.com/v3/smtp/email');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => json_encode($payload),
+        CURLOPT_HTTPHEADER     => [
+            'Content-Type: application/json',
+            'api-key: ' . env('BREVO_API_KEY', ''),
+        ],
+    ]);
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($ch);
+    curl_close($ch);
+
+    return \Config\Services::response()->setJSON([
+        'http_code'  => $httpCode,
+        'response'   => json_decode($response, true) ?? $response,
+        'curl_error' => $curlError ?: null,
+        'api_key'    => env('BREVO_API_KEY') ? '***défini***' : 'NON DÉFINI',
+        'from_email' => env('MAIL_FROM_ADDRESS', 'NON DÉFINI'),
+    ]);
+});
 $routes->group('api', function ($routes) {
 
     // ========================================
