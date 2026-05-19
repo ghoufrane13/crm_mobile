@@ -49,14 +49,11 @@ class RegisterController extends BaseController
     }
 
     private function sendOtpEmail(string $to, string $otpCode, string $company): bool
-    {
-        $subject = "Code de vérification - Inscription société";
-        $message = "
-<!DOCTYPE html>
-<html>
-<head><meta charset='UTF-8'>
+{
+    $htmlContent = "
+<!DOCTYPE html><html><head><meta charset='UTF-8'>
 <style>
-body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#f1f5f9; padding:20px; margin:0; }
+body { font-family: 'Segoe UI', sans-serif; background:#f1f5f9; padding:20px; margin:0; }
 .email-container { max-width:600px; margin:0 auto; background:#fff; padding:36px; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,.08); }
 .header { text-align:center; background:linear-gradient(135deg,#1e1b4b,#2563eb,#0ea5e9); padding:28px; border-radius:12px; margin-bottom:28px; }
 .header h2 { color:#fff; margin:0; font-size:20px; font-weight:800; }
@@ -64,12 +61,10 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 .code-box  { text-align:center; background:#eff6ff; border:2px dashed #2563eb; padding:24px; border-radius:12px; margin:24px 0; }
 .code-box span { font-size:44px; font-weight:900; color:#2563eb; letter-spacing:12px; }
 .code-label { color:#64748b; font-size:12px; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; }
-.info  { color:#64748b; font-size:13px; line-height:1.6; }
-.warn  { color:#94a3b8; font-size:12px; text-align:center; margin-top:20px; }
+.info { color:#64748b; font-size:13px; line-height:1.6; }
+.warn { color:#94a3b8; font-size:12px; text-align:center; margin-top:20px; }
 .footer { border-top:1px solid #e2e8f0; margin-top:28px; padding-top:16px; text-align:center; color:#cbd5e1; font-size:11px; }
-</style>
-</head>
-<body>
+</style></head><body>
 <div class='email-container'>
   <div class='header'>
     <h2>🔐 Vérification de votre compte société</h2>
@@ -85,35 +80,37 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
   <p class='warn'>⏱ Ce code est valable pendant <strong>10 minutes</strong>.</p>
   <p class='warn'>Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>
   <div class='footer'>© " . date('Y') . " CRM Mobile — Envoyé automatiquement, ne pas répondre.</div>
-</div>
-</body>
-</html>";
+</div></body></html>";
 
-        $config = [
-            'protocol'   => 'smtp',
-            'SMTPHost'   => 'smtp-relay.brevo.com',
-            'SMTPPort'   => 465,
-            'SMTPUser'   => env('BREVO_SMTP_USER', ''),
-            'SMTPPass'   => env('BREVO_SMTP_PASS', ''),
-            'SMTPCrypto' => 'ssl',
-            'mailType'   => 'html',
-            'charset'    => 'utf-8',
-            'wordWrap'   => true,
-            'newline'    => "\r\n",
-        ];
+    $payload = [
+        'sender'      => [
+            'name'  => env('MAIL_FROM_NAME', 'CRM Mobile'),
+            'email' => env('MAIL_FROM_ADDRESS', ''),
+        ],
+        'to'          => [['email' => $to]],
+        'subject'     => 'Code de vérification - Inscription société',
+        'htmlContent' => $htmlContent,
+    ];
 
-        $email = \Config\Services::email();
-        $email->initialize($config);
-        $email->setFrom(env('MAIL_FROM_ADDRESS', ''), env('MAIL_FROM_NAME', 'CRM Mobile'));
-        $email->setTo($to);
-        $email->setSubject($subject);
-        $email->setMessage($message);
+    $ch = curl_init('https://api.brevo.com/v3/smtp/email');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => json_encode($payload),
+        CURLOPT_HTTPHEADER     => [
+            'Content-Type: application/json',
+            'api-key: ' . env('BREVO_API_KEY', ''),
+        ],
+    ]);
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
 
-        if (!$email->send()) {
-            throw new \RuntimeException($email->printDebugger(['headers', 'subject', 'body']));
-        }
-        return true;
+    if ($httpCode !== 201) {
+        throw new \RuntimeException('Brevo API error (' . $httpCode . '): ' . $response);
     }
+    return true;
+}
 
     // ══════════════════════════════════════════════════════════════════════
     // 1️⃣  SEND EMAIL CODE
