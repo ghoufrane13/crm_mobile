@@ -12,10 +12,18 @@ $routes->get('/', 'Home::index');
 // DEBUG TEMPORAIRE — À SUPPRIMER APRÈS
 // ========================================
 $routes->get('api/debug', function() {
-    $hostname = env('database.default.hostname', 'NON DÉFINI');
-    $port     = env('database.default.port', 'NON DÉFINI');
-    $database = env('database.default.database', 'NON DÉFINI');
-    $username = env('database.default.username', 'NON DÉFINI');
+    // Afficher TOUTES les variables d'environnement disponibles
+    $allEnv = getenv();
+
+    // Filtrer uniquement celles qui contiennent "DB" ou "database"
+    $dbVars = [];
+    foreach ($allEnv as $key => $value) {
+        if (stripos($key, 'DB') !== false || stripos($key, 'database') !== false) {
+            $dbVars[$key] = (stripos($key, 'PASS') !== false || stripos($key, 'PASSWORD') !== false)
+                            ? '***masqué***'
+                            : $value;
+        }
+    }
 
     try {
         $db = \Config\Database::connect();
@@ -26,11 +34,13 @@ $routes->get('api/debug', function() {
     }
 
     return \Config\Services::response()->setJSON([
-        'hostname'  => $hostname,
-        'port'      => $port,
-        'database'  => $database,
-        'username'  => $username,
-        'db_status' => $dbStatus,
+        'vars_trouvées' => $dbVars,
+        'count'         => count($dbVars),
+        'DB_HOSTNAME'   => getenv('DB_HOSTNAME') ?: 'NON DÉFINI',
+        'DB_PORT'       => getenv('DB_PORT')     ?: 'NON DÉFINI',
+        'DB_USERNAME'   => getenv('DB_USERNAME') ?: 'NON DÉFINI',
+        'DB_DATABASE'   => getenv('DB_DATABASE') ?: 'NON DÉFINI',
+        'db_status'     => $dbStatus,
     ]);
 });
 
