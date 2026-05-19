@@ -75,6 +75,13 @@ $routes->get('api/test-profile-countries', function() {
         ]);
     }
 });
+$routes->get('api/debug-mail', function() {
+    return \Config\Services::response()->setJSON([
+        'BREVO_SMTP_USER'   => env('BREVO_SMTP_USER')   ?: 'NON DÉFINI',
+        'BREVO_SMTP_PASS'   => env('BREVO_SMTP_PASS')   ? '***défini***' : 'NON DÉFINI',
+        'MAIL_FROM_ADDRESS' => env('MAIL_FROM_ADDRESS') ?: 'NON DÉFINI',
+    ]);
+});
 $routes->group('api', function ($routes) {
 
     // ========================================
