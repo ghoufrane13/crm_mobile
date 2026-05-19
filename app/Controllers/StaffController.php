@@ -43,10 +43,10 @@ class StaffController extends ResourceController
         }
     }
 
-   private function sendOtpEmail(string $to, string $otpCode,
-    string $firstname, string $lastname): bool
-{
-    $htmlContent = "
+    private function sendOtpEmail(string $to, string $otpCode,
+        string $firstname, string $lastname): bool
+    {
+        $htmlContent = "
 <!DOCTYPE html><html><head><meta charset='UTF-8'>
 <style>
 body { font-family: 'Segoe UI', sans-serif; background:#f1f5f9; padding:20px; margin:0; }
@@ -78,35 +78,35 @@ body { font-family: 'Segoe UI', sans-serif; background:#f1f5f9; padding:20px; ma
   <div class='footer'>© " . date('Y') . " CRM Mobile — Envoyé automatiquement, ne pas répondre.</div>
 </div></body></html>";
 
-    $payload = [
-        'sender'      => [
-            'name'  => env('MAIL_FROM_NAME', 'CRM Mobile'),
-            'email' => env('MAIL_FROM_ADDRESS', ''),
-        ],
-        'to'          => [['email' => $to]],
-        'subject'     => 'Code de vérification - CRM Mobile Staff',
-        'htmlContent' => $htmlContent,
-    ];
+        $payload = [
+            'sender'      => [
+                'name'  => env('MAIL_FROM_NAME', 'CRM Mobile'),
+                'email' => env('MAIL_FROM_ADDRESS', ''),
+            ],
+            'to'          => [['email' => $to]],
+            'subject'     => 'Code de vérification - CRM Mobile Staff',
+            'htmlContent' => $htmlContent,
+        ];
 
-    $ch = curl_init('https://api.brevo.com/v3/smtp/email');
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST           => true,
-        CURLOPT_POSTFIELDS     => json_encode($payload),
-        CURLOPT_HTTPHEADER     => [
-            'Content-Type: application/json',
-            'api-key: ' . env('BREVO_API_KEY', ''),
-        ],
-    ]);
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
+        $ch = curl_init('https://api.brevo.com/v3/smtp/email');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode($payload),
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'api-key: ' . env('BREVO_API_KEY', ''),
+            ],
+        ]);
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
 
-    if ($httpCode !== 201) {
-        throw new \RuntimeException('Brevo API error (' . $httpCode . '): ' . $response);
+        if ($httpCode !== 201) {
+            throw new \RuntimeException('Brevo API error (' . $httpCode . '): ' . $response);
+        }
+        return true;
     }
-    return true;
-}
 
     // ═══════════════════════════════════════════════════════════════════════
     // POST /api/staff/register
@@ -150,13 +150,14 @@ body { font-family: 'Segoe UI', sans-serif; background:#f1f5f9; padding:20px; ma
             $this->sendOtpEmail($email, $otpCode,
                 trim($data['firstname']), trim($data['lastname']));
         } catch (\Throwable $e) {
-            return $this->fail('SMTP ERROR: ' . $e->getMessage(), 500);
+            log_message('error', '[StaffController] sendOtpEmail: ' . $e->getMessage());
         }
 
         return $this->respond([
-            'success' => true,
-            'message' => 'Code de vérification envoyé à ' . $email,
-            'token'   => $token,
+            'success'   => true,
+            'message'   => 'Code de vérification envoyé à ' . $email,
+            'token'     => $token,
+            'debug_otp' => $otpCode, // ← À SUPPRIMER EN PRODUCTION
         ], 200);
     }
 
@@ -238,14 +239,14 @@ body { font-family: 'Segoe UI', sans-serif; background:#f1f5f9; padding:20px; ma
             $this->sendOtpEmail($pending['email'], $pending['otp_code'],
                 $pending['firstname'], $pending['lastname']);
         } catch (\Throwable $e) {
-            return $this->respond(['success' => false,
-                'message' => 'SMTP ERROR: ' . $e->getMessage()], 200);
+            log_message('error', '[StaffController] resendOtp: ' . $e->getMessage());
         }
 
         return $this->respond([
-            'success' => true,
-            'message' => 'Nouveau code envoyé à ' . $pending['email'],
-            'token'   => $newToken,
+            'success'   => true,
+            'message'   => 'Nouveau code envoyé à ' . $pending['email'],
+            'token'     => $newToken,
+            'debug_otp' => $pending['otp_code'], // ← À SUPPRIMER EN PRODUCTION
         ], 200);
     }
 

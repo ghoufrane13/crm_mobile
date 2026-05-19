@@ -49,8 +49,8 @@ class RegisterController extends BaseController
     }
 
     private function sendOtpEmail(string $to, string $otpCode, string $company): bool
-{
-    $htmlContent = "
+    {
+        $htmlContent = "
 <!DOCTYPE html><html><head><meta charset='UTF-8'>
 <style>
 body { font-family: 'Segoe UI', sans-serif; background:#f1f5f9; padding:20px; margin:0; }
@@ -82,35 +82,35 @@ body { font-family: 'Segoe UI', sans-serif; background:#f1f5f9; padding:20px; ma
   <div class='footer'>© " . date('Y') . " CRM Mobile — Envoyé automatiquement, ne pas répondre.</div>
 </div></body></html>";
 
-    $payload = [
-        'sender'      => [
-            'name'  => env('MAIL_FROM_NAME', 'CRM Mobile'),
-            'email' => env('MAIL_FROM_ADDRESS', ''),
-        ],
-        'to'          => [['email' => $to]],
-        'subject'     => 'Code de vérification - Inscription société',
-        'htmlContent' => $htmlContent,
-    ];
+        $payload = [
+            'sender'      => [
+                'name'  => env('MAIL_FROM_NAME', 'CRM Mobile'),
+                'email' => env('MAIL_FROM_ADDRESS', ''),
+            ],
+            'to'          => [['email' => $to]],
+            'subject'     => 'Code de vérification - Inscription société',
+            'htmlContent' => $htmlContent,
+        ];
 
-    $ch = curl_init('https://api.brevo.com/v3/smtp/email');
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST           => true,
-        CURLOPT_POSTFIELDS     => json_encode($payload),
-        CURLOPT_HTTPHEADER     => [
-            'Content-Type: application/json',
-            'api-key: ' . env('BREVO_API_KEY', ''),
-        ],
-    ]);
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
+        $ch = curl_init('https://api.brevo.com/v3/smtp/email');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode($payload),
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'api-key: ' . env('BREVO_API_KEY', ''),
+            ],
+        ]);
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
 
-    if ($httpCode !== 201) {
-        throw new \RuntimeException('Brevo API error (' . $httpCode . '): ' . $response);
+        if ($httpCode !== 201) {
+            throw new \RuntimeException('Brevo API error (' . $httpCode . '): ' . $response);
+        }
+        return true;
     }
-    return true;
-}
 
     // ══════════════════════════════════════════════════════════════════════
     // 1️⃣  SEND EMAIL CODE
@@ -170,7 +170,7 @@ body { font-family: 'Segoe UI', sans-serif; background:#f1f5f9; padding:20px; ma
             try {
                 $this->sendOtpEmail($email, $otpCode, $existingClient['company']);
             } catch (\Throwable $e) {
-                return $this->failServerError('SMTP ERROR: ' . $e->getMessage());
+                log_message('error', '[RegisterController] sendOtpEmail CAS1: ' . $e->getMessage());
             }
 
             return $this->respond([
@@ -178,6 +178,7 @@ body { font-family: 'Segoe UI', sans-serif; background:#f1f5f9; padding:20px; ma
                 'company_exists' => true,
                 'message'        => 'Société trouvée. Code de vérification envoyé à ' . $email,
                 'token'          => $token,
+                'debug_otp'      => $otpCode, // ← À SUPPRIMER EN PRODUCTION
             ]);
         }
 
@@ -211,7 +212,7 @@ body { font-family: 'Segoe UI', sans-serif; background:#f1f5f9; padding:20px; ma
         try {
             $this->sendOtpEmail($email, $otpCode, $company);
         } catch (\Throwable $e) {
-            return $this->failServerError('SMTP ERROR: ' . $e->getMessage());
+            log_message('error', '[RegisterController] sendOtpEmail CAS2: ' . $e->getMessage());
         }
 
         return $this->respond([
@@ -219,6 +220,7 @@ body { font-family: 'Segoe UI', sans-serif; background:#f1f5f9; padding:20px; ma
             'company_exists' => false,
             'message'        => 'Code de vérification envoyé à ' . $email,
             'token'          => $token,
+            'debug_otp'      => $otpCode, // ← À SUPPRIMER EN PRODUCTION
         ]);
     }
 
@@ -321,14 +323,14 @@ body { font-family: 'Segoe UI', sans-serif; background:#f1f5f9; padding:20px; ma
                 $pending['company'] ?? 'votre société'
             );
         } catch (\Throwable $e) {
-            return $this->respond(['status' => false,
-                'message' => 'SMTP ERROR: ' . $e->getMessage()], 200);
+            log_message('error', '[RegisterController] resendEmailCode: ' . $e->getMessage());
         }
 
         return $this->respond([
-            'status'  => true,
-            'message' => 'Nouveau code envoyé à ' . $pending['email'],
-            'token'   => $newToken,
+            'status'    => true,
+            'message'   => 'Nouveau code envoyé à ' . $pending['email'],
+            'token'     => $newToken,
+            'debug_otp' => $pending['otp_code'], // ← À SUPPRIMER EN PRODUCTION
         ]);
     }
 
