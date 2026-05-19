@@ -28,7 +28,7 @@ class Database extends Config
         'charset'      => 'utf8',
         'DBCollat'     => 'utf8_general_ci',
         'swapPre'      => '',
-        'encrypt'      => true,
+        'encrypt'      => false,
         'verify'       => false,
         'compress'     => false,
         'strictOn'     => false,
@@ -66,27 +66,46 @@ class Database extends Config
     {
         parent::__construct();
 
-        $hostname = env('database.default.hostname', '');
+        // Priorité 1 : variables Render (noms simples, sans points)
+        // Ces variables sont définies dans Render → Environment
+        $renderHostname = getenv('DB_HOSTNAME');
 
-        if (!empty($hostname)) {
-            // Production (Render + Aiven)
-            $this->default['hostname'] = $hostname;
-            $this->default['username'] = env('database.default.username', '');
-            $this->default['password'] = env('database.default.password', '');
-            $this->default['database'] = env('database.default.database', '');
-            $this->default['port']     = (int) env('database.default.port', 3306);
-            $this->default['DBDriver'] = env('database.default.DBDriver', 'MySQLi');
+        if (!empty($renderHostname)) {
+            // ✅ PRODUCTION — Render + Aiven
+            $this->default['hostname'] = $renderHostname;
+            $this->default['username'] = getenv('DB_USERNAME') ?: '';
+            $this->default['password'] = getenv('DB_PASSWORD') ?: '';
+            $this->default['database'] = getenv('DB_DATABASE') ?: '';
+            $this->default['port']     = (int)(getenv('DB_PORT') ?: 3306);
+            $this->default['DBDriver'] = 'MySQLi';
             $this->default['encrypt']  = true;  // SSL obligatoire pour Aiven
             $this->default['verify']   = false;
+
         } else {
-            // Local XAMPP
-            $this->default['hostname'] = 'localhost';
-            $this->default['username'] = 'root';
-            $this->default['password'] = '';
-            $this->default['database'] = 'ton_db_local';
-            $this->default['port']     = 3306;
-            $this->default['encrypt']  = false;
-            $this->default['verify']   = false;
+            // Priorité 2 : variables .env local (format CodeIgniter avec points)
+            $localHostname = env('database.default.hostname', '');
+
+            if (!empty($localHostname)) {
+                // ✅ LOCAL — fichier .env avec format CodeIgniter
+                $this->default['hostname'] = $localHostname;
+                $this->default['username'] = env('database.default.username', '');
+                $this->default['password'] = env('database.default.password', '');
+                $this->default['database'] = env('database.default.database', '');
+                $this->default['port']     = (int) env('database.default.port', 3306);
+                $this->default['DBDriver'] = env('database.default.DBDriver', 'MySQLi');
+                $this->default['encrypt']  = false; // Pas de SSL en local
+                $this->default['verify']   = false;
+
+            } else {
+                // ✅ FALLBACK — XAMPP par défaut
+                $this->default['hostname'] = 'localhost';
+                $this->default['username'] = 'root';
+                $this->default['password'] = '';
+                $this->default['database'] = 'ton_db_local';
+                $this->default['port']     = 3306;
+                $this->default['encrypt']  = false;
+                $this->default['verify']   = false;
+            }
         }
 
         if (ENVIRONMENT === 'testing') {
