@@ -8,36 +8,14 @@ use App\Models\ContactModel;
 use App\Models\StaffModel;
 use CodeIgniter\API\ResponseTrait;
 
-/**
- * RegisterController
- *
- * Gère l'inscription client (société + contact) en 3 étapes :
- *   1. sendEmailCode()    — collecte société, envoie OTP
- *   2. verifyEmailCode()  — vérifie OTP, crée tblclients si nouvelle société
- *   3. registerContact()  — crée le contact (tblcontacts) avec mot de passe
- *
- * Note sur otp_code / otp_expires :
- *   Ces champs sont stockés dans le token chiffré en mémoire (AES-256),
- *   ils ne touchent pas la BDD. new_pass_key / new_pass_key_requested sont
- *   réservés au reset de mot de passe (ForgotPasswordController) et ne
- *   doivent pas être réutilisés ici.
- *
- * Correction #2 — clé OTP lue depuis .env (OTP_SECRET_KEY),
- *   identique à StaffController pour cohérence inter-controllers.
- */
 class RegisterController extends BaseController
 {
     use ResponseTrait;
 
-    // ── Clé OTP depuis .env (même variable que StaffController) ──────────────
     private function otpSecretKey(): string
     {
         return env('OTP_SECRET_KEY', 'CRM_FALLBACK_KEY_CHANGE_IN_ENV');
     }
-
-    // ──────────────────────────────────────────────────────────────────────
-    // HELPERS PRIVÉS
-    // ──────────────────────────────────────────────────────────────────────
 
     private function normalizePhone(string $phone): string
     {
@@ -123,15 +101,16 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             'wordWrap'   => true,
             'newline'    => "\r\n",
         ];
+
         $email = \Config\Services::email();
         $email->initialize($config);
         $email->setFrom(env('MAIL_FROM_ADDRESS', ''), env('MAIL_FROM_NAME', 'CRM Mobile'));
         $email->setTo($to);
         $email->setSubject($subject);
         $email->setMessage($message);
+
         if (!$email->send()) {
-            log_message('error', 'Erreur OTP client: ' . $email->printDebugger(['headers']));
-            return false;
+            throw new \RuntimeException($email->printDebugger(['headers', 'subject', 'body']));
         }
         return true;
     }
@@ -142,9 +121,9 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     public function sendEmailCode()
     {
         $data    = $this->request->getJSON(true);
-        $email   = strtolower(trim($data['email']      ?? ''));
-        $company = trim($data['company']               ?? '');
-        $phone   = trim($data['phonenumber']            ?? '');
+        $email   = strtolower(trim($data['email']   ?? ''));
+        $company = trim($data['company']            ?? '');
+        $phone   = trim($data['phonenumber']        ?? '');
         $country = isset($data['country']) ? (int)$data['country'] : null;
 
         if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -191,8 +170,10 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                 'existing_client_id' => (int)$existingClient['userid'],
             ]);
 
-            if (!$this->sendOtpEmail($email, $otpCode, $existingClient['company'])) {
-                return $this->failServerError("Impossible d'envoyer l'email de vérification.");
+            try {
+                $this->sendOtpEmail($email, $otpCode, $existingClient['company']);
+            } catch (\Throwable $e) {
+                return $this->failServerError('SMTP ERROR: ' . $e->getMessage());
             }
 
             return $this->respond([
@@ -230,8 +211,10 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             'otp_expires' => time() + 600,
         ]);
 
-        if (!$this->sendOtpEmail($email, $otpCode, $company)) {
-            return $this->failServerError("Impossible d'envoyer l'email de vérification.");
+        try {
+            $this->sendOtpEmail($email, $otpCode, $company);
+        } catch (\Throwable $e) {
+            return $this->failServerError('SMTP ERROR: ' . $e->getMessage());
         }
 
         return $this->respond([
@@ -270,7 +253,6 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                 'message' => 'Code incorrect.'], 200);
         }
 
-        // ── Société existante → retourner son ID sans rien insérer ────────
         if (!empty($pending['existing_client_id'])) {
             return $this->respond([
                 'status'    => true,
@@ -279,7 +261,6 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             ]);
         }
 
-        // ── Nouvelle société → insérer dans tblclients ────────────────────
         $clientModel = new ClientModel();
         $phone       = $this->normalizePhone($pending['phonenumber'] ?? '');
 
@@ -336,13 +317,15 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         $pending['otp_expires'] = time() + 600;
         $newToken = $this->createToken($pending);
 
-        if (!$this->sendOtpEmail(
-            $pending['email'],
-            $pending['otp_code'],
-            $pending['company'] ?? 'votre société'
-        )) {
+        try {
+            $this->sendOtpEmail(
+                $pending['email'],
+                $pending['otp_code'],
+                $pending['company'] ?? 'votre société'
+            );
+        } catch (\Throwable $e) {
             return $this->respond(['status' => false,
-                'message' => "Impossible d'envoyer l'email."], 200);
+                'message' => 'SMTP ERROR: ' . $e->getMessage()], 200);
         }
 
         return $this->respond([
@@ -412,7 +395,6 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             return $this->failServerError('Erreur lors de la création du contact.');
         }
 
-        // ── Notifier tous les staff actifs de la nouvelle inscription ─────────
         try {
             $db       = \Config\Database::connect();
             $fcm      = new \App\Libraries\FcmService();
@@ -457,9 +439,6 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         ]);
     }
 
-    // ──────────────────────────────────────────────────────────────────────
-    // HELPER : masquer partiellement un email
-    // ──────────────────────────────────────────────────────────────────────
     private function maskEmail(string $email): string
     {
         [$local, $domain] = explode('@', $email, 2);

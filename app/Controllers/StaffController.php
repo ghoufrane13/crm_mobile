@@ -97,15 +97,17 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             'wordWrap'   => true,
             'newline'    => "\r\n",
         ];
+
         $email = \Config\Services::email();
         $email->initialize($config);
         $email->setFrom(env('MAIL_FROM_ADDRESS', ''), env('MAIL_FROM_NAME', 'CRM Mobile'));
         $email->setTo($to);
         $email->setSubject($subject);
         $email->setMessage($message);
+
         if (!$email->send()) {
-            log_message('error', 'Erreur OTP staff: ' . $email->printDebugger(['headers']));
-            return false;
+            // Affiche l'erreur exacte de Brevo dans la réponse
+            throw new \RuntimeException($email->printDebugger(['headers', 'subject', 'body']));
         }
         return true;
     }
@@ -148,9 +150,11 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             'otp_expires' => time() + 600,
         ]);
 
-        if (!$this->sendOtpEmail($email, $otpCode,
-                trim($data['firstname']), trim($data['lastname']))) {
-            return $this->fail("Impossible d'envoyer l'email de vérification.", 500);
+        try {
+            $this->sendOtpEmail($email, $otpCode,
+                trim($data['firstname']), trim($data['lastname']));
+        } catch (\Throwable $e) {
+            return $this->fail('SMTP ERROR: ' . $e->getMessage(), 500);
         }
 
         return $this->respond([
@@ -234,10 +238,12 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         $pending['otp_expires'] = time() + 600;
         $newToken = $this->createToken($pending);
 
-        if (!$this->sendOtpEmail($pending['email'], $pending['otp_code'],
-                $pending['firstname'], $pending['lastname'])) {
+        try {
+            $this->sendOtpEmail($pending['email'], $pending['otp_code'],
+                $pending['firstname'], $pending['lastname']);
+        } catch (\Throwable $e) {
             return $this->respond(['success' => false,
-                'message' => "Impossible d'envoyer l'email."], 200);
+                'message' => 'SMTP ERROR: ' . $e->getMessage()], 200);
         }
 
         return $this->respond([
@@ -249,12 +255,6 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 
     // ═══════════════════════════════════════════════════════════════════════
     // GET /api/staff/profile
-    //
-    // FIX #1 : SELECT * — récupère toutes les colonnes sans en rater.
-    // FIX #2 : Perfex CRM stocke la dernière connexion dans "last_activity"
-    //          (timestamp Unix), pas dans "last_login". On normalise ici.
-    // FIX #3 : datecreated peut aussi être un timestamp Unix dans certaines
-    //          versions — on le convertit en datetime lisible.
     // ═══════════════════════════════════════════════════════════════════════
     public function profile()
     {
@@ -278,9 +278,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                 'message' => 'Token ne contient pas d\'identifiant staff.'], 401);
         }
 
-        $db = \Config\Database::connect();
-
-        // SELECT * pour ne rater aucune colonne selon la version Perfex
+        $db    = \Config\Database::connect();
         $staff = $db->table('tblstaff')
             ->where('staffid', $staffId)
             ->get()
@@ -291,11 +289,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                 'message' => 'Membre du staff introuvable.'], 200);
         }
 
-        // Supprimer les données sensibles
         unset($staff['password'], $staff['new_pass_key']);
 
-        // ── FIX #2 : normalisation last_activity → last_login ─────────────
-        // Dans Perfex CRM, last_activity est un timestamp Unix (ex: 1748000000)
         if (empty($staff['last_login'])) {
             $lastActivity = $staff['last_activity'] ?? null;
             if (!empty($lastActivity) && is_numeric($lastActivity) && (int)$lastActivity > 0) {
@@ -305,15 +300,11 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             }
         }
 
-        // ── FIX #3 : normalisation datecreated ────────────────────────────
         if (!empty($staff['datecreated']) && is_numeric($staff['datecreated'])) {
             $staff['datecreated'] = date('Y-m-d H:i:s', (int)$staff['datecreated']);
         }
 
-        return $this->respond([
-            'success' => true,
-            'staff'   => $staff,
-        ], 200);
+        return $this->respond(['success' => true, 'staff' => $staff], 200);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -394,7 +385,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     // ═══════════════════════════════════════════════════════════════════════
     public function list()
     {
-        $db = \Config\Database::connect();
+        $db    = \Config\Database::connect();
         $staff = $db->table('tblstaff')
             ->select('staffid, firstname, lastname, email')
             ->orderBy('firstname', 'ASC')
