@@ -43,6 +43,25 @@ $routes->get('api/debug', function() {
         'db_status'     => $dbStatus,
     ]);
 });
+$routes->get('api/test-countries', function() {
+    try {
+        $db = \Config\Database::connect();
+        $countries = $db->table('tblcountries')
+            ->select('country_id, short_name')
+            ->limit(5)
+            ->get()
+            ->getResultArray();
+        return \Config\Services::response()->setJSON([
+            'status'    => 'ok',
+            'countries' => $countries,
+        ]);
+    } catch (\Throwable $e) {
+        return \Config\Services::response()->setJSON([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+        ]);
+    }
+});
 
 $routes->group('api', function ($routes) {
 
