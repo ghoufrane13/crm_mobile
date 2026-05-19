@@ -88,10 +88,10 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         $config = [
             'protocol'   => 'smtp',
             'SMTPHost'   => 'smtp-relay.brevo.com',
-            'SMTPPort'   => 587,
+            'SMTPPort'   => 465,
             'SMTPUser'   => env('BREVO_SMTP_USER', ''),
             'SMTPPass'   => env('BREVO_SMTP_PASS', ''),
-            'SMTPCrypto' => 'tls',
+            'SMTPCrypto' => 'ssl',
             'mailType'   => 'html',
             'charset'    => 'utf-8',
             'wordWrap'   => true,
