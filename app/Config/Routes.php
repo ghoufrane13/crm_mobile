@@ -62,7 +62,19 @@ $routes->get('api/test-countries', function() {
         ]);
     }
 });
-
+$routes->get('api/test-profile-countries', function() {
+    try {
+        $controller = new \App\Controllers\ProfileController();
+        return \Config\Services::response()->setJSON(['status' => 'controller ok']);
+    } catch (\Throwable $e) {
+        return \Config\Services::response()->setJSON([
+            'status'  => 'error',
+            'message' => $e->getMessage(),
+            'file'    => $e->getFile(),
+            'line'    => $e->getLine(),
+        ]);
+    }
+});
 $routes->group('api', function ($routes) {
 
     // ========================================
