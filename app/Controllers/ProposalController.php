@@ -521,30 +521,40 @@ class ProposalController extends ResourceController
     // ═══════════════════════════════════════════════════════════════════════
    public function clients()
 {
-    $db = \Config\Database::connect();
-    
-    $clients = $db->query("
-        SELECT 
-            c.userid AS id,
-            c.company AS name,
-            c.address,
-            c.city,
-            c.state,
-            c.zip,
-            c.country,
-            'customer' AS type,
-            cont.email,
-            cont.phonenumber AS phone
-        FROM tblclients c
-        LEFT JOIN (
-            SELECT userid, email, phonenumber 
-            FROM tblcontacts 
-            GROUP BY userid
-        ) cont ON cont.userid = c.userid
-        ORDER BY c.company ASC
-    ")->getResultArray();
+    try {
+        $db = \Config\Database::connect();
+        
+        $clients = $db->query("
+            SELECT 
+                c.userid AS id,
+                c.company AS name,
+                c.address,
+                c.city,
+                c.state,
+                c.zip,
+                c.country,
+                'customer' AS type,
+                cont.email,
+                cont.phonenumber AS phone
+            FROM tblclients c
+            LEFT JOIN (
+                SELECT userid, email, phonenumber 
+                FROM tblcontacts 
+                GROUP BY userid
+            ) cont ON cont.userid = c.userid
+            ORDER BY c.company ASC
+        ")->getResultArray();
 
-    return $this->respond(['status' => true, 'clients' => $clients]);
+        return $this->respond(['status' => true, 'clients' => $clients]);
+
+    } catch (\Throwable $e) {
+        return $this->respond([
+            'status' => false,
+            'error'  => $e->getMessage(),
+            'file'   => $e->getFile(),
+            'line'   => $e->getLine(),
+        ], 500);
+    }
 }
     // ═══════════════════════════════════════════════════════════════════════
     // GET /api/proposals/contacts?client_id=X
