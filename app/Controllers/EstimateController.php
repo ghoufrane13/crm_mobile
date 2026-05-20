@@ -45,22 +45,6 @@ class EstimateController extends ResourceController
     if (!$id) return $this->respond(['status'=>false,'message'=>'ID manquant'],400);
     
     try {
-        // DEBUG temporaire
-        $db = \Config\Database::connect();
-        $raw = $db->table('tblestimates')->where('id', (int)$id)->get()->getRowArray();
-        
-        if (!$raw) {
-            return $this->respond([
-                'status'  => false,
-                'message' => 'Devis introuvable',
-                'debug'   => [
-                    'id_recu'    => $id,
-                    'id_cast'    => (int)$id,
-                    'count_total'=> $db->table('tblestimates')->countAll(),
-                ]
-            ], 404);
-        }
-
         $estimate = $this->estimateModel->getDetail((int)$id);
         if (!$estimate) return $this->respond(['status'=>false,'message'=>'Devis introuvable'],404);
         $estimate['status_label'] = $this->statuses[(int)$estimate['status']] ?? 'Inconnu';
@@ -69,7 +53,6 @@ class EstimateController extends ResourceController
             ? ['signed'=>true,'signed_at'=>$sig['signed_at'],'signature_url'=>$sig['signature_url']]
             : ['signed'=>false];
         return $this->respond(['status'=>true,'estimate'=>$estimate]);
-
     } catch (\Throwable $e) {
         return $this->respond([
             'status' => false,
