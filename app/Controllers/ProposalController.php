@@ -523,29 +523,24 @@ class ProposalController extends ResourceController
 {
     try {
         $db = \Config\Database::connect();
-        
-        $clients = $db->query("
-            SELECT 
-                c.userid AS id,
-                c.company AS name,
-                c.address,
-                c.city,
-                c.state,
-                c.zip,
-                c.country,
-                'customer' AS type,
-                cont.email,
-                cont.phonenumber AS phone
-            FROM tblclients c
-            LEFT JOIN (
-                SELECT userid, email, phonenumber 
-                FROM tblcontacts 
-                GROUP BY userid
-            ) cont ON cont.userid = c.userid
-            ORDER BY c.company ASC
-        ")->getResultArray();
 
-        return $this->respond(['status' => true, 'clients' => $clients]);
+        // Test 1 : requête ultra simple sans JOIN
+        $clients = $db->query("
+            SELECT userid AS id, company AS name, address, city, state, zip, country
+            FROM tblclients
+            ORDER BY company ASC
+        ");
+
+        if ($clients === false) {
+            return $this->respond([
+                'status' => false,
+                'error'  => 'Query failed: ' . $db->error()['message'],
+            ], 500);
+        }
+
+        $result = $clients->getResultArray();
+
+        return $this->respond(['status' => true, 'clients' => $result]);
 
     } catch (\Throwable $e) {
         return $this->respond([
