@@ -61,10 +61,12 @@ class EstimateModel extends Model
 
     public function getDetail(int $id): ?array
     {
-        $estimate = $this->db->table('tblestimates e')
+        $db = \Config\Database::connect();
+        
+        $estimate = $db->table('tblestimates e')
             ->select('
                 e.*,
-                CONCAT(s.firstname," ",s.lastname) AS sale_agent_name,
+                TRIM(CONCAT(COALESCE(s.firstname,""), " ", COALESCE(s.lastname,""))) AS sale_agent_name,
                 cur.symbol  AS currency_symbol,
                 cur.name    AS currency_name,
                 c.company   AS client_company,
@@ -76,11 +78,16 @@ class EstimateModel extends Model
             ->join('tblcurrencies cur',  'cur.id = e.currency',      'left')
             ->join('tblclients c',       'c.userid = e.clientid',    'left')
             ->where('e.id', $id)
-            ->get()->getRowArray();
+            ->get();
 
+        // ✅ FIX : vérifier que $result n'est pas false avant d'appeler getRowArray()
         if (!$estimate) return null;
-        $estimate['items'] = $this->getItems($id);
-        return $estimate;
+        
+        $row = $estimate->getRowArray();
+        if (!$row) return null;
+        
+        $row['items'] = $this->getItems($id);
+        return $row;
     }
 
     public function getItems(int $estimateId): array
