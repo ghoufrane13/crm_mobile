@@ -524,33 +524,27 @@ class ProposalController extends ResourceController
     try {
         $db = \Config\Database::connect();
 
-        // Test connexion
-        if (!$db->connID) {
-            return $this->respond([
-                'status' => false,
-                'error'  => 'DB connection failed',
-                'db_error' => $db->error(),
-            ], 500);
-        }
-
-        // Test table existe
-        if (!$db->tableExists('tblclients')) {
-            return $this->respond([
-                'status' => false,
-                'error'  => 'Table tblclients does not exist',
-            ], 500);
-        }
-
         $result = $db->table('tblclients')
-            ->select('userid AS id, company AS name')
-            ->limit(5)
+            ->select('
+                userid AS id,
+                company AS name,
+                billing_street,
+                billing_city,
+                billing_state,
+                billing_zip,
+                billing_country,
+                country,
+                email,
+                phonenumber AS phone
+            ')
+            ->where('active', 1)
+            ->orderBy('company', 'ASC')
             ->get();
 
         if (!$result) {
             return $this->respond([
-                'status'   => false,
-                'error'    => 'get() returned false',
-                'db_error' => $db->error(),
+                'status' => false,
+                'error'  => 'Query returned false',
             ], 500);
         }
 
@@ -563,7 +557,6 @@ class ProposalController extends ResourceController
         return $this->respond([
             'status' => false,
             'error'  => $e->getMessage(),
-            'file'   => $e->getFile(),
             'line'   => $e->getLine(),
         ], 500);
     }
