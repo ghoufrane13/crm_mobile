@@ -57,20 +57,20 @@ class ProposalController extends ResourceController
     // GET /api/proposals/detail/:id
     // ═══════════════════════════════════════════════════════════════════════
     public function detail($id)
-    {
-        $db       = \Config\Database::connect();
-        $model    = new ProposalModel();
-        $proposal = $model->getDetail((int)$id);
+{
+    try {
+        $db         = \Config\Database::connect();
+        $model      = new ProposalModel();
+        $proposal   = $model->getDetail((int)$id);
         if (!$proposal) return $this->fail('Offre introuvable', 404);
- 
+
         $proposalId = (int)$id;
         $s = (int)$proposal['status'];
         $proposal['status_label'] = $this->statuses[$s]     ?? 'Inconnu';
         $proposal['status_color'] = $this->statusColors[$s] ?? '#94A3B8';
         $proposal['statuses']     = $this->_statusList();
- 
-        $proposal['items'] = $this->_loadItems($db, $proposalId, 'proposal');
- 
+        $proposal['items']        = $this->_loadItems($db, $proposalId, 'proposal');
+
         $currencyId  = (int)($proposal['currency'] ?? 0);
         $currencyRow = null;
         if ($currencyId > 0) {
@@ -81,8 +81,7 @@ class ProposalController extends ResourceController
         }
         $proposal['currency_symbol'] = $currencyRow['symbol'] ?? '';
         $proposal['currency_name']   = $currencyRow['name']   ?? '';
- 
-        // ✅ FIX : TIMESTAMPDIFF au lieu de CAST AS UNSIGNED (incompatible DATETIME)
+
         try {
             $tasks = $db->table('tbltasks t')
                 ->select([
@@ -104,7 +103,7 @@ class ProposalController extends ResourceController
             $tasks = [];
         }
         $proposal['tasks'] = $tasks;
- 
+
         try {
             $reminders = $db->table('tblreminders r')
                 ->select([
@@ -120,9 +119,18 @@ class ProposalController extends ResourceController
             $reminders = [];
         }
         $proposal['reminders'] = $reminders;
- 
+
         return $this->respond(['status' => true, 'proposal' => $proposal]);
+
+    } catch (\Throwable $e) {
+        return $this->respond([
+            'status'  => false,
+            'error'   => $e->getMessage(),
+            'file'    => $e->getFile(),
+            'line'    => $e->getLine(),
+        ], 500);
     }
+}
  
     // ═══════════════════════════════════════════════════════════════════════
     // POST /api/proposals/create
