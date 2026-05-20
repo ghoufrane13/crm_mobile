@@ -5,7 +5,6 @@ namespace App\Controllers;
 use CodeIgniter\RESTful\ResourceController;
 use App\Libraries\JwtService;
 use App\Libraries\FcmService;
-use App\Helpers\EmailHelper;
 
 /**
  * ============================================================
@@ -353,6 +352,14 @@ class ReminderController extends ResourceController
         string $date,
         string $description
     ): void {
+        $apiKey    = trim(env('BREVO_API_KEY',     ''), '"\'');
+        $fromEmail = trim(env('MAIL_FROM_ADDRESS', ''), '"\'');
+        $fromName  = trim(env('MAIL_FROM_NAME', 'CRM Mobile'), '"\'');
+
+        if (empty($apiKey) || empty($fromEmail)) {
+            log_message('error', '[Reminder] BREVO_API_KEY ou MAIL_FROM_ADDRESS manquant dans .env');
+            return;
+        }
         $html = "<!DOCTYPE html><html><body style='font-family:sans-serif;background:#f1f5f9;padding:20px'>
 <div style='max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden'>
 <div style='background:linear-gradient(135deg,#1e1b4b,#2563eb);padding:28px;text-align:center'>
@@ -367,6 +374,39 @@ class ReminderController extends ResourceController
 <div style='background:#eff6ff;border-left:4px solid #2563eb;padding:12px 16px;color:#1e40af;border-radius:0 10px 10px 0'>"
 . htmlspecialchars($msg) . "</div></div></div></body></html>";
 
-        EmailHelper::sendBrevoEmail($to, '⏰ Rappel CRM : ' . ($relLabel ?: 'nouveau rappel'), $html);
+        $ch = curl_init('https://api.brevo.com/v3/smtp/email');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode([
+                'sender'      => ['name' => $fromName, 'email' => $fromEmail],
+                'to'          => [['email' => $to, 'name' => $staffName]],
+                'subject'     => '⏰ Rappel CRM : ' . ($relLabel ?: 'nouveau rappel'),
+                'htmlContent' => $html,
+            ]),
+            CURLOPT_HTTPHEADER     => [
+                'accept: application/json',
+                'api-key: ' . $apiKey,
+                'content-type: application/json',
+            ],
+            CURLOPT_TIMEOUT        => 15,
+            CURLOPT_SSL_VERIFYPEER => false,
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlErr  = curl_error($ch);
+        curl_close($ch);
+
+        if ($curlErr) {
+            log_message('error', '[Reminder] cURL error: ' . $curlErr);
+            return;
+        }
+
+        if ($httpCode !== 201) {
+            log_message('error', "[Reminder] Brevo HTTP $httpCode | to: $to | réponse: $response");
+        } else {
+            log_message('info', "[Reminder] Email envoyé à $to");
+        }
     }
 }
