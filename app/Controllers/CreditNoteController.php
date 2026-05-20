@@ -37,24 +37,50 @@ class CreditNoteController extends ResourceController
     // GET /api/credit-notes/detail?id=<id>
     // ─────────────────────────────────────────────────────────────────────────
     public function detail($id = null)
-    {
-        $id = (int)($id ?? $this->request->getGet('id'));
-        if (!$id) {
-            return $this->respond(['status' => false, 'message' => 'ID manquant'], 400);
-        }
+{
+    $id = (int)($id ?? $this->request->getGet('id'));
+    if (!$id) {
+        return $this->respond(['status' => false, 'message' => 'ID manquant'], 400);
+    }
 
+    try {
         $note = $this->creditNoteModel->getDetail($id);
-        if (!$note) {
-            return $this->respond(['status' => false, 'message' => 'Note introuvable'], 404);
-        }
+    } catch (\Throwable $e) {
+        log_message('error', 'CN detail getDetail error: ' . $e->getMessage());
+        return $this->respond([
+            'status'  => false,
+            'message' => 'Erreur BDD : ' . $e->getMessage()
+        ], 500);
+    }
 
-        $note['status_label']    = $this->statuses[(int)($note['status'] ?? 0)] ?? 'Inconnu';
-        $note['items']           = $this->_getItems($id);
+    if (!$note) {
+        return $this->respond(['status' => false, 'message' => 'Note introuvable'], 404);
+    }
+
+    $note['status_label'] = $this->statuses[(int)($note['status'] ?? 0)] ?? 'Inconnu';
+
+    // Surcharge uniquement si le modèle n'a pas déjà chargé les items
+    // (le modèle charge avec rel_type='credit_note' seulement)
+    try {
+        $items = $this->_getItems($id);
+        if (!empty($items)) {
+            $note['items'] = $items;
+        }
+    } catch (\Throwable $e) {
+        log_message('error', 'CN detail _getItems error: ' . $e->getMessage());
+    }
+
+    try {
         $note['applied_credits'] = $this->_getAppliedCredits($id);
         $note['refunds']         = $this->_getRefunds($id);
-
-        return $this->respond(['status' => true, 'credit_note' => $note]);
+    } catch (\Throwable $e) {
+        log_message('error', 'CN detail credits/refunds error: ' . $e->getMessage());
+        $note['applied_credits'] = $note['applied_credits'] ?? [];
+        $note['refunds']         = $note['refunds'] ?? [];
     }
+
+    return $this->respond(['status' => true, 'credit_note' => $note]);
+}
 
     // ─────────────────────────────────────────────────────────────────────────
     // _getItems — CORRIGÉ
@@ -116,9 +142,8 @@ class CreditNoteController extends ResourceController
     }
 
     private function _getAppliedCredits(int $creditNoteId): array
-    {
-        if (!$this->db->tableExists('tblcredits')) return [];
-
+{
+    try {
         return $this->db->query(
             "SELECT c.id, c.invoice_id, c.amount, c.date, c.date_applied,
                     i.formatted_number AS invoice_number
@@ -128,12 +153,15 @@ class CreditNoteController extends ResourceController
              ORDER BY c.date_applied DESC",
             [$creditNoteId]
         )->getResultArray();
+    } catch (\Throwable $e) {
+        log_message('error', '_getAppliedCredits: ' . $e->getMessage());
+        return [];
     }
+}
 
-    private function _getRefunds(int $creditNoteId): array
-    {
-        if (!$this->db->tableExists('tblcreditnote_refunds')) return [];
-
+private function _getRefunds(int $creditNoteId): array
+{
+    try {
         return $this->db->query(
             "SELECT r.id, r.amount, r.refunded_on, r.note, r.payment_mode,
                     pm.name AS payment_mode_name
@@ -143,7 +171,11 @@ class CreditNoteController extends ResourceController
              ORDER BY r.refunded_on DESC",
             [$creditNoteId]
         )->getResultArray();
+    } catch (\Throwable $e) {
+        log_message('error', '_getRefunds: ' . $e->getMessage());
+        return [];
     }
+}
 
     public function nextNumber()
     {
