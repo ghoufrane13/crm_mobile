@@ -1557,18 +1557,5 @@ body{font-family:'Segoe UI',sans-serif;background:#f1f5f9;padding:20px}
 
         return $httpCode === 201;
     }
-    public function addTND()
-{
-    $db = \Config\Database::connect();
-    $db->table('tblcurrencies')->update(['isdefault' => 0]);
-    $db->table('tblcurrencies')->insert([
-        'symbol'             => 'DT',
-        'name'               => 'TND',
-        'decimal_separator'  => '.',
-        'thousand_separator' => ',',
-        'placement'          => 'after',
-        'isdefault'          => 1,
-    ]);
-    return $this->respond(['status' => true, 'id' => $db->insertID()]);
-}
+
 }

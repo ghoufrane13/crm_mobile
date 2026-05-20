@@ -282,5 +282,4 @@ $routes->group('api', function ($routes) {
     $routes->get(   'notifications',                'NotificationController::index');
     $routes->put(   'notifications/(:num)/read',    'NotificationController::markRead/$1');
     $routes->delete('notifications/(:num)',         'NotificationController::delete/$1');
-    $routes->get('proposals/add-tnd', 'ProposalController::addTND');
 });
