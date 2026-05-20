@@ -51,62 +51,105 @@ class CreditNoteModel extends Model
     }
 
     public function getDetail(int $id): ?array
-    {
-        $note = $this->db->table('tblcreditnotes cn')
-            ->select('cn.*, COALESCE(c.company, cn.deleted_customer_name) AS clientname, c.email AS client_email, cur.symbol AS currency_symbol, cur.name AS currency_name')
-            ->join('tblclients c', 'c.userid = cn.clientid', 'left')
-            ->join('tblcurrencies cur', 'cur.id = cn.currency', 'left')
-            ->where('cn.id', $id)
-            ->get()
-            ->getRowArray();
+{
+    $note = $this->db->table('tblcreditnotes cn')
+        ->select('cn.*, COALESCE(c.company, cn.deleted_customer_name) AS clientname, c.email AS client_email, cur.symbol AS currency_symbol, cur.name AS currency_name')
+        ->join('tblclients c',    'c.userid = cn.clientid', 'left')
+        ->join('tblcurrencies cur', 'cur.id = cn.currency', 'left')
+        ->where('cn.id', $id)
+        ->get();
 
-        if (!$note) {
-            return null;
-        }
+    // ← vérification critique
+    if (!$note) return null;
+    $note = $note->getRowArray();
+    if (!$note) return null;
 
-        $items = $this->db->table('tblitemable')
-            ->select('id, description, long_description, qty, rate, unit, item_order, (qty * rate) AS total', false)
-            ->where('rel_type', 'credit_note')
+    // ── Items ────────────────────────────────────────────────────────────
+    $itemsResult = $this->db->table('tblitemable')
+        ->select('id, description, long_description, qty, rate, unit, item_order')
+        ->where('rel_id', $id)
+        ->whereIn('rel_type', ['credit_note', 'creditnote'])
+        ->orderBy('item_order', 'ASC')
+        ->get();
+
+    $items = ($itemsResult) ? $itemsResult->getResultArray() : [];
+
+    foreach ($items as &$item) {
+        // calcul PHP plutôt que SQL pour éviter l'erreur sur (qty*rate)
+        $item['total'] = (float)($item['qty'] ?? 0) * (float)($item['rate'] ?? 0);
+
+        $taxResult = $this->db->table('tblitem_tax')
+            ->select('taxname, taxrate')
             ->where('rel_id', $id)
-            ->orderBy('item_order', 'ASC')
-            ->get()
-            ->getResultArray();
+            ->whereIn('rel_type', ['credit_note', 'creditnote'])
+            ->where('itemid', (int)$item['id'])
+            ->get();
 
-        foreach ($items as &$item) {
-            $item['taxes'] = $this->db->table('tblitem_tax')
-                ->select('taxname, SUBSTRING_INDEX(taxname, "|", -1) AS taxrate', false)
-                ->where('rel_type', 'credit_note')
-                ->where('rel_id', $id)
-                ->where('itemid', (int) $item['id'])
-                ->get()
-                ->getResultArray();
+        $taxRows = ($taxResult) ? $taxResult->getResultArray() : [];
+
+        $item['taxes'] = [];
+        foreach ($taxRows as $tr) {
+            $taxname = $tr['taxname'] ?? '';
+            // si taxrate vide, extraire depuis taxname "TVA|20"
+            $taxrate = isset($tr['taxrate']) && $tr['taxrate'] !== ''
+                ? (float)$tr['taxrate']
+                : (float)(explode('|', $taxname)[1] ?? 0);
+
+            $item['taxes'][] = [
+                'taxname' => $taxname,
+                'taxrate' => $taxrate,
+            ];
         }
-        unset($item);
 
-        $note['items'] = $items;
-
-        $note['applied_credits'] = $this->db->table('tblcredits cr')
-            ->select('cr.id, cr.invoice_id, i.formatted_number AS invoice_number, cr.date_applied, cr.amount')
-            ->join('tblinvoices i', 'i.id = cr.invoice_id', 'left')
-            ->where('cr.credit_id', $id)
-            ->orderBy('cr.id', 'DESC')
-            ->get()
-            ->getResultArray();
-
-        $note['refunds'] = $this->db->table('tblcreditnote_refunds r')
-            ->select('r.id, r.refunded_on, r.amount, r.note, pm.name AS payment_mode_name')
-            ->join('tblpayment_modes pm', 'pm.id = r.payment_mode', 'left')
-            ->where('r.credit_note_id', $id)
-            ->orderBy('r.id', 'DESC')
-            ->get()
-            ->getResultArray();
-
-        $note['credits_used']      = $this->getCreditsUsed($id);
-        $note['total_refunds']     = $this->getTotalRefunds($id);
-        $note['remaining_credits'] = $this->getRemainingCredits($id);
-
-        return $note;
+        $item['taxrate'] = !empty($item['taxes'])
+            ? $item['taxes'][0]['taxrate']
+            : 0.0;
     }
+    unset($item);
+
+    $note['items'] = $items;
+
+    // ── Applied credits ──────────────────────────────────────────────────
+    try {
+        $creditsResult = $this->db->query(
+            "SELECT c.id, c.invoice_id, i.formatted_number AS invoice_number,
+                    c.date_applied, c.amount
+             FROM tblcredits c
+             LEFT JOIN tblinvoices i ON i.id = c.invoice_id
+             WHERE c.credit_id = ?
+             ORDER BY c.id DESC",
+            [$id]
+        );
+        $note['applied_credits'] = $creditsResult ? $creditsResult->getResultArray() : [];
+    } catch (\Throwable $e) {
+        log_message('error', 'getDetail applied_credits: ' . $e->getMessage());
+        $note['applied_credits'] = [];
+    }
+
+    // ── Refunds ──────────────────────────────────────────────────────────
+    try {
+        $refundsResult = $this->db->query(
+            "SELECT r.id, r.refunded_on, r.amount, r.note,
+                    pm.name AS payment_mode_name
+             FROM tblcreditnote_refunds r
+             LEFT JOIN tblpayment_modes pm ON pm.id = r.payment_mode
+             WHERE r.credit_note_id = ?
+             ORDER BY r.id DESC",
+            [$id]
+        );
+        $note['refunds'] = $refundsResult ? $refundsResult->getResultArray() : [];
+    } catch (\Throwable $e) {
+        log_message('error', 'getDetail refunds: ' . $e->getMessage());
+        $note['refunds'] = [];
+    }
+
+    // ── Totaux calculés ──────────────────────────────────────────────────
+    $note['credits_used']      = $this->getCreditsUsed($id);
+    $note['total_refunds']     = $this->getTotalRefunds($id);
+    $note['remaining_credits'] = $this->getRemainingCredits($id);
+
+    return $note;
+}
 
     public function insertItems(int $creditNoteId, array $items): void
     {
