@@ -948,21 +948,23 @@ class ProposalController extends ResourceController
     // ═══════════════════════════════════════════════════════════════════════
     private function _loadItems(\CodeIgniter\Database\BaseConnection $db, int $relId, string $relType): array
     {
-        return $db->table('tblitemable i')
-            ->select([
-                'i.id', 'i.description', 'i.long_description', 'i.qty',
-                'i.rate', 'i.unit', 'i.item_order', 'i.is_optional', 'i.is_selected',
-                'COALESCE(t.taxrate, 0)  AS taxrate',
-                'COALESCE(t.taxname, "") AS taxname',
-            ])
-            ->join('tblitem_tax t',
-                   "t.itemid = i.id AND t.rel_type = '{$relType}'",
-                   'left')
-            ->where('i.rel_id',   $relId)
-            ->where('i.rel_type', $relType)
-            ->orderBy('i.item_order', 'ASC')
-            ->get()
-            ->getResultArray();
+        // ✅ FIX : JOIN complexe remplacé par deux requêtes simples
+        $items = $db->table('tblitemable')
+            ->where('rel_id',   $relId)
+            ->where('rel_type', $relType)
+            ->orderBy('item_order', 'ASC')
+            ->get()->getResultArray();
+
+        foreach ($items as &$item) {
+            $tax = $db->table('tblitem_tax')
+                ->where('itemid',   $item['id'])
+                ->where('rel_type', $relType)
+                ->get()->getRowArray();
+            $item['taxrate'] = $tax['taxrate'] ?? 0;
+            $item['taxname'] = $tax['taxname'] ?? '';
+        }
+
+        return $items;
     }
  
     // ═══════════════════════════════════════════════════════════════════════
