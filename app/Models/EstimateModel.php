@@ -60,35 +60,51 @@ class EstimateModel extends Model
     }
 
     public function getDetail(int $id): ?array
-    {
-        $db = \Config\Database::connect();
-        
-        $estimate = $db->table('tblestimates e')
-            ->select('
-                e.*,
-                TRIM(CONCAT(COALESCE(s.firstname,""), " ", COALESCE(s.lastname,""))) AS sale_agent_name,
-                cur.symbol  AS currency_symbol,
-                cur.name    AS currency_name,
-                c.company   AS client_company,
-                c.address,
-                c.vat,
-                c.email     AS client_email
-            ')
-            ->join('tblstaff s',        's.staffid = e.sale_agent', 'left')
-            ->join('tblcurrencies cur',  'cur.id = e.currency',      'left')
-            ->join('tblclients c',       'c.userid = e.clientid',    'left')
-            ->where('e.id', $id)
-            ->get();
+{
+    $db = \Config\Database::connect();
 
-        // ✅ FIX : vérifier que $result n'est pas false avant d'appeler getRowArray()
-        if (!$estimate) return null;
-        
-        $row = $estimate->getRowArray();
-        if (!$row) return null;
-        
-        $row['items'] = $this->getItems($id);
-        return $row;
+    // Étape 1 : récupérer le devis seul, sans JOIN
+    $row = $db->table('tblestimates')
+        ->where('id', $id)
+        ->get()->getRowArray();
+
+    if (!$row) return null;
+
+    // Étape 2 : enrichir manuellement
+    $currency = $db->table('tblcurrencies')
+        ->select('symbol, name')
+        ->where('id', (int)($row['currency'] ?? 0))
+        ->get()->getRowArray();
+
+    $row['currency_symbol'] = $currency['symbol'] ?? '';
+    $row['currency_name']   = $currency['name']   ?? '';
+
+    $client = $db->table('tblclients')
+        ->select('company, address, vat, email')
+        ->where('userid', (int)($row['clientid'] ?? 0))
+        ->get()->getRowArray();
+
+    $row['client_company'] = $client['company'] ?? '';
+    $row['address']        = $client['address'] ?? '';
+    $row['vat']            = $client['vat']     ?? '';
+    $row['client_email']   = $client['email']   ?? '';
+
+    $agentId = (int)($row['sale_agent'] ?? 0);
+    if ($agentId > 0) {
+        $staff = $db->table('tblstaff')
+            ->select('firstname, lastname')
+            ->where('staffid', $agentId)
+            ->get()->getRowArray();
+        $row['sale_agent_name'] = $staff
+            ? trim(($staff['firstname'] ?? '') . ' ' . ($staff['lastname'] ?? ''))
+            : '';
+    } else {
+        $row['sale_agent_name'] = '';
     }
+
+    $row['items'] = $this->getItems($id);
+    return $row;
+}
 
     public function getItems(int $estimateId): array
     {
