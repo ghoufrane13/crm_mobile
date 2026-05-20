@@ -519,19 +519,33 @@ class ProposalController extends ResourceController
     // ═══════════════════════════════════════════════════════════════════════
     // GET /api/proposals/clients
     // ═══════════════════════════════════════════════════════════════════════
-    public function clients()
-    {
-        $db = \Config\Database::connect();
-        $clients = $db->table('tblclients c')
-            ->select('c.userid AS id, c.company AS name, c.address, c.city, c.state, c.zip,
-                      c.country, "customer" AS type, cont.email, cont.phonenumber AS phone')
-            ->join('(SELECT userid, email, phonenumber FROM tblcontacts GROUP BY userid) cont',
-                   'cont.userid = c.userid', 'left')
-            ->orderBy('c.company', 'ASC')
-            ->get()->getResultArray();
-        return $this->respond(['status' => true, 'clients' => $clients]);
-    }
- 
+   public function clients()
+{
+    $db = \Config\Database::connect();
+    
+    $clients = $db->query("
+        SELECT 
+            c.userid AS id,
+            c.company AS name,
+            c.address,
+            c.city,
+            c.state,
+            c.zip,
+            c.country,
+            'customer' AS type,
+            cont.email,
+            cont.phonenumber AS phone
+        FROM tblclients c
+        LEFT JOIN (
+            SELECT userid, email, phonenumber 
+            FROM tblcontacts 
+            GROUP BY userid
+        ) cont ON cont.userid = c.userid
+        ORDER BY c.company ASC
+    ")->getResultArray();
+
+    return $this->respond(['status' => true, 'clients' => $clients]);
+}
     // ═══════════════════════════════════════════════════════════════════════
     // GET /api/proposals/contacts?client_id=X
     // ═══════════════════════════════════════════════════════════════════════
