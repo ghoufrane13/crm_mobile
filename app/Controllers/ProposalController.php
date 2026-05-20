@@ -524,23 +524,40 @@ class ProposalController extends ResourceController
     try {
         $db = \Config\Database::connect();
 
-        // Test 1 : requête ultra simple sans JOIN
-        $clients = $db->query("
-            SELECT userid AS id, company AS name, address, city, state, zip, country
-            FROM tblclients
-            ORDER BY company ASC
-        ");
-
-        if ($clients === false) {
+        // Test connexion
+        if (!$db->connID) {
             return $this->respond([
                 'status' => false,
-                'error'  => 'Query failed: ' . $db->error()['message'],
+                'error'  => 'DB connection failed',
+                'db_error' => $db->error(),
             ], 500);
         }
 
-        $result = $clients->getResultArray();
+        // Test table existe
+        if (!$db->tableExists('tblclients')) {
+            return $this->respond([
+                'status' => false,
+                'error'  => 'Table tblclients does not exist',
+            ], 500);
+        }
 
-        return $this->respond(['status' => true, 'clients' => $result]);
+        $result = $db->table('tblclients')
+            ->select('userid AS id, company AS name')
+            ->limit(5)
+            ->get();
+
+        if (!$result) {
+            return $this->respond([
+                'status'   => false,
+                'error'    => 'get() returned false',
+                'db_error' => $db->error(),
+            ], 500);
+        }
+
+        return $this->respond([
+            'status'  => true,
+            'clients' => $result->getResultArray(),
+        ]);
 
     } catch (\Throwable $e) {
         return $this->respond([
@@ -551,7 +568,7 @@ class ProposalController extends ResourceController
         ], 500);
     }
 }
-    // ═══════════════════════════════════════════════════════════════════════
+ // ═══════════════════════════════════════════════════════════════════════
     // GET /api/proposals/contacts?client_id=X
     // ═══════════════════════════════════════════════════════════════════════
     public function contacts()
