@@ -1288,6 +1288,9 @@ class InvoiceController extends ResourceController
         string $to, string $clientName, string $staffName,
         int $invoiceId, array $invoice
     ): bool {
+        $apiKey    = getenv('BREVO_API_KEY') ?: env('BREVO_API_KEY', '');
+        $fromEmail = getenv('MAIL_FROM_ADDRESS') ?: env('MAIL_FROM_ADDRESS', '');
+        $fromName  = getenv('MAIL_FROM_NAME')    ?: env('MAIL_FROM_NAME', 'CRM Mobile');
         $numStr      = $invoice['formatted_number'] ?? ('INV-' . str_pad($invoiceId, 6, '0', STR_PAD_LEFT));
         $sym         = $invoice['currency_symbol'] ?? '';
         $total       = number_format((float)($invoice['total']     ?? 0), 2, ',', '.');
@@ -1344,8 +1347,43 @@ body{font-family:'Segoe UI',sans-serif;background:#f1f5f9;padding:20px;margin:0}
         }
 
         $pdfName = 'facture_' . $invoiceId . '.pdf';
-        return EmailHelper::sendBrevoEmailWithBinary($to, "Facture $numStr", $htmlContent, $pdfBase64, $pdfName);
-    }
+        $payload = [
+            'sender'      => ['name' => $fromName ?? 'CRM Mobile', 'email' => $fromEmail ?? ''],
+            'to'          => [['email' => $to, 'name' => $clientName]],
+            'subject'     => "Facture $numStr",
+            'htmlContent' => $htmlContent,
+        ];
+
+        if ($pdfBase64) {
+            $payload['attachment'] = [['name' => $pdfName, 'content' => $pdfBase64]];
+        }
+
+        $apiKey = getenv('BREVO_API_KEY') ?: env('BREVO_API_KEY', '');
+        $ch = curl_init('https://api.brevo.com/v3/smtp/email');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode($payload),
+            CURLOPT_HTTPHEADER     => [
+                'accept: application/json',
+                'api-key: ' . $apiKey,
+                'content-type: application/json',
+            ],
+            CURLOPT_TIMEOUT => 30,
+        ]);
+
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlErr  = curl_error($ch);
+        curl_close($ch);
+
+        log_message('debug', "Brevo invoice [$httpCode]: $response");
+        if ($curlErr) {
+            log_message('error', 'Brevo invoice cURL: ' . $curlErr);
+            return false;
+        }
+        return $httpCode === 201;    
+}
     // GET /api/invoices/client-dashboard-stats?client_id=X
 public function clientDashboardStats()
 {

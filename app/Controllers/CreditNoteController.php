@@ -656,23 +656,97 @@ private function _getRefunds(int $creditNoteId): array
     // EMAIL
     // ─────────────────────────────────────────────────────────────────────────
     private function _sendCreditNoteEmail(
-        string $to, string $clientName, string $staffName, int $id, array $note
-    ): bool {
-        $numStr = $note['formatted_number'] ?? ('CN-' . str_pad($id, 6, '0', STR_PAD_LEFT));
+    string $to, string $clientName, string $staffName, int $id, array $note
+): bool {
+    $apiKey    = getenv('BREVO_API_KEY') ?: env('BREVO_API_KEY', '');
+    $fromEmail = getenv('MAIL_FROM_ADDRESS') ?: env('MAIL_FROM_ADDRESS', '');
+    $fromName  = getenv('MAIL_FROM_NAME')    ?: env('MAIL_FROM_NAME', 'CRM Mobile');
 
-        $html = "<!DOCTYPE html><html><head><meta charset='UTF-8'><style>body{font-family:'Segoe UI',sans-serif;background:#f1f5f9;padding:20px}.box{max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden}.hd{background:linear-gradient(135deg,#1e1b4b,#2563eb,#0ea5e9);padding:32px;text-align:center}.hd h2{color:#fff;margin:0;font-size:22px;font-weight:800}.bd{padding:32px}.note{background:#f0f9ff;border-left:4px solid #0ea5e9;padding:12px 16px;border-radius:0 8px 8px 0;color:#0369a1;font-size:13px;margin:16px 0}.ft{background:#f8fafc;padding:16px;text-align:center;color:#94a3b8;font-size:12px;border-top:1px solid #e2e8f0}</style></head><body><div class='box'><div class='hd'><h2>Note de Crédit $numStr</h2></div><div class='bd'><p>Bonjour <strong>" . htmlspecialchars($clientName) . "</strong>,</p><p><strong>" . htmlspecialchars($staffName) . "</strong> vous a transmis une note de crédit :</p><p><strong style='font-size:16px'>$numStr</strong></p><div class='note'>Le PDF de votre note de crédit est joint à cet email.</div><p style='color:#64748b;font-size:13px'>Pour toute question, contactez votre commercial.<br><strong>" . htmlspecialchars($staffName) . "</strong></p></div><div class='ft'>© " . date('Y') . " — Envoyé automatiquement.</div></div></body></html>";
+    $numStr = $note['formatted_number'] ?? ('CN-' . str_pad($id, 6, '0', STR_PAD_LEFT));
+    $sym    = $note['currency_symbol'] ?? '';
+    $total  = number_format((float)($note['total'] ?? 0), 2, ',', '.');
+    $remaining = number_format((float)($note['remaining_credits'] ?? 0), 2, ',', '.');
 
-        $pdfBase64 = null;
-        try {
-            $pdfBytes  = $this->_generatePdfBytes($note);
-            $pdfBase64 = base64_encode($pdfBytes);
-        } catch (\Throwable $e) {
-            log_message('error', 'CN PDF gen: ' . $e->getMessage());
-        }
+    $html = "<!DOCTYPE html><html><head><meta charset='UTF-8'><style>
+body{font-family:'Segoe UI',sans-serif;background:#f1f5f9;padding:20px}
+.box{max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden}
+.hd{background:linear-gradient(135deg,#1e1b4b,#2563eb,#0ea5e9);padding:32px;text-align:center}
+.hd h2{color:#fff;margin:0;font-size:22px;font-weight:800}
+.bd{padding:32px}
+.infobox{background:#f8fafc;border-radius:12px;padding:16px 20px;margin:16px 0;border:1px solid #e2e8f0}
+.infobox table{width:100%;border-collapse:collapse}
+.infobox td{padding:6px 0;font-size:13px;color:#334155}
+.infobox td:first-child{color:#64748b;width:160px}
+.credit-row{background:#f0fdf4;border-radius:10px;padding:14px 20px;margin:12px 0;display:flex;justify-content:space-between;align-items:center}
+.credit-label{font-size:13px;color:#10b981;font-weight:600}
+.credit-value{font-size:22px;color:#059669;font-weight:900}
+.note{background:#f0f9ff;border-left:4px solid #0ea5e9;padding:12px 16px;border-radius:0 10px 10px 0;color:#0369a1;font-size:13px;margin:16px 0}
+.ft{background:#f8fafc;padding:16px;text-align:center;color:#94a3b8;font-size:12px;border-top:1px solid #e2e8f0}
+</style></head><body>
+<div class='box'>
+  <div class='hd'><h2>Note de Crédit $numStr</h2></div>
+  <div class='bd'>
+    <p>Bonjour <strong>" . htmlspecialchars($clientName) . "</strong>,</p>
+    <p><strong>" . htmlspecialchars($staffName) . "</strong> vous a transmis une note de crédit.</p>
+    <div class='infobox'><table>
+      <tr><td>N° Note de crédit</td><td><strong>$numStr</strong></td></tr>
+      <tr><td>Montant total</td><td><strong>{$sym}{$total}</strong></td></tr>
+    </table></div>
+    <div class='credit-row'>
+      <span class='credit-label'>Crédits disponibles</span>
+      <span class='credit-value'>{$sym}{$remaining}</span>
+    </div>
+    <div class='note'>Le PDF de votre note de crédit est joint à cet email.</div>
+    <p style='color:#64748b;font-size:13px'>Cordialement,<br><strong>" . htmlspecialchars($staffName) . "</strong></p>
+  </div>
+  <div class='ft'>© " . date('Y') . " — CRM Mobile</div>
+</div></body></html>";
 
-        $pdfName = 'note_credit_' . $id . '.pdf';
-        return EmailHelper::sendBrevoEmailWithBinary($to, "Note de Crédit $numStr", $html, $pdfBase64, $pdfName);
+    $payload = [
+        'sender'      => ['name' => $fromName, 'email' => $fromEmail],
+        'to'          => [['email' => $to, 'name' => $clientName]],
+        'subject'     => "Note de Crédit $numStr",
+        'htmlContent' => $html,
+    ];
+
+    // Attache le PDF
+    try {
+        $pdfBytes = $this->_generatePdfBytes($note);
+        $payload['attachment'] = [[
+            'name'    => 'note_credit_' . $id . '.pdf',
+            'content' => base64_encode($pdfBytes),
+        ]];
+    } catch (\Throwable $e) {
+        log_message('error', 'CN PDF gen for email: ' . $e->getMessage());
     }
+
+    $ch = curl_init('https://api.brevo.com/v3/smtp/email');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => json_encode($payload),
+        CURLOPT_HTTPHEADER     => [
+            'accept: application/json',
+            'api-key: ' . $apiKey,
+            'content-type: application/json',
+        ],
+        CURLOPT_TIMEOUT => 30,
+    ]);
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlErr  = curl_error($ch);
+    curl_close($ch);
+
+    log_message('debug', "Brevo CN email [$httpCode]: $response");
+
+    if ($curlErr) {
+        log_message('error', 'Brevo CN cURL error: ' . $curlErr);
+        return false;
+    }
+
+    return $httpCode === 201;
+}
 
     // ─────────────────────────────────────────────────────────────────────────
     // PDF
