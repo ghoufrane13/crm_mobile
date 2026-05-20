@@ -41,8 +41,10 @@ class EstimateController extends ResourceController
     }
 
     public function detail($id = null)
-    {
-        if (!$id) return $this->respond(['status'=>false,'message'=>'ID manquant'],400);
+{
+    if (!$id) return $this->respond(['status'=>false,'message'=>'ID manquant'],400);
+    
+    try {
         $estimate = $this->estimateModel->getDetail((int)$id);
         if (!$estimate) return $this->respond(['status'=>false,'message'=>'Devis introuvable'],404);
         $estimate['status_label'] = $this->statuses[(int)$estimate['status']] ?? 'Inconnu';
@@ -51,8 +53,15 @@ class EstimateController extends ResourceController
             ? ['signed'=>true,'signed_at'=>$sig['signed_at'],'signature_url'=>$sig['signature_url']]
             : ['signed'=>false];
         return $this->respond(['status'=>true,'estimate'=>$estimate]);
+    } catch (\Throwable $e) {
+        return $this->respond([
+            'status' => false,
+            'error'  => $e->getMessage(),
+            'file'   => $e->getFile(),
+            'line'   => $e->getLine(),
+        ], 500);
     }
-
+}
     public function nextNumber()
     {
         $next = $this->estimateModel->getNextNumber();
