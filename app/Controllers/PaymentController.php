@@ -558,8 +558,8 @@ class PaymentController extends ResourceController
         $paymeeMode   = env('PAYMEE_MODE', 'test');
 
         $paymeeBase = $paymeeMode === 'prod'
-            ? 'https://app.paymee.tn/api/v1'
-            : 'https://sandbox.paymee.tn/api/v1';
+            ? 'https://app.paymee.tn/api/v2'
+            : 'https://sandbox.paymee.tn/api/v2';
 
         // ── CORRECTION 1 : slash final garanti, pas de conversion http→https ──
         $defaultCallbackBase = base_url();
@@ -667,8 +667,8 @@ class PaymentController extends ResourceController
         $paymeeApiKey = env('PAYMEE_API_KEY', '');
         $paymeeMode   = env('PAYMEE_MODE', 'test');
         $paymeeBase   = $paymeeMode === 'prod'
-            ? 'https://app.paymee.tn/api/v1'
-            : 'https://sandbox.paymee.tn/api/v1';
+            ? 'https://app.paymee.tn/api/v2'
+            : 'https://sandbox.paymee.tn/api/v2';
 
         $ch = curl_init("$paymeeBase/payments/$token/check");
         $curlOptions = [
