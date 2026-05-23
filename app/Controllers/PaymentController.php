@@ -554,7 +554,7 @@ class PaymentController extends ResourceController
         $phone     = $contact['phonenumber'] ?? '00000000';
 
         // ── Config Paymee ──────────────────────────────────────────────────────
-        $paymeeApiKey = env('PAYMEE_API_KEY', '');
+        $paymeeApiKey = $_ENV['PAYMEE_API_KEY'] ?? getenv('PAYMEE_API_KEY') ?? '';
         $paymeeMode   = env('PAYMEE_MODE', 'test');
 
         $paymeeBase = $paymeeMode === 'prod'
@@ -598,7 +598,7 @@ class PaymentController extends ResourceController
         ];
 
         log_message('debug', 'Paymee create payload: ' . json_encode($payload));
-
+        log_message('debug', 'PAYMEE_API_KEY lu: [' . $paymeeApiKey . ']');
         $ch = curl_init("$paymeeBase/payments/create");
         $curlOptions = [
             CURLOPT_RETURNTRANSFER => true,
@@ -663,7 +663,7 @@ class PaymentController extends ResourceController
             'message' => 'token et invoice_id requis',
         ], 400);
 
-        $paymeeApiKey = env('PAYMEE_API_KEY', '');
+        $paymeeApiKey = $_ENV['PAYMEE_API_KEY'] ?? getenv('PAYMEE_API_KEY') ?? '';
         $paymeeMode   = env('PAYMEE_MODE', 'test');
         $paymeeBase   = $paymeeMode === 'prod'
             ? 'https://app.paymee.tn/api/v2'
