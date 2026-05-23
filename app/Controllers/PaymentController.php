@@ -496,6 +496,10 @@ class PaymentController extends ResourceController
      */
     public function createPaymeePayment()
     {
+        $paymeeApiKey = $_SERVER['PAYMEE_API_KEY'] 
+    ?? $_ENV['PAYMEE_API_KEY'] 
+    ?? getenv('PAYMEE_API_KEY') 
+    ?? '';
         return $this->respond([
         'status' => false,
         'debug_key' => $_ENV['PAYMEE_API_KEY'] ?? 'ENV_VIDE',
