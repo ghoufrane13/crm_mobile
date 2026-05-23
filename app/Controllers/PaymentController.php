@@ -496,6 +496,11 @@ class PaymentController extends ResourceController
      */
     public function createPaymeePayment()
     {
+        return $this->respond([
+        'status' => false,
+        'debug_key' => $_ENV['PAYMEE_API_KEY'] ?? 'ENV_VIDE',
+        'debug_getenv' => getenv('PAYMEE_API_KEY') ?: 'GETENV_VIDE',
+        ]);
         $data      = $this->request->getJSON(true);
         $invoiceId = (int)($data['invoice_id'] ?? 0);
         $clientId  = (int)($data['client_id']  ?? 0);
@@ -637,11 +642,7 @@ class PaymentController extends ResourceController
         $paymentUrl = $paymeeMode === 'prod'
             ? "https://app.paymee.tn/gateway/$token"
             : "https://sandbox.paymee.tn/gateway/$token";
-        return $this->respond([
-        'status' => false,
-        'debug_key' => $_ENV['PAYMEE_API_KEY'] ?? 'ENV_VIDE',
-        'debug_getenv' => getenv('PAYMEE_API_KEY') ?: 'GETENV_VIDE',
-        ]);
+        
 
         return $this->respond([
             'status'      => true,
