@@ -630,8 +630,7 @@ class PaymentController extends ResourceController
             log_message('error', 'Paymee create error: ' . $response);
             return $this->respond([
                 'status'  => false,
-                'message' => $paymee['message'] ?? 'Erreur Paymee',
-            ], 400);
+                'message' => $paymee['message'] ?? $response,            ], 400);
         }
 
         $token      = $paymee['data']['token'];
