@@ -555,7 +555,7 @@ class PaymentController extends ResourceController
 
         // ── Config Paymee ──────────────────────────────────────────────────────
         $paymeeApiKey = $_ENV['PAYMEE_API_KEY'] ?? getenv('PAYMEE_API_KEY') ?? '';
-        $paymeeMode   = env('PAYMEE_MODE', 'test');
+        $paymeeMode   = $_ENV['PAYMEE_MODE']    ?? getenv('PAYMEE_MODE')    ?? 'test';
 
         $paymeeBase = $paymeeMode === 'prod'
             ? 'https://app.paymee.tn/api/v2'
@@ -584,7 +584,7 @@ class PaymentController extends ResourceController
         }
 
         $payload = [
-            'vendor'      => (int)env('PAYMEE_VENDOR_ID', 0),
+            'vendor' => (int)($_ENV['PAYMEE_VENDOR_ID'] ?? getenv('PAYMEE_VENDOR_ID') ?? 0),
             'amount'      => $amountToPay,
             'note'        => $note ?: "Facture #$invoiceId",
             'first_name'  => $firstName,
