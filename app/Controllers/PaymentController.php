@@ -637,6 +637,11 @@ class PaymentController extends ResourceController
         $paymentUrl = $paymeeMode === 'prod'
             ? "https://app.paymee.tn/gateway/$token"
             : "https://sandbox.paymee.tn/gateway/$token";
+        return $this->respond([
+        'status' => false,
+        'debug_key' => $_ENV['PAYMEE_API_KEY'] ?? 'ENV_VIDE',
+        'debug_getenv' => getenv('PAYMEE_API_KEY') ?: 'GETENV_VIDE',
+        ]);
 
         return $this->respond([
             'status'      => true,
@@ -644,6 +649,7 @@ class PaymentController extends ResourceController
             'payment_url' => $paymentUrl,
             'amount'      => $amountToPay,
         ]);
+        
     }
 
     /**
