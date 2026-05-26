@@ -636,8 +636,8 @@ class PaymentController extends ResourceController
         $token      = $paymee['data']['token'];
         $paymentUrl = $paymeeMode === 'prod'
             ? "https://app.paymee.tn/gateway/$token"
-            : "https://sandbox.paymee.tn/pay/$token";
-        
+            : "https://sandbox.paymee.tn/gateway/$token";
+                
 
         return $this->respond([
             'status'      => true,
