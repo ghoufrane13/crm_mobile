@@ -19,9 +19,6 @@ class PaymentController extends ResourceController
         $this->paymentModel = new PaymentModel();
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Génère une référence de transaction unique : TXN-YYYYMMDD-XXXXXX
-    // ─────────────────────────────────────────────────────────────────────────
     private function _generateTransactionRef(): string
     {
         $date   = date('Ymd');
@@ -29,7 +26,6 @@ class PaymentController extends ResourceController
         return "TXN-{$date}-{$suffix}";
     }
 
-    // GET /api/payments/list[?invoice_id=X]
     public function list()
     {
         $invoiceId = $this->request->getVar('invoice_id');
@@ -43,7 +39,6 @@ class PaymentController extends ResourceController
         ]);
     }
 
-    // GET /api/payments/detail/:id
     public function detail($id = null)
     {
         if (!$id) return $this->respond(
@@ -56,14 +51,12 @@ class PaymentController extends ResourceController
         return $this->respond(['status' => true, 'payment' => $payment]);
     }
 
-    // GET /api/payments/modes
     public function modes()
     {
         $modes = $this->paymentModel->getPaymentModes();
         return $this->respond(['status' => true, 'modes' => $modes]);
     }
 
-    // GET /api/payments/generate-ref
     public function generateRef()
     {
         return $this->respond([
@@ -72,9 +65,6 @@ class PaymentController extends ResourceController
         ]);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // POST /api/payments/create
-    // ─────────────────────────────────────────────────────────────────────────
     public function create()
     {
         $data      = $this->request->getJSON(true);
@@ -197,9 +187,6 @@ class PaymentController extends ResourceController
         ], 201);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // PUT /api/payments/update/:id
-    // ─────────────────────────────────────────────────────────────────────────
     public function update($id = null)
     {
         if (!$id) return $this->respond(
@@ -241,9 +228,6 @@ class PaymentController extends ResourceController
         return $this->respond(['status' => true, 'message' => 'Règlement mis à jour']);
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // DELETE /api/payments/delete/:id
-    // ─────────────────────────────────────────────────────────────────────────
     public function delete($id = null)
     {
         if (!$id) return $this->respond(
@@ -264,7 +248,6 @@ class PaymentController extends ResourceController
         return $this->respond(['status' => true, 'message' => 'Règlement supprimé']);
     }
 
-    // ── Helper recalcul statut ─────────────────────────────────────────────────
     private function _recalcStatus($db, int $invoiceId): void
     {
         $invoice = $db->table('tblinvoices')
@@ -484,16 +467,6 @@ class PaymentController extends ResourceController
     // PAYMEE
     // =========================================================================
 
-    /**
-     * POST /api/payments/paymee/create
-     *
-     * CORRECTIONS :
-     *   1. rtrim() + '/' → garantit exactement un slash final dans callbackBase
-     *   2. Suppression de la conversion http→https qui cassait l'IP locale
-     *   3. En mode test : URLs de callback factices HTTPS (Paymee sandbox
-     *      exige https mais le flux Flutter confirme via bouton, pas redirect)
-     *   4. Condition payment_status robuste (booléen / int / string)
-     */
     public function createPaymeePayment()
     {
         $data      = $this->request->getJSON(true);
@@ -532,7 +505,6 @@ class PaymentController extends ResourceController
             'message' => "Le montant dépasse le solde restant ($totalDue TND).",
         ], 400);
 
-        // Récupérer infos client
         $contact = $db->table('tblcontacts')
             ->select('firstname, lastname, email, phonenumber')
             ->where('userid', $clientId)
@@ -553,7 +525,6 @@ class PaymentController extends ResourceController
         $email     = $contact['email']       ?? 'client@example.com';
         $phone     = $contact['phonenumber'] ?? '00000000';
 
-        // ── Config Paymee ──────────────────────────────────────────────────────
         $paymeeApiKey = $_ENV['PAYMEE_API_KEY'] ?? getenv('PAYMEE_API_KEY') ?? '';
         $paymeeMode   = $_ENV['PAYMEE_MODE']    ?? getenv('PAYMEE_MODE')    ?? 'test';
 
@@ -561,30 +532,17 @@ class PaymentController extends ResourceController
             ? 'https://app.paymee.tn/api/v2'
             : 'https://sandbox.paymee.tn/api/v2';
 
-        // ── CORRECTION 1 : slash final garanti, pas de conversion http→https ──
-        $defaultCallbackBase = base_url();
-        $callbackBase = rtrim(
-            env('PAYMEE_CALLBACK_BASE_URL', $defaultCallbackBase),
-            '/'
-        ) . '/';
+        // ── URLs de callback ───────────────────────────────────────────────────
+        // On pointe vers notre propre backend (hébergé sur Render = HTTPS garanti).
+        // Paymee redirigera vers une page HTML propre au lieu d'une 404 sandbox.
+        $callbackBase = rtrim(env('PAYMEE_CALLBACK_BASE_URL', base_url()), '/');
 
-        // ── CORRECTION 2 : URLs de callback ────────────────────────────────────
-        // Paymee sandbox exige HTTPS pour return_url / cancel_url / webhook_url.
-        // En mode test avec IP locale (http://), on passe des URLs HTTPS
-        // factices de sandbox — le flux Flutter confirme via le bouton
-        // "J'ai payé", il n'attend pas le redirect du navigateur.
-        if ($paymeeMode !== 'prod') {
-            $successUrl = 'https://sandbox.paymee.tn/return/success?invoice_id=' . $invoiceId;
-            $failUrl    = 'https://sandbox.paymee.tn/return/fail?invoice_id='    . $invoiceId;
-            $webhookUrl = 'https://sandbox.paymee.tn/return/webhook';
-        } else {
-            $successUrl = $callbackBase . 'paymee/success?invoice_id=' . $invoiceId;
-            $failUrl    = $callbackBase . 'paymee/fail?invoice_id='    . $invoiceId;
-            $webhookUrl = $callbackBase . 'api/payments/paymee/webhook';
-        }
+        $successUrl = $callbackBase . '/api/paymee/success?invoice_id=' . $invoiceId;
+        $failUrl    = $callbackBase . '/api/paymee/fail?invoice_id='    . $invoiceId;
+        $webhookUrl = $callbackBase . '/api/payments/paymee/webhook';
 
         $payload = [
-            'vendor' => (int)($_ENV['PAYMEE_VENDOR_ID'] ?? getenv('PAYMEE_VENDOR_ID') ?? 0),
+            'vendor'      => (int)($_ENV['PAYMEE_VENDOR_ID'] ?? getenv('PAYMEE_VENDOR_ID') ?? 0),
             'amount'      => $amountToPay,
             'note'        => $note ?: "Facture #$invoiceId",
             'first_name'  => $firstName,
@@ -599,8 +557,9 @@ class PaymentController extends ResourceController
 
         log_message('debug', 'Paymee create payload: ' . json_encode($payload));
         log_message('debug', 'PAYMEE_API_KEY lu: [' . $paymeeApiKey . ']');
+
         $ch = curl_init("$paymeeBase/payments/create");
-        $curlOptions = [
+        curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST           => true,
             CURLOPT_POSTFIELDS     => json_encode($payload),
@@ -610,9 +569,7 @@ class PaymentController extends ResourceController
             ],
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_SSL_VERIFYHOST => false,
-        ];
-
-        curl_setopt_array($ch, $curlOptions);
+        ]);
         $response   = curl_exec($ch);
         $httpStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError  = curl_error($ch);
@@ -630,14 +587,14 @@ class PaymentController extends ResourceController
             log_message('error', 'Paymee create error: ' . $response);
             return $this->respond([
                 'status'  => false,
-                'message' => $paymee['message'] ?? $response,            ], 400);
+                'message' => $paymee['message'] ?? $response,
+            ], 400);
         }
 
         $token      = $paymee['data']['token'];
         $paymentUrl = $paymeeMode === 'prod'
             ? "https://app.paymee.tn/gateway/$token"
             : "https://sandbox.paymee.tn/gateway/$token";
-                
 
         return $this->respond([
             'status'      => true,
@@ -645,15 +602,8 @@ class PaymentController extends ResourceController
             'payment_url' => $paymentUrl,
             'amount'      => $amountToPay,
         ]);
-        
     }
 
-    /**
-     * POST /api/payments/paymee/confirm
-     *
-     * CORRECTION : condition payment_status robuste
-     * (Paymee sandbox peut retourner true, 1, "true", "1"…)
-     */
     public function confirmPaymeePayment()
     {
         $data      = $this->request->getJSON(true);
@@ -672,7 +622,7 @@ class PaymentController extends ResourceController
             : 'https://sandbox.paymee.tn/api/v2';
 
         $ch = curl_init("$paymeeBase/payments/$token/check");
-        $curlOptions = [
+        curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER     => [
                 'Content-Type: application/json',
@@ -680,9 +630,7 @@ class PaymentController extends ResourceController
             ],
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_SSL_VERIFYHOST => false,
-        ];
-
-        curl_setopt_array($ch, $curlOptions);
+        ]);
         $response   = curl_exec($ch);
         $httpStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
@@ -697,8 +645,6 @@ class PaymentController extends ResourceController
 
         $paymee = json_decode($response, true);
 
-        // ── CORRECTION 3 : vérification robuste de payment_status ─────────────
-        // Paymee sandbox peut renvoyer : true, 1, "true", "1"
         $paymentStatus = $paymee['data']['payment_status'] ?? false;
         $isPaid = ($paymentStatus === true
             || $paymentStatus === 1
@@ -716,7 +662,6 @@ class PaymentController extends ResourceController
 
         $db = \Config\Database::connect();
 
-        // Anti-doublon
         $existing = $db->table('tblinvoicepaymentrecords')
             ->where('transactionid', $token)->get()->getRowArray();
 
@@ -758,38 +703,48 @@ class PaymentController extends ResourceController
         ], 201);
     }
 
+    // ── Pages de retour Paymee (déclarées dans le groupe api) ─────────────────
+
     /**
-     * GET /paymee/success
-     * ⚠️ À déclarer HORS du groupe api dans Routes.php :
-     *    $routes->get('paymee/success', 'PaymentController::paymeeSuccess');
+     * GET /api/paymee/success
      */
     public function paymeeSuccess()
     {
-        return $this->response->setBody(
-            '<!DOCTYPE html><html><head><meta charset="utf-8">'
-            . '<title>Paiement réussi</title></head>'
-            . '<body style="font-family:sans-serif;text-align:center;padding:40px">'
-            . '<h2 style="color:#10B981">✅ Paiement réussi</h2>'
-            . '<p>Vous pouvez fermer cette fenêtre et revenir dans l\'application.</p>'
-            . '</body></html>'
-        );
+        return $this->response
+            ->setContentType('text/html')
+            ->setBody(
+                '<!DOCTYPE html><html><head><meta charset="utf-8">'
+                . '<meta name="viewport" content="width=device-width,initial-scale=1">'
+                . '<title>Paiement réussi</title>'
+                . '<style>body{font-family:sans-serif;text-align:center;padding:60px 20px;background:#f8fafc}'
+                . 'h2{color:#10B981;font-size:24px}p{color:#64748B;margin-top:12px}'
+                . '.icon{font-size:64px;margin-bottom:16px}</style></head>'
+                . '<body><div class="icon">✅</div>'
+                . '<h2>Paiement réussi</h2>'
+                . '<p>Vous pouvez fermer cette fenêtre et revenir dans l\'application.</p>'
+                . '</body></html>'
+            );
     }
 
     /**
-     * GET /paymee/fail
-     * ⚠️ À déclarer HORS du groupe api dans Routes.php :
-     *    $routes->get('paymee/fail', 'PaymentController::paymeeFail');
+     * GET /api/paymee/fail
      */
     public function paymeeFail()
     {
-        return $this->response->setBody(
-            '<!DOCTYPE html><html><head><meta charset="utf-8">'
-            . '<title>Paiement échoué</title></head>'
-            . '<body style="font-family:sans-serif;text-align:center;padding:40px">'
-            . '<h2 style="color:#EF4444">❌ Paiement annulé ou échoué</h2>'
-            . '<p>Vous pouvez fermer cette fenêtre et réessayer dans l\'application.</p>'
-            . '</body></html>'
-        );
+        return $this->response
+            ->setContentType('text/html')
+            ->setBody(
+                '<!DOCTYPE html><html><head><meta charset="utf-8">'
+                . '<meta name="viewport" content="width=device-width,initial-scale=1">'
+                . '<title>Paiement échoué</title>'
+                . '<style>body{font-family:sans-serif;text-align:center;padding:60px 20px;background:#f8fafc}'
+                . 'h2{color:#EF4444;font-size:24px}p{color:#64748B;margin-top:12px}'
+                . '.icon{font-size:64px;margin-bottom:16px}</style></head>'
+                . '<body><div class="icon">❌</div>'
+                . '<h2>Paiement annulé ou échoué</h2>'
+                . '<p>Vous pouvez fermer cette fenêtre et réessayer dans l\'application.</p>'
+                . '</body></html>'
+            );
     }
 
     /**
@@ -829,7 +784,6 @@ class PaymentController extends ResourceController
             $now         = date('Y-m-d H:i:s');
             $link        = 'invoices/detail/' . $invoiceId;
 
-            // ── Contacts du client ────────────────────────────────────────────
             $contacts = $db->table('tblcontacts')
                 ->select('id')
                 ->where('userid', $clientId)
@@ -849,7 +803,6 @@ class PaymentController extends ResourceController
                 } catch (\Throwable) {}
             }
 
-            // ── Staff à notifier ──────────────────────────────────────────────
             $staffIds  = [];
             $saleAgent = (int)($invoice['sale_agent'] ?? 0);
             $addedFrom = (int)($invoice['addedfrom']  ?? 0);
