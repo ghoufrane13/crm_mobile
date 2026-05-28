@@ -800,7 +800,9 @@ class PaymentController extends ResourceController
                         'notif_id'   => (string)$invoiceId,
                         'notif_link' => $link,
                     ]);
-                } catch (\Throwable) {}
+                } catch (\Throwable $e) {
+                    log_message('warning', '[PaymentController] FCM push client contactId=' . $contactId . ' : ' . $e->getMessage());
+                }
             }
 
             $staffIds  = [];
@@ -829,7 +831,9 @@ class PaymentController extends ResourceController
                         'notif_id'   => (string)$invoiceId,
                         'notif_link' => $link,
                     ]);
-                } catch (\Throwable) {}
+                } catch (\Throwable $e) {
+                    log_message('warning', '[PaymentController] FCM push staff staffId=' . $staffId . ' : ' . $e->getMessage());
+                }
             }
 
         } catch (\Throwable $e) {
