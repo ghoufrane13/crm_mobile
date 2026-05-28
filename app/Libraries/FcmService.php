@@ -37,15 +37,33 @@ class FcmService
     {
         $this->credentialsPath = APPPATH . 'Config/firebase_credentials.json';
 
-        if (!file_exists($this->credentialsPath)) {
-            throw new \RuntimeException('firebase_credentials.json introuvable dans app/Config/');
+        // ── Priorité 1 : variable d'environnement (Render, production) ──────
+        $envJson = getenv('FIREBASE_CREDENTIALS_JSON');
+        if (!empty($envJson)) {
+            $this->credentials = json_decode($envJson, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new \RuntimeException(
+                    'FIREBASE_CREDENTIALS_JSON invalide : ' . json_last_error_msg()
+                );
+            }
+            log_message('debug', '[FcmService] Credentials chargés depuis ENV');
+        }
+        // ── Priorité 2 : fichier local (xampp, développement) ────────────────
+        elseif (file_exists($this->credentialsPath)) {
+            $this->credentials = json_decode(
+                file_get_contents($this->credentialsPath), true
+            );
+            log_message('debug', '[FcmService] Credentials chargés depuis fichier');
+        } else {
+            throw new \RuntimeException(
+                'Firebase credentials introuvables : ni FIREBASE_CREDENTIALS_JSON ni firebase_credentials.json'
+            );
         }
 
-        $this->credentials = json_decode(file_get_contents($this->credentialsPath), true);
-        $this->projectId   = $this->credentials['project_id'] ?? '';
+        $this->projectId = $this->credentials['project_id'] ?? '';
 
         if (empty($this->projectId)) {
-            throw new \RuntimeException('project_id manquant dans firebase_credentials.json');
+            throw new \RuntimeException('project_id manquant dans les credentials Firebase');
         }
     }
 
@@ -150,22 +168,6 @@ class FcmService
 
     /**
      * Insérer une notification dans tblnotifications ET envoyer le push.
-     *
-     * Logique touserid / fromuserid :
-     *   - touserid   = staffid ou contact_id du destinataire (selon $userType)
-     *   - fromuserid = staffid ou contact_id de l'expéditeur (0 si système CRM)
-     *
-     * Les deux étapes sont DÉCOUPLÉES :
-     *   1. INSERT dans tblnotifications — toujours exécuté, garanti
-     *   2. Push FCM — tenté ensuite, échec silencieux si pas de token/credentials
-     *
-     * @param int    $toUserId    staffid ou contact_id du destinataire
-     * @param string $userType    'staff' ou 'client'
-     * @param int    $fromUserId  staffid ou contact_id de l'expéditeur (0 = système)
-     * @param string $fromName    Nom affiché de l'expéditeur
-     * @param string $description Texte de la notification
-     * @param string $link        Lien optionnel
-     * @param array  $extraData   Data push supplémentaires
      */
     public function createAndSend(
         int    $toUserId,
@@ -177,8 +179,6 @@ class FcmService
         array  $extraData = []
     ): bool {
         // ── ÉTAPE 1 : INSERT dans tblnotifications (toujours exécuté) ─────
-        // touserid   = destinataire : staffid OU contact_id selon $userType
-        // fromuserid = expéditeur   : staffid OU contact_id (0 si système)
         try {
             $db = \Config\Database::connect();
             $db->table('tblnotifications')->insert([
@@ -186,15 +186,14 @@ class FcmService
                 'isread_inline' => 0,
                 'date'          => date('Y-m-d H:i:s'),
                 'description'   => $description,
-                'fromuserid'    => $fromUserId,   // 0 si expéditeur = système CRM
+                'fromuserid'    => $fromUserId,
                 'fromclientid'  => 0,
                 'from_fullname' => $fromName,
-                'touserid'      => $toUserId,     // staffid ou contact_id
+                'touserid'      => $toUserId,
                 'link'          => $link,
             ]);
         } catch (\Throwable $e) {
             log_message('error', '[FcmService::createAndSend] INSERT tblnotifications échoué : ' . $e->getMessage());
-            // On continue quand même pour tenter le push FCM
         }
 
         // ── ÉTAPE 2 : Push FCM (bonus, échec silencieux) ──────────────────
