@@ -5,32 +5,13 @@ namespace App\Helpers;
 /**
  * EmailHelper
  * 
- * Centralise la configuration et l'envoi d'emails via Brevo SMTP.
+ * Centralise la configuration et l'envoi d'emails via SendGrid API.
  * À utiliser dans tous les controllers pour standardiser l'envoi d'emails.
  */
 class EmailHelper
 {
     /**
-     * Configuration BREVO SMTP standardisée
-     */
-    private static function getBrevoConfig(): array
-    {
-        return [
-            'protocol'   => 'smtp',
-            'SMTPHost'   => 'smtp-relay.brevo.com',
-            'SMTPPort'   => 587,
-            'SMTPUser'   => env('BREVO_SMTP_USER', ''),
-            'SMTPPass'   => env('BREVO_SMTP_PASS', ''),
-            'SMTPCrypto' => 'tls',
-            'mailType'   => 'html',
-            'charset'    => 'utf-8',
-            'wordWrap'   => true,
-            'newline'    => "\r\n",
-        ];
-    }
-
-    /**
-     * Envoie un email simple via Brevo SMTP
+     * Envoie un email simple via SendGrid API
      *
      * @param string $to           Email destinataire
      * @param string $subject      Sujet de l'email
@@ -47,21 +28,64 @@ class EmailHelper
         ?string $pdfName = null
     ): bool
     {
-        $config = self::getBrevoConfig();
-        $email = \Config\Services::email();
-        $email->initialize($config);
-        $email->setFrom(env('MAIL_FROM_ADDRESS', ''), env('MAIL_FROM_NAME', 'CRM Mobile'));
-        $email->setTo($to);
-        $email->setSubject($subject);
-        $email->setMessage($htmlContent);
+        $apiKey    = getenv('SENDGRID_API_KEY') ?: env('SENDGRID_API_KEY', '');
+        $fromEmail = env('MAIL_FROM_ADDRESS', '');
+        $fromName  = env('MAIL_FROM_NAME', 'CRM Mobile');
+
+        $payload = [
+            'personalizations' => [
+                [
+                    'to' => [['email' => $to]],
+                ]
+            ],
+            'from' => [
+                'email' => $fromEmail,
+                'name'  => $fromName,
+            ],
+            'subject' => $subject,
+            'content' => [
+                [
+                    'type' => 'text/html',
+                    'value' => $htmlContent,
+                ]
+            ]
+        ];
 
         // Joindre un PDF si fourni
         if ($pdfPath && $pdfName && is_file($pdfPath)) {
-            $email->attach($pdfPath, 'attachment', $pdfName);
+            $pdfBytes  = file_get_contents($pdfPath);
+            $pdfBase64 = base64_encode($pdfBytes);
+            $payload['attachments'] = [[
+                'content'     => $pdfBase64,
+                'type'        => 'application/pdf',
+                'filename'    => $pdfName,
+                'disposition' => 'attachment',
+            ]];
         }
 
-        if (!$email->send()) {
-            log_message('error', 'Brevo SMTP error: ' . $email->printDebugger(['headers']));
+        $ch = curl_init('https://api.sendgrid.com/v3/mail/send');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode($payload),
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apiKey,
+            ],
+            CURLOPT_TIMEOUT => 30,
+        ]);
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlErr  = curl_error($ch);
+        curl_close($ch);
+
+        if ($curlErr) {
+            log_message('error', 'SendGrid Helper cURL error: ' . $curlErr);
+            return false;
+        }
+
+        if ($httpCode !== 202) {
+            log_message('error', 'SendGrid Helper API error (' . $httpCode . '): ' . $response);
             return false;
         }
         return true;
@@ -101,9 +125,7 @@ class EmailHelper
             }
 
             // Utiliser sendBrevoEmail pour envoyer
-            $result = self::sendBrevoEmail($to, $subject, $htmlContent, $tempFile, $pdfName);
-
-            return $result;
+            return self::sendBrevoEmail($to, $subject, $htmlContent, $tempFile, $pdfName);
         } finally {
             // Nettoyer le fichier temporaire
             if ($tempFile && is_file($tempFile)) {
@@ -127,27 +149,61 @@ class EmailHelper
     ): bool
     {
         if (empty($recipients)) {
-            log_message('error', 'No recipients provided for Brevo email');
+            log_message('error', 'No recipients provided for SendGrid email');
             return false;
         }
 
-        $config = self::getBrevoConfig();
-        $email = \Config\Services::email();
-        $email->initialize($config);
-        $email->setFrom(env('MAIL_FROM_ADDRESS', ''), env('MAIL_FROM_NAME', 'CRM Mobile'));
-        $email->setSubject($subject);
-        $email->setMessage($htmlContent);
+        $apiKey    = getenv('SENDGRID_API_KEY') ?: env('SENDGRID_API_KEY', '');
+        $fromEmail = env('MAIL_FROM_ADDRESS', '');
+        $fromName  = env('MAIL_FROM_NAME', 'CRM Mobile');
 
+        $personalizations = [];
         foreach ($recipients as $recipient) {
-            $email->setTo($recipient);
-            if (!$email->send(false)) {
-                log_message('error', 'Brevo SMTP error for ' . $recipient . ': ' . $email->printDebugger(['headers']));
-                $email->clear();
-                continue;
-            }
-            $email->clear();
+            $personalizations[] = [
+                'to' => [['email' => $recipient]]
+            ];
         }
 
+        $payload = [
+            'personalizations' => $personalizations,
+            'from' => [
+                'email' => $fromEmail,
+                'name'  => $fromName,
+            ],
+            'subject' => $subject,
+            'content' => [
+                [
+                    'type' => 'text/html',
+                    'value' => $htmlContent,
+                ]
+            ]
+        ];
+
+        $ch = curl_init('https://api.sendgrid.com/v3/mail/send');
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => json_encode($payload),
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apiKey,
+            ],
+            CURLOPT_TIMEOUT => 30,
+        ]);
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlErr  = curl_error($ch);
+        curl_close($ch);
+
+        if ($curlErr) {
+            log_message('error', 'SendGrid Helper Multiple cURL error: ' . $curlErr);
+            return false;
+        }
+
+        if ($httpCode !== 202) {
+            log_message('error', 'SendGrid Helper Multiple API error (' . $httpCode . '): ' . $response);
+            return false;
+        }
         return true;
     }
 }

@@ -794,21 +794,37 @@ body{font-family:'Segoe UI',sans-serif;background:#f1f5f9;padding:20px;margin:0}
   <div class='ft'>© " . date('Y') . " — CRM Mobile</div>
 </div></div></body></html>";
 
+        $apiKey    = getenv('SENDGRID_API_KEY') ?: env('SENDGRID_API_KEY', '');
+        $fromEmail = getenv('MAIL_FROM_ADDRESS') ?: 'ghoufranbensassy@gmail.com';
+        $fromName  = getenv('MAIL_FROM_NAME')    ?: 'CRM Mobile';
+
         $payload = [
-            'sender'      => ['name' => 'CRM Mobile', 'email' => 'ghoufranbensassy@gmail.com'],
-            'to'          => [['email' => $toEmail, 'name' => $staffName]],
-            'subject'     => "⏰ Rappel : $taskName",
-            'htmlContent' => $htmlContent,
+            'personalizations' => [
+                [
+                    'to' => [['email' => $toEmail, 'name' => $staffName]],
+                ]
+            ],
+            'from' => [
+                'email' => $fromEmail,
+                'name'  => $fromName,
+            ],
+            'subject' => "⏰ Rappel : $taskName",
+            'content' => [
+                [
+                    'type' => 'text/html',
+                    'value' => $htmlContent,
+                ]
+            ]
         ];
 
-        $ch = curl_init('https://api.brevo.com/v3/smtp/email');
+        $ch = curl_init('https://api.sendgrid.com/v3/mail/send');
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST           => true,
             CURLOPT_POSTFIELDS     => json_encode($payload),
             CURLOPT_HTTPHEADER     => [
                 'accept: application/json',
-                'api-key: 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',
+                'Authorization: Bearer ' . $apiKey,
                 'content-type: application/json',
             ],
             CURLOPT_TIMEOUT => 30,
@@ -817,7 +833,7 @@ body{font-family:'Segoe UI',sans-serif;background:#f1f5f9;padding:20px;margin:0}
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        if ($code !== 201) {
+        if ($code !== 202) {
             log_message('error', "Task reminder email failed (HTTP $code): $res");
         }
     }

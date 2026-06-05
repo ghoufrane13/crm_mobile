@@ -82,32 +82,42 @@ body { font-family: 'Segoe UI', sans-serif; background:#f1f5f9; padding:20px; ma
   <div class='footer'>© " . date('Y') . " CRM Mobile — Envoyé automatiquement, ne pas répondre.</div>
 </div></body></html>";
 
+        $apiKey = getenv('SENDGRID_API_KEY') ?: env('SENDGRID_API_KEY', '');
         $payload = [
-            'sender'      => [
-                'name'  => env('MAIL_FROM_NAME', 'CRM Mobile'),
-                'email' => env('MAIL_FROM_ADDRESS', ''),
+            'personalizations' => [
+                [
+                    'to' => [['email' => $to]],
+                ]
             ],
-            'to'          => [['email' => $to]],
-            'subject'     => 'Code de vérification - Inscription société',
-            'htmlContent' => $htmlContent,
+            'from' => [
+                'email' => env('MAIL_FROM_ADDRESS', ''),
+                'name'  => env('MAIL_FROM_NAME', 'CRM Mobile'),
+            ],
+            'subject' => 'Code de vérification - Inscription société',
+            'content' => [
+                [
+                    'type' => 'text/html',
+                    'value' => $htmlContent,
+                ]
+            ]
         ];
 
-        $ch = curl_init('https://api.brevo.com/v3/smtp/email');
+        $ch = curl_init('https://api.sendgrid.com/v3/mail/send');
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST           => true,
             CURLOPT_POSTFIELDS     => json_encode($payload),
             CURLOPT_HTTPHEADER     => [
                 'Content-Type: application/json',
-                'api-key: ' . env('BREVO_API_KEY', ''),
+                'Authorization: Bearer ' . $apiKey,
             ],
         ]);
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        if ($httpCode !== 201) {
-            throw new \RuntimeException('Brevo API error (' . $httpCode . '): ' . $response);
+        if ($httpCode !== 202) {
+            throw new \RuntimeException('SendGrid API error (' . $httpCode . '): ' . $response);
         }
         return true;
     }

@@ -658,7 +658,7 @@ private function _getRefunds(int $creditNoteId): array
     private function _sendCreditNoteEmail(
     string $to, string $clientName, string $staffName, int $id, array $note
 ): bool {
-    $apiKey    = getenv('BREVO_API_KEY') ?: env('BREVO_API_KEY', '');
+    $apiKey    = getenv('SENDGRID_API_KEY') ?: env('SENDGRID_API_KEY', '');
     $fromEmail = getenv('MAIL_FROM_ADDRESS') ?: env('MAIL_FROM_ADDRESS', '');
     $fromName  = getenv('MAIL_FROM_NAME')    ?: env('MAIL_FROM_NAME', 'CRM Mobile');
 
@@ -702,32 +702,50 @@ body{font-family:'Segoe UI',sans-serif;background:#f1f5f9;padding:20px}
   <div class='ft'>© " . date('Y') . " — CRM Mobile</div>
 </div></body></html>";
 
-    $payload = [
-        'sender'      => ['name' => $fromName, 'email' => $fromEmail],
-        'to'          => [['email' => $to, 'name' => $clientName]],
-        'subject'     => "Note de Crédit $numStr",
-        'htmlContent' => $html,
-    ];
-
-    // Attache le PDF
+    $pdfBase64 = null;
     try {
         $pdfBytes = $this->_generatePdfBytes($note);
-        $payload['attachment'] = [[
-            'name'    => 'note_credit_' . $id . '.pdf',
-            'content' => base64_encode($pdfBytes),
-        ]];
+        $pdfBase64 = base64_encode($pdfBytes);
     } catch (\Throwable $e) {
         log_message('error', 'CN PDF gen for email: ' . $e->getMessage());
     }
 
-    $ch = curl_init('https://api.brevo.com/v3/smtp/email');
+    $payload = [
+        'personalizations' => [
+            [
+                'to' => [['email' => $to, 'name' => $clientName]],
+            ]
+        ],
+        'from' => [
+            'email' => $fromEmail ?? '',
+            'name'  => $fromName ?? 'CRM Mobile',
+        ],
+        'subject' => "Note de Crédit $numStr",
+        'content' => [
+            [
+                'type' => 'text/html',
+                'value' => $html,
+            ]
+        ]
+    ];
+
+    if ($pdfBase64) {
+        $payload['attachments'] = [[
+            'content'     => $pdfBase64,
+            'type'        => 'application/pdf',
+            'filename'    => 'note_credit_' . $id . '.pdf',
+            'disposition' => 'attachment',
+        ]];
+    }
+
+    $ch = curl_init('https://api.sendgrid.com/v3/mail/send');
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_POST           => true,
         CURLOPT_POSTFIELDS     => json_encode($payload),
         CURLOPT_HTTPHEADER     => [
             'accept: application/json',
-            'api-key: ' . $apiKey,
+            'Authorization: Bearer ' . $apiKey,
             'content-type: application/json',
         ],
         CURLOPT_TIMEOUT => 30,
@@ -738,14 +756,14 @@ body{font-family:'Segoe UI',sans-serif;background:#f1f5f9;padding:20px}
     $curlErr  = curl_error($ch);
     curl_close($ch);
 
-    log_message('debug', "Brevo CN email [$httpCode]: $response");
+    log_message('debug', "SendGrid CN email [$httpCode]: $response");
 
     if ($curlErr) {
-        log_message('error', 'Brevo CN cURL error: ' . $curlErr);
+        log_message('error', 'SendGrid CN cURL error: ' . $curlErr);
         return false;
     }
 
-    return $httpCode === 201;
+    return $httpCode === 202;
 }
 
     // ─────────────────────────────────────────────────────────────────────────

@@ -583,7 +583,7 @@ class EstimateController extends ResourceController
 
     private function _sendEstimateEmail(string $to, string $clientName, string $staffName, int $estimateId, array $estimate): bool
 {
-    $apiKey    = getenv('BREVO_API_KEY') ?: env('BREVO_API_KEY', '');
+    $apiKey    = getenv('SENDGRID_API_KEY') ?: env('SENDGRID_API_KEY', '');
     $fromEmail = getenv('MAIL_FROM_ADDRESS') ?: env('MAIL_FROM_ADDRESS', '');
     $fromName  = getenv('MAIL_FROM_NAME')    ?: env('MAIL_FROM_NAME', 'CRM Mobile');
 
@@ -611,32 +611,50 @@ body{font-family:'Segoe UI',sans-serif;background:#f1f5f9;padding:20px}
   <div class='ft'>© " . date('Y') . " — Envoyé automatiquement.</div>
 </div></body></html>";
 
-    $payload = [
-        'sender'      => ['name' => $fromName, 'email' => $fromEmail],
-        'to'          => [['email' => $to, 'name' => $clientName]],
-        'subject'     => "Devis $numStr",
-        'htmlContent' => $html,
-    ];
-
-    // Attache le PDF
+    $pdfBase64 = null;
     try {
-        $pdfBase64 = base64_encode($this->_generatePdfBytes($estimate));
-        $payload['attachment'] = [[
-            'name'    => 'devis_' . $estimateId . '.pdf',
-            'content' => $pdfBase64,
-        ]];
+        $pdfBytes  = $this->_generatePdfBytes($estimate);
+        $pdfBase64 = base64_encode($pdfBytes);
     } catch (\Throwable $e) {
         log_message('error', 'PDF estimate error: ' . $e->getMessage());
     }
 
-    $ch = curl_init('https://api.brevo.com/v3/smtp/email');
+    $payload = [
+        'personalizations' => [
+            [
+                'to' => [['email' => $to, 'name' => $clientName]],
+            ]
+        ],
+        'from' => [
+            'email' => $fromEmail ?? '',
+            'name'  => $fromName ?? 'CRM Mobile',
+        ],
+        'subject' => "Devis $numStr",
+        'content' => [
+            [
+                'type' => 'text/html',
+                'value' => $html,
+            ]
+        ]
+    ];
+
+    if ($pdfBase64) {
+        $payload['attachments'] = [[
+            'content'     => $pdfBase64,
+            'type'        => 'application/pdf',
+            'filename'    => 'devis_' . $estimateId . '.pdf',
+            'disposition' => 'attachment',
+        ]];
+    }
+
+    $ch = curl_init('https://api.sendgrid.com/v3/mail/send');
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_POST           => true,
         CURLOPT_POSTFIELDS     => json_encode($payload),
         CURLOPT_HTTPHEADER     => [
             'accept: application/json',
-            'api-key: ' . $apiKey,
+            'Authorization: Bearer ' . $apiKey,
             'content-type: application/json',
         ],
         CURLOPT_TIMEOUT => 30,
@@ -647,14 +665,14 @@ body{font-family:'Segoe UI',sans-serif;background:#f1f5f9;padding:20px}
     $curlErr  = curl_error($ch);
     curl_close($ch);
 
-    log_message('debug', "Brevo estimate [$httpCode]: $response");
+    log_message('debug', "SendGrid estimate [$httpCode]: $response");
 
     if ($curlErr) {
-        log_message('error', 'Brevo estimate cURL error: ' . $curlErr);
+        log_message('error', 'SendGrid estimate cURL error: ' . $curlErr);
         return false;
     }
 
-    return $httpCode === 201;
+    return $httpCode === 202;
 }
 
     private function _fmtNum(float $val): string { return number_format(abs($val), 2, ',', '.'); }
