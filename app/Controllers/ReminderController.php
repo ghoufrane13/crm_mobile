@@ -352,12 +352,12 @@ class ReminderController extends ResourceController
         string $date,
         string $description
     ): void {
-        $apiKey    = getenv('SENDGRID_API_KEY') ?: env('SENDGRID_API_KEY', '');
+        $apiKey    = trim(env('BREVO_API_KEY',     ''), '"\'');
         $fromEmail = trim(env('MAIL_FROM_ADDRESS', ''), '"\'');
         $fromName  = trim(env('MAIL_FROM_NAME', 'CRM Mobile'), '"\'');
 
         if (empty($apiKey) || empty($fromEmail)) {
-            log_message('error', '[Reminder] SENDGRID_API_KEY ou MAIL_FROM_ADDRESS manquant dans .env');
+            log_message('error', '[Reminder] BREVO_API_KEY ou MAIL_FROM_ADDRESS manquant dans .env');
             return;
         }
         $html = "<!DOCTYPE html><html><body style='font-family:sans-serif;background:#f1f5f9;padding:20px'>
@@ -374,33 +374,19 @@ class ReminderController extends ResourceController
 <div style='background:#eff6ff;border-left:4px solid #2563eb;padding:12px 16px;color:#1e40af;border-radius:0 10px 10px 0'>"
 . htmlspecialchars($msg) . "</div></div></div></body></html>";
 
-        $payload = [
-            'personalizations' => [
-                [
-                    'to' => [['email' => $to, 'name' => $staffName]],
-                ]
-            ],
-            'from' => [
-                'email' => $fromEmail,
-                'name'  => $fromName,
-            ],
-            'subject' => '⏰ Rappel CRM : ' . ($relLabel ?: 'nouveau rappel'),
-            'content' => [
-                [
-                    'type' => 'text/html',
-                    'value' => $html,
-                ]
-            ]
-        ];
-
-        $ch = curl_init('https://api.sendgrid.com/v3/mail/send');
+        $ch = curl_init('https://api.brevo.com/v3/smtp/email');
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => json_encode($payload),
+            CURLOPT_POSTFIELDS     => json_encode([
+                'sender'      => ['name' => $fromName, 'email' => $fromEmail],
+                'to'          => [['email' => $to, 'name' => $staffName]],
+                'subject'     => '⏰ Rappel CRM : ' . ($relLabel ?: 'nouveau rappel'),
+                'htmlContent' => $html,
+            ]),
             CURLOPT_HTTPHEADER     => [
                 'accept: application/json',
-                'Authorization: Bearer ' . $apiKey,
+                'api-key: ' . $apiKey,
                 'content-type: application/json',
             ],
             CURLOPT_TIMEOUT        => 15,
@@ -417,8 +403,8 @@ class ReminderController extends ResourceController
             return;
         }
 
-        if ($httpCode !== 202) {
-            log_message('error', "[Reminder] SendGrid HTTP $httpCode | to: $to | réponse: $response");
+        if ($httpCode !== 201) {
+            log_message('error', "[Reminder] Brevo HTTP $httpCode | to: $to | réponse: $response");
         } else {
             log_message('info', "[Reminder] Email envoyé à $to");
         }

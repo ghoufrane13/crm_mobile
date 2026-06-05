@@ -120,45 +120,28 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 </body>
 </html>";
 
-        $apiKey    = getenv('SENDGRID_API_KEY') ?: env('SENDGRID_API_KEY', '');
-        $fromEmail = env('MAIL_FROM_ADDRESS', '');
-        $fromName  = env('MAIL_FROM_NAME', 'CRM Mobile');
-
-        $payload = [
-            'personalizations' => [
-                [
-                    'to' => [['email' => $to, 'name' => $firstname . ' ' . $lastname]],
-                ]
-            ],
-            'from' => [
-                'email' => $fromEmail,
-                'name'  => $fromName,
-            ],
-            'subject' => $subject,
-            'content' => [
-                [
-                    'type' => 'text/html',
-                    'value' => $message,
-                ]
-            ]
+        $config = [
+            'protocol'   => 'smtp',
+            'SMTPHost'   => 'smtp-relay.brevo.com',
+            'SMTPPort'   => 587,
+            'SMTPUser'   => env('BREVO_SMTP_USER', ''),
+            'SMTPPass'   => env('BREVO_SMTP_PASS', ''),
+            'SMTPCrypto' => 'tls',
+            'mailType'   => 'html',
+            'charset'    => 'utf-8',
+            'wordWrap'   => true,
+            'newline'    => "\r\n",
         ];
 
-        $ch = curl_init('https://api.sendgrid.com/v3/mail/send');
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => json_encode($payload),
-            CURLOPT_HTTPHEADER     => [
-                'Content-Type: application/json',
-                'Authorization: Bearer ' . $apiKey,
-            ],
-        ]);
-        $response = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        $email = \Config\Services::email();
+        $email->initialize($config);
+        $email->setFrom(env('MAIL_FROM_ADDRESS', ''), env('MAIL_FROM_NAME', 'CRM Mobile'));
+        $email->setTo($to);
+        $email->setSubject($subject);
+        $email->setMessage($message);
 
-        if ($httpCode !== 202) {
-            log_message('error', 'Erreur reset password email (HTTP ' . $httpCode . '): ' . $response);
+        if (!$email->send()) {
+            log_message('error', 'Erreur reset password email: ' . $email->printDebugger(['headers']));
             return false;
         }
         return true;
@@ -356,4 +339,4 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             'message' => 'Mot de passe réinitialisé avec succès.',
         ], 200);
     }
-}
+}   

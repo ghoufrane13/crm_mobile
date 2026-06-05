@@ -1288,7 +1288,7 @@ class InvoiceController extends ResourceController
         string $to, string $clientName, string $staffName,
         int $invoiceId, array $invoice
     ): bool {
-        $apiKey    = getenv('SENDGRID_API_KEY') ?: env('SENDGRID_API_KEY', '');
+        $apiKey    = getenv('BREVO_API_KEY') ?: env('BREVO_API_KEY', '');
         $fromEmail = getenv('MAIL_FROM_ADDRESS') ?: env('MAIL_FROM_ADDRESS', '');
         $fromName  = getenv('MAIL_FROM_NAME')    ?: env('MAIL_FROM_NAME', 'CRM Mobile');
         $numStr      = $invoice['formatted_number'] ?? ('INV-' . str_pad($invoiceId, 6, '0', STR_PAD_LEFT));
@@ -1348,41 +1348,25 @@ body{font-family:'Segoe UI',sans-serif;background:#f1f5f9;padding:20px;margin:0}
 
         $pdfName = 'facture_' . $invoiceId . '.pdf';
         $payload = [
-            'personalizations' => [
-                [
-                    'to' => [['email' => $to, 'name' => $clientName]],
-                ]
-            ],
-            'from' => [
-                'email' => $fromEmail ?? '',
-                'name'  => $fromName ?? 'CRM Mobile',
-            ],
-            'subject' => "Facture $numStr",
-            'content' => [
-                [
-                    'type' => 'text/html',
-                    'value' => $htmlContent,
-                ]
-            ]
+            'sender'      => ['name' => $fromName ?? 'CRM Mobile', 'email' => $fromEmail ?? ''],
+            'to'          => [['email' => $to, 'name' => $clientName]],
+            'subject'     => "Facture $numStr",
+            'htmlContent' => $htmlContent,
         ];
 
         if ($pdfBase64) {
-            $payload['attachments'] = [[
-                'content'     => $pdfBase64,
-                'type'        => 'application/pdf',
-                'filename'    => $pdfName,
-                'disposition' => 'attachment',
-            ]];
+            $payload['attachment'] = [['name' => $pdfName, 'content' => $pdfBase64]];
         }
 
-        $ch = curl_init('https://api.sendgrid.com/v3/mail/send');
+        $apiKey = getenv('BREVO_API_KEY') ?: env('BREVO_API_KEY', '');
+        $ch = curl_init('https://api.brevo.com/v3/smtp/email');
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST           => true,
             CURLOPT_POSTFIELDS     => json_encode($payload),
             CURLOPT_HTTPHEADER     => [
                 'accept: application/json',
-                'Authorization: Bearer ' . $apiKey,
+                'api-key: ' . $apiKey,
                 'content-type: application/json',
             ],
             CURLOPT_TIMEOUT => 30,
@@ -1393,12 +1377,12 @@ body{font-family:'Segoe UI',sans-serif;background:#f1f5f9;padding:20px;margin:0}
         $curlErr  = curl_error($ch);
         curl_close($ch);
 
-        log_message('debug', "SendGrid invoice [$httpCode]: $response");
+        log_message('debug', "Brevo invoice [$httpCode]: $response");
         if ($curlErr) {
-            log_message('error', 'SendGrid invoice cURL: ' . $curlErr);
+            log_message('error', 'Brevo invoice cURL: ' . $curlErr);
             return false;
         }
-        return $httpCode === 202;    
+        return $httpCode === 201;    
 }
     // GET /api/invoices/client-dashboard-stats?client_id=X
 public function clientDashboardStats()

@@ -78,42 +78,32 @@ body { font-family: 'Segoe UI', sans-serif; background:#f1f5f9; padding:20px; ma
   <div class='footer'>© " . date('Y') . " CRM Mobile — Envoyé automatiquement, ne pas répondre.</div>
 </div></body></html>";
 
-        $apiKey = getenv('SENDGRID_API_KEY') ?: env('SENDGRID_API_KEY', '');
         $payload = [
-            'personalizations' => [
-                [
-                    'to' => [['email' => $to]],
-                ]
-            ],
-            'from' => [
-                'email' => env('MAIL_FROM_ADDRESS', ''),
+            'sender'      => [
                 'name'  => env('MAIL_FROM_NAME', 'CRM Mobile'),
+                'email' => env('MAIL_FROM_ADDRESS', ''),
             ],
-            'subject' => 'Code de vérification - CRM Mobile Staff',
-            'content' => [
-                [
-                    'type' => 'text/html',
-                    'value' => $htmlContent,
-                ]
-            ]
+            'to'          => [['email' => $to]],
+            'subject'     => 'Code de vérification - CRM Mobile Staff',
+            'htmlContent' => $htmlContent,
         ];
 
-        $ch = curl_init('https://api.sendgrid.com/v3/mail/send');
+        $ch = curl_init('https://api.brevo.com/v3/smtp/email');
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST           => true,
             CURLOPT_POSTFIELDS     => json_encode($payload),
             CURLOPT_HTTPHEADER     => [
                 'Content-Type: application/json',
-                'Authorization: Bearer ' . $apiKey,
+                'api-key: ' . env('BREVO_API_KEY', ''),
             ],
         ]);
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
-        if ($httpCode !== 202) {
-            throw new \RuntimeException('SendGrid API error (' . $httpCode . '): ' . $response);
+        if ($httpCode !== 201) {
+            throw new \RuntimeException('Brevo API error (' . $httpCode . '): ' . $response);
         }
         return true;
     }
@@ -400,4 +390,4 @@ body { font-family: 'Segoe UI', sans-serif; background:#f1f5f9; padding:20px; ma
 
         return $this->respond(['status' => 200, 'data' => $staff]);
     }
-}
+}   

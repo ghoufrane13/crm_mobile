@@ -1484,7 +1484,7 @@ class ProposalController extends ResourceController
         int    $proposalId,
         ?array $proposalData = null
     ): bool {
-        $apiKey    = getenv('SENDGRID_API_KEY') ?: env('SENDGRID_API_KEY', '');
+        $apiKey    = getenv('BREVO_API_KEY') ?: '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';
         $fromEmail = getenv('MAIL_FROM_ADDRESS') ?: 'noreply@example.com';
         $fromName  = getenv('MAIL_FROM_NAME')    ?: 'CRM Mobile';
 
@@ -1511,51 +1511,33 @@ body{font-family:'Segoe UI',sans-serif;background:#f1f5f9;padding:20px}
   <div class='ft'>© " . date('Y') . " — Envoyé automatiquement.</div>
 </div></body></html>";
 
-        $pdfBase64 = null;
+        $payload = [
+            'sender'      => ['name' => $fromName, 'email' => $fromEmail],
+            'to'          => [['email' => $to, 'name' => $clientName]],
+            'subject'     => "Offre commerciale : $subject",
+            'htmlContent' => $html,
+        ];
+
         if ($proposalData !== null) {
             try {
                 $pdfBase64 = $this->_generatePdfBase64($proposalData);
+                $payload['attachment'] = [[
+                    'name'    => 'offre_' . $proposalId . '.pdf',
+                    'content' => $pdfBase64,
+                ]];
             } catch (\Throwable $e) {
                 log_message('error', 'PDF proposal error: ' . $e->getMessage());
             }
         }
 
-        $payload = [
-            'personalizations' => [
-                [
-                    'to' => [['email' => $to, 'name' => $clientName]],
-                ]
-            ],
-            'from' => [
-                'email' => $fromEmail,
-                'name'  => $fromName,
-            ],
-            'subject' => "Offre commerciale : $subject",
-            'content' => [
-                [
-                    'type' => 'text/html',
-                    'value' => $html,
-                ]
-            ]
-        ];
-
-        if ($pdfBase64) {
-            $payload['attachments'] = [[
-                'content'     => $pdfBase64,
-                'type'        => 'application/pdf',
-                'filename'    => 'offre_' . $proposalId . '.pdf',
-                'disposition' => 'attachment',
-            ]];
-        }
-
-        $ch = curl_init('https://api.sendgrid.com/v3/mail/send');
+        $ch = curl_init('https://api.brevo.com/v3/smtp/email');
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST           => true,
             CURLOPT_POSTFIELDS     => json_encode($payload),
             CURLOPT_HTTPHEADER     => [
                 'accept: application/json',
-                'Authorization: Bearer ' . $apiKey,
+                'api-key: ' . $apiKey,
                 'content-type: application/json',
             ],
             CURLOPT_TIMEOUT => 30,
@@ -1566,14 +1548,14 @@ body{font-family:'Segoe UI',sans-serif;background:#f1f5f9;padding:20px}
         $curlErr  = curl_error($ch);
         curl_close($ch);
 
-        log_message('debug', "SendGrid proposal [$httpCode]: $response");
+        log_message('debug', "Brevo proposal [$httpCode]: $response");
 
         if ($curlErr) {
-            log_message('error', 'SendGrid proposal cURL error: ' . $curlErr);
+            log_message('error', 'Brevo cURL error: ' . $curlErr);
             return false;
         }
 
-        return $httpCode === 202;
+        return $httpCode === 201;
     }
 
 }
