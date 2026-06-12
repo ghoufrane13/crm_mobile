@@ -220,16 +220,21 @@ class CreditNoteModel extends Model
 
     public function getTotalLeftToPay(int $invoiceId): float
     {
-        $inv = $this->db->table('tblinvoices')->select('total')->where('id', $invoiceId)->get()->getRowArray();
-        if (!$inv) {
-            return 0.0;
-        }
-        $total = (float) ($inv['total'] ?? 0);
+        $invoice = $this->db->table('tblinvoices')
+            ->select('total')
+            ->where('id', $invoiceId)
+            ->get()->getRowArray();
 
-        $paid = (float) (($this->db->table('tblpaymentrecords')->selectSum('amount')->where('invoiceid', $invoiceId)->get()->getRowArray()['amount'] ?? 0));
-        $credits = (float) (($this->db->table('tblcredits')->selectSum('amount')->where('invoice_id', $invoiceId)->get()->getRowArray()['amount'] ?? 0));
+        $total = (float)($invoice['total'] ?? 0);
 
-        return max(0, round($total - $paid - $credits, 2));
+        $paid = $this->db->table('tblinvoicepaymentrecords')
+            ->selectSum('amount')
+            ->where('invoiceid', $invoiceId)
+            ->get()->getRowArray();
+
+        $paidAmount = (float)($paid['amount'] ?? 0);
+
+        return max(0, $total - $paidAmount);
     }
 
     public function getRemainingCredits(int $creditNoteId): float
