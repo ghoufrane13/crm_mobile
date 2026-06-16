@@ -307,56 +307,59 @@ class ProposalController extends ResourceController
     // POST /api/proposals/send-email/:id
     // ═══════════════════════════════════════════════════════════════════════
     public function sendEmail($id)
-    {
-        $data        = $this->request->getJSON(true);
-        $db          = \Config\Database::connect();
-        $proposalRow = $db->table('tblproposals')->where('id', (int)$id)->get()->getRowArray();
-        if (!$proposalRow) return $this->fail('Offre introuvable', 404);
- 
-        $email      = trim($data['email']       ?? $proposalRow['email']       ?? '');
-        $clientName = trim($data['proposal_to'] ?? $proposalRow['proposal_to'] ?? '');
-        $subject    = trim($data['subject']      ?? $proposalRow['subject']     ?? 'Offre commerciale');
- 
-        if (!$email) return $this->fail('Aucun email destinataire sur cette offre', 400);
- 
-        $staffId   = (int)($data['staff_id'] ?? $proposalRow['addedfrom'] ?? 0);
-        $staff     = $db->table('tblstaff')->where('staffid', $staffId)->get()->getRowArray();
-        $staffName = $staff
-            ? trim(($staff['firstname'] ?? '') . ' ' . ($staff['lastname'] ?? ''))
-            : 'Votre commercial';
- 
-        $updateFields = [];
-        if (!empty($data['email'])       && $data['email']       !== $proposalRow['email'])       $updateFields['email']       = $email;
-        if (!empty($data['proposal_to']) && $data['proposal_to'] !== $proposalRow['proposal_to']) $updateFields['proposal_to'] = $clientName;
-        if (!empty($updateFields)) {
-            $db->table('tblproposals')->where('id', (int)$id)->update($updateFields);
-        }
- 
-        $model    = new ProposalModel();
-        $proposal = $model->getDetail((int)$id);
-        if ($proposal) {
-            $s = (int)$proposal['status'];
-            $proposal['status_label'] = $this->statuses[$s]     ?? 'Inconnu';
-            $proposal['status_color'] = $this->statusColors[$s] ?? '#94A3B8';
-            $proposal['items'] = $this->_loadItems($db, (int)$id, 'proposal');
-            $currencyRow = $db->table('tblcurrencies')->select('symbol, name')
-                ->where('id', (int)($proposalRow['currency'] ?? 0))->get()->getRowArray();
-            $proposal['currency_symbol'] = $currencyRow['symbol'] ?? '';
-            $proposal['currency_name']   = $currencyRow['name']   ?? '';
-        }
- 
-        $sent = $this->_sendProposalEmail(
-            $email, $clientName, $subject, $staffName, (int)$id, $proposal ?? null
-        );
-        if (!$sent) return $this->fail("Erreur lors de l'envoi de l'email", 500);
- 
-        $db->table('tblproposals')->where('id', (int)$id)->update(['status' => 2]);
- 
-        $clientId = (int)($proposalRow['rel_id'] ?? 0);
-        $this->_notifyProposalSent($db, (int)$id, $subject, $clientId, $staffId, $staffName);
- 
-        return $this->respond(['status' => true, 'message' => "Offre envoyée à $email"]);
+{
+    $data        = $this->request->getJSON(true);
+    $db          = \Config\Database::connect();
+    $proposalRow = $db->table('tblproposals')->where('id', (int)$id)->get()->getRowArray();
+    if (!$proposalRow) return $this->fail('Offre introuvable', 404);
+
+    $email      = trim($data['email']       ?? $proposalRow['email']       ?? '');
+    $clientName = trim($data['proposal_to'] ?? $proposalRow['proposal_to'] ?? '');
+    $subject    = trim($data['subject']      ?? $proposalRow['subject']     ?? 'Offre commerciale');
+
+    if (!$email) return $this->fail('Aucun email destinataire sur cette offre', 400);
+
+    $staffId   = (int)($data['staff_id'] ?? $proposalRow['addedfrom'] ?? 0);
+    $staff     = $db->table('tblstaff')->where('staffid', $staffId)->get()->getRowArray();
+    $staffName = $staff
+        ? trim(($staff['firstname'] ?? '') . ' ' . ($staff['lastname'] ?? ''))
+        : 'Votre commercial';
+
+    $updateFields = [];
+    if (!empty($data['email'])       && $data['email']       !== $proposalRow['email'])       $updateFields['email']       = $email;
+    if (!empty($data['proposal_to']) && $data['proposal_to'] !== $proposalRow['proposal_to']) $updateFields['proposal_to'] = $clientName;
+    if (!empty($updateFields)) {
+        $db->table('tblproposals')->where('id', (int)$id)->update($updateFields);
     }
+
+    $model    = new ProposalModel();
+    $proposal = $model->getDetail((int)$id);
+    if ($proposal) {
+        $s = (int)$proposal['status'];
+        $proposal['status_label'] = $this->statuses[$s]     ?? 'Inconnu';
+        $proposal['status_color'] = $this->statusColors[$s] ?? '#94A3B8';
+        $proposal['items'] = $this->_loadItems($db, (int)$id, 'proposal');
+        $currencyRow = $db->table('tblcurrencies')->select('symbol, name')
+            ->where('id', (int)($proposalRow['currency'] ?? 0))->get()->getRowArray();
+        $proposal['currency_symbol'] = $currencyRow['symbol'] ?? '';
+        $proposal['currency_name']   = $currencyRow['name']   ?? '';
+    }
+
+    $sent = $this->_sendProposalEmail(
+        $email, $clientName, $subject, $staffName, (int)$id, $proposal ?? null
+    );
+    if (!$sent) return $this->fail("Erreur lors de l'envoi de l'email", 500);
+
+    // ✅ Ne passer à "Envoyée" que si l'offre est encore en Brouillon (status = 1)
+    if ((int)$proposalRow['status'] === 1) {
+        $db->table('tblproposals')->where('id', (int)$id)->update(['status' => 2]);
+    }
+
+    $clientId = (int)($proposalRow['rel_id'] ?? 0);
+    $this->_notifyProposalSent($db, (int)$id, $subject, $clientId, $staffId, $staffName);
+
+    return $this->respond(['status' => true, 'message' => "Offre envoyée à $email"]);
+}
  
     // ═══════════════════════════════════════════════════════════════════════
     // POST /api/proposals/convert/:id
